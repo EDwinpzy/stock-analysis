@@ -4,6 +4,7 @@ from tools.fetch_yuanxiaoer_posts import (
     fetch_topics,
     parse_post,
     pending_items,
+    image_digest,
     reply_digest,
 )
 
@@ -153,6 +154,159 @@ class CaptureTests(unittest.TestCase):
         }
 
         self.assertEqual(pending_items([old_post], {}), [])
+
+    def test_pending_items_flags_unreviewed_post_images_until_hash_is_recorded(self):
+        images = ["https://image.tgb.cn/img/chart.png"]
+        post = {
+            "id": "image-thread", "title": "topic", "date": "2026-10-08",
+            "url": "https://example.test/image-thread", "sha256": "body-v1",
+            "images": images, "author_replies": [],
+        }
+        state = {"processed_posts": {"image-thread": {"sha256": "body-v1"}}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(len(pending), 1)
+        self.assertFalse(pending[0]["body_pending"])
+        self.assertTrue(pending[0]["image_pending"])
+        self.assertEqual(pending[0]["post_image_sha256"], image_digest(images))
+        self.assertEqual(pending[0]["unreviewed_images"], [{
+            "location": "post", "reply_id": None, "urls": images,
+            "sha256": image_digest(images), "status": "available",
+        }])
+
+        state["processed_posts"]["image-thread"]["post_image_sha256"] = image_digest(images)
+        self.assertEqual(pending_items([post], state), [])
+
+    def test_archived_post_image_revision_reopens_pending_work(self):
+        old_images = ["https://image.tgb.cn/img/old.png"]
+        revised_images = ["https://image.tgb.cn/img/new.png"]
+        post = {
+            "id": "archived-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/archived-thread", "sha256": "body-v1",
+            "images": revised_images, "author_replies": [],
+        }
+        state = {"processed_posts": {"archived-thread": {
+            "sha256": "body-v1", "post_image_sha256": image_digest(old_images),
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(len(pending), 1)
+        self.assertFalse(pending[0]["body_pending"])
+        self.assertTrue(pending[0]["image_pending"])
+        self.assertEqual(pending[0]["unreviewed_images"][0]["urls"], revised_images)
+
+    def test_archived_post_image_removal_reopens_pending_work(self):
+        post = {
+            "id": "archived-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/archived-thread", "sha256": "body-v1",
+            "images": [], "author_replies": [],
+        }
+        state = {"processed_posts": {"archived-thread": {
+            "sha256": "body-v1", "post_image_sha256": image_digest(["https://image.tgb.cn/img/old.png"]),
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertTrue(pending[0]["image_pending"])
+        self.assertEqual(pending[0]["post_image_sha256"], image_digest([]))
+        self.assertEqual(pending[0]["unreviewed_images"][0]["status"], "removed")
+
+    def test_archived_reply_revision_reopens_pending_work(self):
+        old_reply = {"id": "reply-old", "date": "25-01-01 10:00", "text": "old wording"}
+        revised_reply = {"id": "reply-old", "date": "25-01-01 10:00", "text": "revised wording"}
+        post = {
+            "id": "archived-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/archived-thread", "sha256": "body-v1",
+            "author_replies": [revised_reply],
+        }
+        state = {"processed_posts": {"archived-thread": {
+            "sha256": "body-v1", "reply_ids": ["reply-old"],
+            "reply_hashes": {"reply-old": reply_digest(old_reply)},
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(pending[0]["reply_ids"], ["reply-old"])
+
+    def test_archived_reply_image_revision_is_listed_for_review(self):
+        old_images = ["https://image.tgb.cn/img/old.png"]
+        revised_images = ["https://image.tgb.cn/img/new.png"]
+        reply = {"id": "reply-old", "date": "25-01-01 10:00", "text": "reply",
+                 "images": revised_images}
+        post = {
+            "id": "archived-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/archived-thread", "sha256": "body-v1",
+            "author_replies": [reply],
+        }
+        state = {"processed_posts": {"archived-thread": {
+            "sha256": "body-v1", "reply_ids": ["reply-old"],
+            "reply_hashes": {"reply-old": reply_digest(reply)},
+            "reply_image_sha256": {"reply-old": image_digest(old_images)},
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(pending[0]["reply_ids"], ["reply-old"])
+        self.assertEqual(pending[0]["unreviewed_images"][0]["location"], "reply")
+        self.assertEqual(pending[0]["unreviewed_images"][0]["urls"], revised_images)
+
+    def test_archived_reply_image_removal_reopens_pending_work(self):
+        reply = {"id": "reply-old", "date": "25-01-01 10:00", "text": "reply", "images": []}
+        post = {
+            "id": "archived-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/archived-thread", "sha256": "body-v1",
+            "author_replies": [reply],
+        }
+        state = {"processed_posts": {"archived-thread": {
+            "sha256": "body-v1", "reply_ids": ["reply-old"],
+            "reply_hashes": {"reply-old": reply_digest(reply)},
+            "reply_image_sha256": {"reply-old": image_digest(["https://image.tgb.cn/img/old.png"])},
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(pending[0]["reply_ids"], ["reply-old"])
+        self.assertEqual(pending[0]["reply_image_sha256"]["reply-old"], image_digest([]))
+        self.assertEqual(pending[0]["unreviewed_images"][0]["status"], "removed")
+
+    def test_pending_items_reopens_reviewed_reply_when_attachment_hash_changes(self):
+        first_images = ["https://image.tgb.cn/img/first.png"]
+        changed_images = ["https://image.tgb.cn/img/second.png"]
+        reply = {"id": "reply-1", "date": "26-10-08 10:00", "text": "reply",
+                 "images": changed_images}
+        post = {
+            "id": "old-thread", "title": "old topic", "date": "2025-01-01",
+            "url": "https://example.test/old-thread", "sha256": "body-v1",
+            "images": [], "author_replies": [reply],
+        }
+        state = {"processed_posts": {"old-thread": {
+            "sha256": "body-v1", "reply_ids": ["reply-1"],
+            "reply_hashes": {"reply-1": reply_digest(reply)},
+            "reply_image_sha256": {"reply-1": image_digest(first_images)},
+        }}}
+
+        pending = pending_items([post], state)
+
+        self.assertEqual(pending[0]["reply_ids"], ["reply-1"])
+        self.assertEqual(pending[0]["reply_image_ids"], ["reply-1"])
+        self.assertEqual(pending[0]["reply_image_sha256"]["reply-1"], image_digest(changed_images))
+
+    def test_static_face_avatars_do_not_create_image_pending_work(self):
+        post = {
+            "id": "avatar-thread", "title": "topic", "date": "2026-10-08",
+            "url": "https://example.test/avatar-thread", "sha256": "body-v1",
+            "images": ["https://css.tgb.cn/images/face/012.png"],
+            "author_replies": [{"id": "reply-avatar", "date": "26-10-08 10:00",
+                                "text": "reply", "images": ["https://css.tgb.cn/images/face/013.png"]}],
+        }
+        state = {"processed_posts": {"avatar-thread": {
+            "sha256": "body-v1", "reply_ids": ["reply-avatar"],
+            "reply_hashes": {"reply-avatar": reply_digest(post["author_replies"][0])},
+        }}}
+
+        self.assertEqual(pending_items([post], state), [])
 
 
 if __name__ == "__main__":

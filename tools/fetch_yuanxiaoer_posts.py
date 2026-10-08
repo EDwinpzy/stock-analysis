@@ -50,25 +50,61 @@ def reply_digest(reply):
                                     ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
+def content_images(images):
+    """Exclude TaoGuba's static face avatars; keep attachments requiring review."""
+    return [url for url in images or [] if url and "/face/" not in url.lower()]
+
+
+def image_digest(images):
+    return hashlib.sha256(json.dumps(sorted(images), ensure_ascii=False).encode()).hexdigest()
+
+
 def pending_items(posts, state, baseline=BASELINE):
     """Only successful distillation acknowledgements can remove pending work."""
     pending = []
     done = state.get("processed_posts", {})
     for post in posts:
         previous = done.get(post["id"], {})
-        body_pending = (post["date"][:10] >= baseline or bool(previous)) and previous.get("sha256") != post["sha256"]
-        replies = []
+        in_scope = post["date"][:10] >= baseline or bool(previous)
+        body_pending = in_scope and previous.get("sha256") != post["sha256"]
+        post_images = content_images(post.get("images", []))
+        previous_post_image_sha256 = previous.get("post_image_sha256")
+        post_image_sha256 = image_digest(post_images) if post_images or previous_post_image_sha256 else None
+        image_pending = bool(in_scope and post_image_sha256
+                             and previous_post_image_sha256 != post_image_sha256)
+        replies, reply_image_ids, reply_image_hashes, unreviewed_images = [], [], {}, []
+        if image_pending and (post_images or previous_post_image_sha256):
+            unreviewed_images.append({"location": "post", "reply_id": None,
+                                      "urls": post_images, "sha256": post_image_sha256,
+                                      "status": "available" if post_images else "removed"})
         for reply in post["author_replies"]:
             date = "20" + reply["date"][:8] if len(reply["date"]) > 2 and reply["date"][2] == "-" else reply["date"][:10]
-            if date < baseline:
+            reply_was_processed = reply["id"] in previous.get("reply_ids", [])
+            if date < baseline and not reply_was_processed:
                 continue
             hashes = previous.get("reply_hashes", {})
-            if reply["id"] not in previous.get("reply_ids", []) or (reply["id"] in hashes and hashes[reply["id"]] != reply_digest(reply)):
+            reply_images = content_images(reply.get("images", []))
+            previous_reply_image_sha256 = previous.get("reply_image_sha256", {}).get(reply["id"])
+            reply_image_sha256 = image_digest(reply_images) if reply_images or previous_reply_image_sha256 else None
+            image_unreviewed = bool(reply_image_sha256 and
+                                    previous_reply_image_sha256 != reply_image_sha256)
+            if (reply["id"] not in previous.get("reply_ids", []) or
+                    (reply["id"] in hashes and hashes[reply["id"]] != reply_digest(reply)) or image_unreviewed):
                 replies.append(reply["id"])
-        if body_pending or replies:
+            if image_unreviewed:
+                reply_image_ids.append(reply["id"])
+                reply_image_hashes[reply["id"]] = reply_image_sha256
+                unreviewed_images.append({"location": "reply", "reply_id": reply["id"],
+                                          "urls": reply_images, "sha256": reply_image_sha256,
+                                          "status": "available" if reply_images else "removed"})
+        if body_pending or replies or image_pending:
             pending.append({"id": post["id"], "title": post["title"], "date": post["date"],
                             "url": post["url"], "body_pending": body_pending, "reply_ids": replies,
-                            "body_sha256": post["sha256"]})
+                            "body_sha256": post["sha256"], "image_pending": image_pending,
+                            "post_image_sha256": post_image_sha256 if image_pending else None,
+                            "reply_image_ids": reply_image_ids,
+                            "reply_image_sha256": reply_image_hashes,
+                            "unreviewed_images": unreviewed_images})
     return pending
 
 
