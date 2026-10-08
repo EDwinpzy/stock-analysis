@@ -6,3 +6,4 @@ venv/
 *.egg-info/
 data/_*.log*
 data/_proxy_backup_*.json
+data/yuanxiaoer/raw/
