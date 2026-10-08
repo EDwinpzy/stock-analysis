@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>物理AI行业深度分析</title>
+<style>
+:root{
+--paper:#f5f1e8;--ink:#1b1915;
+--bg:#f5f1e8;--bg2:#fffdf8;--bg3:#f1ece1;--bg4:#e6dfd0;
+--bd:rgba(27,25,21,.16);--bd2:rgba(27,25,21,.34);
+--t1:#1b1915;--t2:#45413a;--t3:#7c7566;
+--up:#b3261e;--dn:#1c6b46;--inf:#1f4e79;--cyn:#155e63;--gld:#8a6a12;--wrn:#9a5b00;--a:#8c1c13;
+--sans:'Microsoft YaHei UI','Microsoft YaHei','PingFang SC','HarmonyOS Sans SC','Hiragino Sans GB','Segoe UI',system-ui,-apple-system,sans-serif;
+--serif:var(--sans);--display:var(--sans);--mono:var(--sans);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.8;font-size:13.5px;min-height:100vh;font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body::after{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,rgba(27,25,21,.022) 0 1px,transparent 1px 4px);pointer-events:none;z-index:0}
+.c{max-width:1280px;margin:0 auto;padding:20px 24px 40px;position:relative;z-index:1}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.np-mast{margin:4px 0 20px;padding:14px 0 11px;border-top:1px solid var(--ink);border-bottom:3px double var(--ink);text-align:center}
+.np-mast-kicker{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--a);margin-bottom:6px}
+.np-mast-title{font-family:var(--display);font-size:44px;line-height:1.12;font-weight:900;letter-spacing:.2em;color:var(--ink);text-indent:.2em}
+.np-mast-sub{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--t2);letter-spacing:.06em}
+.np-mast-sub .sep{color:var(--bd2)}
+.np-mast-sub b{font-weight:700;color:var(--ink)}
+.g{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;position:relative;align-items:start}
+.sec{background:var(--bg2);border:1px solid var(--bd);border-top:2px solid var(--ink);overflow:hidden}
+.sh{display:flex;align-items:center;gap:8px;padding:11px 16px 10px;border-bottom:1px solid var(--ink);cursor:pointer}
+.sh .icon{font-size:12px;color:var(--a)}
+.sh h2{font-family:var(--display);font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:.03em}
+.sh .toggle{font-size:11px;color:var(--t3);margin-left:auto;transition:.2s}
+.sh .toggle.collapsed{transform:rotate(-90deg)}
+.sb{padding:14px 16px;transition:max-height .3s ease;overflow:hidden}
+.sb.hide{max-height:0;opacity:0;margin:0;padding:0}
+.sc{margin:0 0 18px}
+.sc:last-child{margin-bottom:0}
+.sch{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-left:3px solid var(--a);margin-bottom:12px;cursor:pointer}
+.sch h3{font-family:var(--display);font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.sch .tag{font-size:10.5px;font-weight:700;padding:2px 8px;border:1px solid var(--bd2);color:var(--t2);letter-spacing:.04em}
+.sch .ht{font-size:11px;font-weight:700;color:var(--a);margin-right:4px}
+.scb{transition:max-height .3s ease;overflow:hidden}
+.scb.hide{max-height:0;opacity:0;margin:0;padding:0}
+.kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.kvi{background:var(--bg3);border:1px solid var(--bd);border-top:2px solid var(--ink);padding:12px 14px}
+.kvi .kvk{font-size:11px;color:var(--t3);margin-bottom:4px;letter-spacing:.08em}
+.kvi .kvv{font-family:var(--display);font-size:21px;font-weight:700;color:var(--ink);line-height:1.2}
+.kvi .kvv.up{color:var(--up)}
+.kvi .kvv.dn{color:var(--dn)}
+.kvi .kvv.gold{color:var(--gld)}
+.kvi .kvsub{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.55}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px}
+.dt th{padding:8px 10px;text-align:left;font-weight:700;color:var(--t3);font-size:11px;letter-spacing:.08em;border-bottom:1px solid var(--ink);white-space:nowrap}
+.dt td{padding:7px 10px;border-bottom:1px solid rgba(27,25,21,.10);color:var(--t2);line-height:1.5}
+.dt tbody tr:hover{background:rgba(140,28,19,.045)}
+.dt .up{color:var(--up);font-weight:600}
+.dt .dn{color:var(--dn)}
+.dt .gold{color:var(--gld);font-weight:700}
+.st{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border:1px solid currentColor;margin-right:4px;letter-spacing:.02em}
+.st.gold{color:var(--gld)}
+.st.mb2{color:var(--inf)}
+.st.cy{color:var(--cyn)}
+.st.kc{color:var(--wrn)}
+.tag2{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 5px;border:1px solid currentColor;margin-left:4px;white-space:nowrap;letter-spacing:.02em}
+.tag2.zb{color:var(--up)}
+.tag2.yq{color:var(--gld)}
+.vp{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border:1px solid currentColor}
+.vp.lo{color:var(--up)}
+.vp.mid{color:var(--wrn)}
+.vp.hi{color:var(--dn)}
+.lb{border:1px solid var(--bd);border-left:3px solid var(--inf);background:rgba(31,78,121,.05);padding:14px 18px;margin-bottom:16px}
+.lb.gold{border-left-color:var(--a);background:rgba(140,28,19,.05)}
+.lb.warn{border-left-color:var(--dn);background:rgba(28,107,70,.05)}
+.lb .li{font-size:12.5px;color:var(--t2);padding:4px 0;display:flex;align-items:flex-start;gap:8px;line-height:1.7}
+.lb .li::before{content:'\2014';color:var(--inf);font-weight:700;flex-shrink:0}
+.lb.gold .li::before{color:var(--a)}
+.lb.warn .li::before{color:var(--dn)}
+.icc{margin-bottom:20px}
+.cf{display:flex;align-items:stretch;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.cfi{background:var(--bg3);border:1px solid var(--bd);border-top:2px solid var(--ink);padding:12px 16px;text-align:center;min-width:130px;flex:1 1 130px}
+.cfi .cfn{font-family:var(--display);font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.cfi .cfd{font-size:11px;color:var(--t3);line-height:1.55}
+.cf .arr{font-size:16px;color:var(--a);align-self:center}
+.src{font-size:11px;color:var(--t3);margin:8px 0 16px;line-height:1.65}
+.ft{text-align:center;padding:28px 0 12px;font-size:11.5px;color:var(--t3);border-top:1px solid var(--ink);margin-top:24px;line-height:2;letter-spacing:.06em}
+.ft span{color:var(--a);font-weight:700}
+@media(max-width:960px){
+.c{padding:14px}
+.np-mast-title{font-size:29px;letter-spacing:.14em;text-indent:.14em}
+.np-mast-kicker{font-size:9.5px;letter-spacing:.22em}
+.g{gap:14px}
+.kv{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sch{flex-wrap:wrap}
+.cfi{min-width:110px}
+.sh h2{font-size:14.5px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="c">
+
+<div class="np-mast">
+<div class="np-mast-kicker">PHYSICAL AI INDUSTRY</div>
+<div class="np-mast-title">物理AI行业深度分析</div>
+<div class="np-mast-sub">
+<span>2026-09-29</span><span class="sep">|</span>
+<span>数据日 2026-09-29 收盘</span><span class="sep">|</span>
+<span>覆盖标的 <b>49</b> 只 / 核心 28 只</span><span class="sep">|</span>
+<span>Embodied AI / Humanoid / Actuator / VLA</span>
+</div>
+</div>
+
+<div class="g">
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">01</span><h2>一、行业概览</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="kv">
+<div class="kvi"><div class="kvk">核心标的年内涨跌中位数</div><div class="kvv dn">-29.3%</div><div class="kvsub">28 只核心标的 · 2026-01-05 至 09-29 前复权</div></div>
+<div class="kvi"><div class="kvk">中报营收增速中位数</div><div class="kvv up">+19.0%</div><div class="kvsub">需求真实放量 · 收入端全面增长</div></div>
+<div class="kvi"><div class="kvk">中报净利增速中位数</div><div class="kvv gold">+3.9%</div><div class="kvsub">显著落后收入 · 以价换量特征明显</div></div>
+<div class="kvi"><div class="kvk">净利正增长家数</div><div class="kvv">17 / 28</div><div class="kvsub">约六成标的利润端仍在爬坡</div></div>
+<div class="kvi"><div class="kvk">板块 PE 中位数</div><div class="kvv">48.5x</div><div class="kvsub">剔除亏损标的 · 回调后已明显压缩</div></div>
+<div class="kvi"><div class="kvk">核心标的总市值</div><div class="kvv">8,922 亿</div><div class="kvsub">28 只核心标的合计</div></div>
+<div class="kvi"><div class="kvk">收入利润剪刀差</div><div class="kvv up">15.1 pct</div><div class="kvsub">营收增速减净利增速 · 毛利承压是核心矛盾</div></div>
+<div class="kvi"><div class="kvk">数据基准</div><div class="kvv">2026-09-29</div><div class="kvsub">同花顺 thsdk · 2026 中报已披露</div></div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>核心矛盾 — 收入在涨，利润没跟上</h3><span class="tag">放量 / 降价 / 爬坡 三重压力</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th style="width:14%">维度</th><th style="width:43%">现象</th><th style="width:43%">解读</th></tr></thead>
+<tbody>
+<tr><td class="gold">收入端</td><td>中报营收增速中位数 +19.0%，28 只核心标的中 25 只实现正增长</td><td>需求真实存在，国产整机小批量交付与海外市场共同拉动，不是单纯的题材炒作</td></tr>
+<tr><td class="gold">利润端</td><td>中报净利增速中位数仅 +3.9%，落后收入增速 15.1 个百分点</td><td>环节竞争加剧，零部件企业以降价换取定点份额，处于典型的以价换量阶段</td></tr>
+<tr><td class="gold">毛利端</td><td>多家标的 H1 毛利率偏薄：拓普 18.8%、广东鸿图 10.9%、三花 28.1%、汇川 29.7%</td><td>规模效应尚未跑赢价格压力，产能爬坡期折旧与低负荷是主要拖累</td></tr>
+<tr><td class="gold">股价端</td><td>年内中位数 -29.3%，三花 -35.1%、拓普 -38.3%、汇川 -29.9%、伟创 -57.2%</td><td>市场已提前消化量增利不增的现实，估值泡沫被挤出，部分标的进入配置窗口</td></tr>
+<tr><td class="gold">内部分化</td><td>凌云光 H1 净利 +583.3%、全志科技 +204.2%；而三花 -3.1%、拓普 -21.0%、雷赛之外多数硬件端为负</td><td>同赛道内部明显分层：具备 AI 软件与算力属性的标的显著强于纯硬件代工标的</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>三大催化 — 为什么是现在？</h3><span class="tag">VLA 大模型 | 国产整机量产 | 边缘算力放量</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th style="width:15%">催化</th><th style="width:45%">驱动逻辑</th><th style="width:40%">关键数据</th></tr></thead>
+<tbody>
+<tr><td class="gold">VLA 大模型</td><td>视觉-语言-动作模型将感知、规划与执行整合为单一模型，压缩推理层复杂度与算力需求，是物理AI从演示走向商用的技术前提</td><td>中科创达 H1 净利 +55.0%（OS 与中间件层），机器人软件栈国产化持续推进</td></tr>
+<tr><td class="gold">国产整机量产</td><td>智元、宇树、优必选等国产整机厂进入小批量交付阶段，上游执行器与传感器从送样转入定点量产，收入确认节奏提速</td><td>埃斯顿 H1 净利 +2,314.2%、拓斯达 H1 净利 +263.0%，整机端最先兑现</td></tr>
+<tr><td class="gold">边缘算力放量</td><td>机器人本体需搭载端侧推理芯片，边缘 AI 从车规向机器人场景迁移，带动低功耗 SoC 与视觉算法需求</td><td>全志科技 H1 净利 +204.2%、营收 +41.2%；寒武纪 H1 营收 +108.1%、净利 +122.6%</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="icc">
+<div class="cf">
+<div class="cfi"><div class="cfn">上游材料</div><div class="cfd">PEI/PEEK 高分子<br>轻量化合金/碳纤维<br>永磁材料</div></div>
+<span class="arr">→</span>
+<div class="cfi" style="border-top-color:var(--gld)"><div class="cfn" style="color:var(--gld)">★ 物理AI执行层</div><div class="cfd">减速器/丝杠<br>执行器/电机<br>力觉/视觉传感</div></div>
+<span class="arr">→</span>
+<div class="cfi"><div class="cfn">整机与软件</div><div class="cfd">人形机器人本体<br>ROS2/中间件<br>运动控制</div></div>
+<span class="arr">→</span>
+<div class="cfi"><div class="cfn">大脑与算力</div><div class="cfd">VLA 模型训练<br>Edge AI 推理<br>训练算力基建</div></div>
+<span class="arr">→</span>
+<div class="cfi"><div class="cfn">下游应用</div><div class="cfd">制造/物流仓储<br>危险环境巡检<br>农业与服务</div></div>
+</div>
+<div class="src">注：物理AI（Physical AI / Embodied AI）指 AI 模型直接作用于物理世界、通过传感器与执行器形成闭环的智能体系统，核心载体为人形机器人与具身智能终端。</div>
+</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">02</span><h2>二、竞争格局</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>全球格局：执行层日美双寡头，大脑层中美并进</h3><span class="tag">Harmonic Drive | Nabtesco | Tesla</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th>维度</th><th>Harmonic Drive</th><th>Nabtesco</th><th>Tesla</th></tr></thead>
+<tbody>
+<tr><td class="gold">国家</td><td>日本</td><td>日本</td><td>美国</td></tr>
+<tr><td>全球份额</td><td class="up">谐波减速器约 50%</td><td class="up">RV 减速器约 60%</td><td class="up">自产自用</td></tr>
+<tr><td>核心平台</td><td>谐波减速器（SF/UA 系列）</td><td>RV 减速器、精密齿轮</td><td>Optimus 执行层自研</td></tr>
+<tr><td>核心客户</td><td>工业机器人四大家族</td><td>工业机器人 + 半导体设备</td><td>自产自用</td></tr>
+<tr><td>在中国份额</td><td class="dn">约 15%</td><td class="dn">约 20%</td><td class="up">自产自用</td></tr>
+<tr><td class="gold">国产主要对手</td><td>绿的谐波</td><td>双环传动 / 中大力德</td><td>三花智控 / 拓普集团</td></tr>
+</tbody>
+</table>
+<div class="src">来源：各公司公开资料与行业研究口径。全球份额为行业研究估计值，非公司披露数据，仅作竞争格局参考。</div>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>国内竞争：三梯队分化</h3><span class="tag">核心执行器 | 感知与软件 | 配套材料</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th>梯队</th><th>公司</th><th>卡位</th><th>国产化率</th><th>竞争壁垒</th></tr></thead>
+<tbody>
+<tr><td rowspan="3" style="color:var(--gld);font-weight:700">第一梯队<br>核心执行器</td>
+<td><span class="st gold">首选</span>绿的谐波(688017)</td><td>谐波减速器龙头，平台型单点突破</td><td class="dn">约 20%</td><td>柔轮材料与齿形专利 + 产线 know-how</td></tr>
+<tr><td>双环传动(002472)</td><td>RV 减速器 + 精密齿轮，汽零主业稳定</td><td class="dn">约 15%</td><td>齿轮精度加工 + 汽车客户基盘</td></tr>
+<tr><td>三花智控(002050)</td><td>机电执行器，绑定海外头部客户</td><td class="dn">约 30%</td><td>热管理客户关系外溢 + 精密制造</td></tr>
+<tr><td rowspan="3" style="color:var(--inf);font-weight:700">第二梯队<br>感知与软件</td>
+<td><span class="st mb2">核心</span>雷赛智能(002979)</td><td>运动控制 + 丝杠轴承布局</td><td class="dn">约 10%</td><td>运动控制算法 + 多品类覆盖</td></tr>
+<tr><td>柯力传感(603662)</td><td>六轴力传感器 / 关节扭矩</td><td class="dn">约 40%</td><td>称重传感器基盘 + 力觉量产经验</td></tr>
+<tr><td>凌云光(688400)</td><td>机器视觉 + 3D 视觉模组</td><td class="dn">约 50%</td><td>3D 视觉算法 + 多行业视觉库</td></tr>
+<tr><td rowspan="3" style="color:var(--t2);font-weight:700">第三梯队<br>配套材料</td>
+<td>中大力德(002896)</td><td>减速电机一体、RV 减速器</td><td class="dn">约 15%</td><td>成本控制 + 小批量交付</td></tr>
+<tr><td>贝斯特(300580)</td><td>行星滚柱丝杠、线性执行器</td><td class="dn">约 5%</td><td>精密磨削工艺 + 设备资本开支</td></tr>
+<tr><td>沃特股份(002886)</td><td>PEI/PEEK 工程塑料，用于灵巧手</td><td class="up">约 60%</td><td>高分子材料配方 + 客户认证周期</td></tr>
+</tbody>
+</table>
+<div class="src">国产化率为行业研究估计值，用于刻画替代空间量级，不构成精确市占率结论。</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">03</span><h2>三、核心标的深度</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>绿的谐波(688017) — 谐波减速器龙头</h3><span class="tag">核心执行器</span><span class="tag2 zb">高增</span></div>
+<div class="scb">
+<div class="kv">
+<div class="kvi"><div class="kvk">市值 / 股价</div><div class="kvv">505 亿 / 275.60</div></div>
+<div class="kvi"><div class="kvk">PE TTM</div><div class="kvv up">360.3x</div></div>
+<div class="kvi"><div class="kvk">2025 营收 / 净利</div><div class="kvv up">5.71 亿 / 1.24 亿</div></div>
+<div class="kvi"><div class="kvk">H1 净利增速</div><div class="kvv up">+31.3%</div></div>
+<div class="kvi"><div class="kvk">25 净利增速</div><div class="kvv up">+121.4%</div></div>
+<div class="kvi"><div class="kvk">25 毛利率</div><div class="kvv">36.9%</div></div>
+<div class="kvi"><div class="kvk">H1 毛利率</div><div class="kvv">32.3%</div></div>
+<div class="kvi"><div class="kvk">年内涨幅</div><div class="kvv up">+43.6%</div></div>
+</div>
+<p style="color:var(--t2);font-size:12px;margin-bottom:12px">物理AI执行层确定性最高的单点突破标的。2025 年营收 +47.3%、净利 +121.4%，2026 中报净利再增 31.3%，是本轮 28 只核心标的中唯一实现年内正收益且涨幅超 40% 的零部件公司。谐波减速器国产化率仅约 20%，对 Harmonic Drive 的替代空间是全链条中确定最高的环节。但需注意：H1 毛利率从 36.9% 回落至 32.3%，PE 360x 已透支相当部分预期。<span style="color:var(--wrn);font-weight:700">风险提示：估值极高（PE 360x），客户高度集中于国产整机厂，若整机放量节奏低于预期，杀估值幅度可能大于杀业绩。</span></p>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>凌云光(688400) — 3D视觉与AI视觉</h3><span class="tag">感知层</span><span class="tag2 zb">高增</span></div>
+<div class="scb">
+<div class="kv">
+<div class="kvi"><div class="kvk">市值 / 股价</div><div class="kvv">202 亿 / 42.51</div></div>
+<div class="kvi"><div class="kvk">PE TTM</div><div class="kvv dn">15.4x</div></div>
+<div class="kvi"><div class="kvk">2025 营收 / 净利</div><div class="kvv up">29.12 亿 / 1.61 亿</div></div>
+<div class="kvi"><div class="kvk">H1 净利增速</div><div class="kvv up">+583.3%</div></div>
+<div class="kvi"><div class="kvk">H1 营收增速</div><div class="kvv up">+6.1%</div></div>
+<div class="kvi"><div class="kvk">H1 毛利率</div><div class="kvv up">40.7%</div></div>
+<div class="kvi"><div class="kvk">H1 ROE</div><div class="kvv up">10.7%</div></div>
+<div class="kvi"><div class="kvk">年内涨幅</div><div class="kvv">+0.5%</div></div>
+</div>
+<p style="color:var(--t2);font-size:12px;margin-bottom:12px">全链条中「业绩兑现度与估值匹配度」最优的标的。H1 净利暴增 583.3%，PE 仅 15.4x，是 28 只核心标的中估值与增速反差最大的一只。ROE 由上年同期的 -10.85% 回升至 10.7%，毛利率从 34.8% 提升至 40.7%，显示产品结构正向高毛利视觉模组与软件升级。3D 视觉是 VLA 模型的直接输入端，机器人「看懂世界」的必经环节。<span style="color:var(--cyn);font-weight:700">估值优势：PE 15.4x 显著低于板块中位数 48.5x，业绩高增却未被定价，是典型的预期差标的。</span></p>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>雷赛智能(002979) — 运动控制+丝杠轴承</h3><span class="tag">运动控制</span><span class="tag2 zb">高增</span></div>
+<div class="scb">
+<div class="kv">
+<div class="kvi"><div class="kvk">市值 / 股价</div><div class="kvv">164 亿 / 51.76</div></div>
+<div class="kvi"><div class="kvk">PE TTM</div><div class="kvv">42.2x</div></div>
+<div class="kvi"><div class="kvk">2025 营收 / 净利</div><div class="kvv up">18.74 亿 / 2.25 亿</div></div>
+<div class="kvi"><div class="kvk">H1 净利增速</div><div class="kvv up">+62.8%</div></div>
+<div class="kvi"><div class="kvk">H1 营收增速</div><div class="kvv up">+39.9%</div></div>
+<div class="kvi"><div class="kvk">H1 毛利率</div><div class="kvv">39.2%</div></div>
+<div class="kvi"><div class="kvk">25 ROE</div><div class="kvv">13.0%</div></div>
+<div class="kvi"><div class="kvk">年内涨幅</div><div class="kvv up">+23.8%</div></div>
+</div>
+<p style="color:var(--t2);font-size:12px;margin-bottom:12px">收入与利润同步高增的少数标的。H1 营收 +39.9%、净利 +62.8%，是 28 只核心标的中唯一实现「收入利润同步加速」且年内上涨的中小市值标的。运动控制算法是机器人关节伺服的必备软件层，向上可延展至丝杠、轴承等线性执行器硬件，卡位比纯机械件更具延展性。<span style="color:var(--wrn);font-weight:700">风险提示：PE 42x 处于板块中枢，但涨幅已 +23.8%，短期存在获利盘压力；丝杠业务尚处放量早期，业绩弹性依赖整机厂定点节奏。</span></p>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>配套标的：执行器与感知层全景</h3><span class="tag">双环 | 三花 | 拓普 | 柯力 | 中大力德</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th>标的</th><th>卡位</th><th>核心数据</th><th>看点</th></tr></thead>
+<tbody>
+<tr><td>双环传动(002472)</td><td>RV 减速器 + 精密齿轮</td><td>市值 329 亿 / PE 28.0x / 25 净利 12.62 亿</td><td>PE 28x 板块最低之一，25 ROE 13.4% 且净利 +23.2%，汽零主业提供稳定现金流支撑，是估值洼地型标的</td></tr>
+<tr><td>三花智控(002050)</td><td>机电执行器总成</td><td>市值 1,428 亿 / PE 36.7x / 25 净利 40.63 亿</td><td>热管理龙头客户关系外溢至机器人执行器，市值超 1,400 亿是板块权重，但 H1 净利 -3.1%，毛利率 28.1% 偏薄</td></tr>
+<tr><td>拓普集团(601689)</td><td>执行器结构件总成</td><td>市值 823 亿 / PE 40.2x / 25 营收 295.81 亿</td><td>营收规模最大（295 亿），但 25 净利 -7.4%、H1 净利 -21.0%，毛利率仅 18.8%，是「量增利不增」最典型的样本</td></tr>
+<tr><td>柯力传感(603662)</td><td>六轴力传感器</td><td>市值 135 亿 / PE 51.7x / 25 毛利率 44.8%</td><td>毛利率 44.8% 保持较高水平，力觉传感器是灵巧手与关节扭矩的刚需，但 H1 净利 -24.4% 需观察订单节奏</td></tr>
+<tr><td>中大力德(002896)</td><td>减速电机一体</td><td>市值 120 亿 / PE 215.3x / 25 净利 0.63 亿</td><td>营收 +6.6% 但净利 -13.6%、H1 净利 -40.1%，PE 215x 与盈利恶化背离，估值风险显著</td></tr>
+<tr><td>瑞鹄模具(002997)</td><td>精密结构件与工装</td><td>市值 54 亿 / PE 11.2x / 25 净利 3.92 亿</td><td>PE 仅 11.2x 为全板块最低，25 营收 +35.8%、ROE 16.9%，年内 -30.4%，深度回调后的低估值防守型标的</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">04</span><h2>四、客户订单信息</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<table class="dt">
+<thead><tr><th>标的</th><th>客户名称</th><th>产品 / 服务</th><th>状态</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">绿的谐波</td><td>国产人形机器人整机厂</td><td>谐波减速器</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司公开披露未列明具体客户</td></tr>
+<tr><td>工业机器人厂商</td><td>谐波减速器 / 机电一体化</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>双环传动</td><td>汽车整车与零部件厂</td><td>RV 减速器、精密齿轮</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>三花智控</td><td>全球汽车与家电龙头</td><td>机电执行器 / 热管理</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>拓普集团</td><td>新能源整车厂与 Tier1</td><td>执行器结构件、底盘件</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>雷赛智能</td><td>自动化设备与运动控制客户</td><td>伺服系统、运动控制</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>柯力传感</td><td>工业与汽车客户</td><td>六轴力传感器、称重传感器</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>凌云光</td><td>消费电子、印刷、显示行业</td><td>3D 视觉模组、视觉检测</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>埃斯顿</td><td>制造业自动化客户</td><td>工业机器人、伺服系统</td><td><span class="up">&#9679; 行业普遍认知</span></td><td>公司年报主营业务描述</td></tr>
+<tr><td>海外人形机器人厂商</td><td>国内零部件供应商</td><td>执行器、电机、丝杠</td><td><span class="dn">&#9888; 传闻 / 未公开确认</span></td><td>未经公司公告确认，仅为市场普遍讨论</td></tr>
+</tbody>
+</table>
+<div class="src">来源：公司年报/半年报主营业务描述与投资者调研。本表严格区分披露口径与市场传闻——截至 2026-09-29，A 股物理AI标的均未公开披露具名的人形机器人客户或订单金额，标注为「行业普遍认知」者为主营业务领域的既有客户结构，不代表已进入人形机器人供应链。</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">05</span><h2>五、同行核心指标对比</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<table class="dt">
+<thead><tr><th>标的</th><th>板块</th><th>2025 营收(亿)</th><th>2025 净利(亿)</th><th>H1 毛利率</th><th>25 ROE</th><th>PE TTM</th><th>市值(亿)</th><th>H1 净利增</th><th>年内涨跌</th></tr></thead>
+<tbody>
+<tr>
+<td><span class="st gold">CT</span>绿的谐波</td><td>谐波减速器</td><td class="up">5.71</td><td class="up">1.24</td><td class="up" style="color:var(--gld)">32.3%</td><td>3.6%</td><td class="up">360.3x</td><td>505</td><td><span class="tag2 zb">+31.3%</span></td><td class="up">+43.6%</td></tr>
+<tr>
+<td>凌云光</td><td>3D机器视觉</td><td class="up">29.12</td><td class="up">1.61</td><td class="up">40.7%</td><td>4.0%</td><td class="dn">15.4x</td><td>202</td><td><span class="tag2 zb">+583.3%</span></td><td>+0.5%</td></tr>
+<tr>
+<td>雷赛智能</td><td>运动控制</td><td class="up">18.74</td><td class="up">2.25</td><td class="up">39.2%</td><td>13.0%</td><td>42.2x</td><td>164</td><td><span class="tag2 zb">+62.8%</span></td><td class="up">+23.8%</td></tr>
+<tr>
+<td>双环传动</td><td>RV减速器</td><td class="up">91.12</td><td class="up">12.62</td><td>26.8%</td><td>13.4%</td><td class="dn">28.0x</td><td>329</td><td>+1.6%</td><td class="dn">-17.9%</td></tr>
+<tr>
+<td>三花智控</td><td>机电执行器</td><td class="up">310.12</td><td class="up">40.63</td><td>28.1%</td><td>15.8%</td><td>36.7x</td><td>1,428</td><td class="dn">-3.1%</td><td class="dn">-35.1%</td></tr>
+<tr>
+<td>拓普集团</td><td>执行器结构件</td><td class="up">295.81</td><td>27.79</td><td class="dn">18.8%</td><td>12.4%</td><td>40.2x</td><td>823</td><td class="dn">-21.0%</td><td class="dn">-38.3%</td></tr>
+<tr>
+<td>柯力传感</td><td>力传感器</td><td>15.58</td><td>3.41</td><td class="up">45.7%</td><td>12.1%</td><td>51.7x</td><td>135</td><td class="dn">-24.4%</td><td class="dn">-32.8%</td></tr>
+<tr>
+<td>恒立液压</td><td>线性执行器</td><td class="up">109.41</td><td class="up">27.34</td><td class="up">39.3%</td><td>16.6%</td><td>42.4x</td><td>1,218</td><td>+0.5%</td><td class="dn">-16.9%</td></tr>
+<tr>
+<td>瑞鹄模具</td><td>精密结构件</td><td>32.92</td><td>3.92</td><td>24.8%</td><td>16.9%</td><td class="dn">11.2x</td><td>54</td><td>+6.1%</td><td class="dn">-30.4%</td></tr>
+<tr>
+<td>中大力德</td><td>减速电机</td><td>10.41</td><td class="dn">0.63</td><td class="dn">23.3%</td><td>5.3%</td><td class="up">215.3x</td><td>120</td><td class="dn">-40.1%</td><td class="dn">-31.8%</td></tr>
+<tr>
+<td>汇川技术</td><td>伺服/运动控制</td><td class="up">451.05</td><td class="up">50.50</td><td>29.7%</td><td>16.3%</td><td class="dn">25.3x</td><td>1,422</td><td class="dn">-5.4%</td><td class="dn">-29.9%</td></tr>
+<tr>
+<td>中科创达</td><td>机器人OS/中间件</td><td class="up">77.78</td><td>4.50</td><td>29.1%</td><td>4.5%</td><td>50.0x</td><td>246</td><td><span class="tag2 zb">+55.0%</span></td><td class="dn">-20.9%</td></tr>
+</tbody>
+</table>
+<div class="src">来源：同花顺 thsdk · 2025 年报与 2026 中报数据 · 2026-09-29 收盘。PE 为 TTM。已剔除亏损与异常值标的。</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">06</span><h2>六、投资逻辑与配置建议</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="lb gold">
+<div class="li">板块判断：回调到位，分层配置。核心标的年内中位数 -29.3%，PE 中位数从高位压缩至 48.5x，估值泡沫基本挤出；但中报净利增速中位数仅 +3.9%，说明基本面尚未全面反转。策略上应从「押注赛道贝塔」转向「精选业绩兑现的个股阿尔法」。</div>
+<div class="li">首选：凌云光(688400) — 唯一「净利 +583.3% + PE 仅 15.4x + 年内涨幅 0.5%」的三重错配标的，H1 毛利率 40.7%、ROE 回升至 10.7%，3D 视觉是 VLA 模型的直接输入端，业绩与估值存在明确预期差。</div>
+<div class="li">确定性：绿的谐波(688017) — 唯一年内上涨超 40% 的零部件标的，25 净利 +121.4%、H1 再增 31.3%，国产化率仅约 20%，替代空间最大；但 PE 360x 已高，需以回调后分批建仓。</div>
+<div class="li">估值洼地：瑞鹄模具(002997) / 双环传动(002472) — PE 分别 11.2x 与 28.0x，ROE 分别 16.9% 与 13.4%，年内分别回调 30.4% 与 17.9%，基本面稳健且估值处于板块底部，适合防守型配置。</div>
+<div class="li">高弹性：雷赛智能(002979) — H1 营收 +39.9%、净利 +62.8% 同步加速，运动控制算法向丝杠轴承延展空间大；但年内已 +23.8%，短期需消化获利盘。</div>
+<div class="li">规避：中大力德(002896) / 拓普集团(601689) — PE 215x / 40x 但 H1 净利 -40.1% / -21.0%，毛利率 23.3% / 18.8% 持续走弱，量增利不增的典型受损方，短期性价比不足。</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>弹性排序（按国产替代空间与业绩兑现度综合）</h3><span class="tag">丝杠/力觉 &gt; 3D视觉 &gt; 减速器 &gt; 执行器 &gt; 结构件</span></div>
+<div class="scb">
+<table class="dt">
+<thead><tr><th>细分赛道</th><th>国产化率</th><th>替代空间</th><th>核心标的</th><th>H1 净利增</th><th>综合弹性</th></tr></thead>
+<tbody>
+<tr><td>行星滚柱丝杠</td><td class="dn">约 5%</td><td class="up">极大</td><td>贝斯特、长盛轴承</td><td class="dn">-1.5% / +1.2%</td><td class="gold">★★★★★</td></tr>
+<tr><td>六轴力/力觉传感</td><td class="dn">约 40%</td><td class="up">大</td><td>柯力传感</td><td class="dn">-24.4%</td><td>★★★★</td></tr>
+<tr><td>3D 机器视觉</td><td class="dn">约 50%</td><td class="up">大</td><td>凌云光、奥普特</td><td class="up">+583.3% / +16.8%</td><td class="gold">★★★★★</td></tr>
+<tr><td>谐波/RV 减速器</td><td class="dn">约 20%</td><td class="up">大</td><td>绿的谐波、双环传动</td><td class="up">+31.3% / +1.6%</td><td class="gold">★★★★★</td></tr>
+<tr><td>运动控制/伺服</td><td class="dn">约 45%</td><td class="up">中等</td><td>雷赛智能、汇川技术</td><td class="up">+62.8% / -5.4%</td><td>★★★★</td></tr>
+<tr><td>机电执行器总成</td><td class="dn">约 30%</td><td>中等</td><td>三花智控、拓普集团</td><td class="dn">-3.1% / -21.0%</td><td>★★</td></tr>
+</tbody>
+</table>
+<div class="src">国产化率为行业研究估计值。综合弹性同时考虑替代空间、业绩兑现度与估值水平，非单纯按替代空间排序。</div>
+</div>
+</div>
+
+<div class="sc">
+<div class="sch"><span class="ht">#</span><h3>配置节奏 — 从预期驱动到业绩驱动</h3><span class="tag">软件/算力 → 感知 → 执行器 → 结构件</span></div>
+<div class="scb">
+<p style="color:var(--t2);font-size:12px;margin-bottom:8px">当前处于「量产元年但利润尚未释放」的过渡期，配置顺序应跟随利润传导路径：先是软件与算力层（毛利率高、利润最先兑现），再到感知层（模组化后毛利改善），最后是执行器与结构件（规模大但毛利最薄）。</p>
+<table class="dt">
+<thead><tr><th>阶段</th><th>受益顺序</th><th>代表标的</th><th>当前阶段</th></tr></thead>
+<tbody>
+<tr><td>1. 软件与算力先行</td><td>OS/中间件、边缘推理芯片</td><td>中科创达、全志科技、寒武纪</td><td class="up">&#10003; 正在兑现</td></tr>
+<tr><td>2. 感知模组放量</td><td>3D 视觉、力觉传感器</td><td>凌云光、奥普特、柯力传感</td><td class="up">&#10003; 正在兑现</td></tr>
+<tr><td>3. 核心执行器定点</td><td>减速器、丝杠、运动控制</td><td>绿的谐波、雷赛智能、贝斯特</td><td class="up">&#10003; 部分兑现</td></tr>
+<tr><td>4. 结构件规模效应</td><td>执行器结构件、精密加工</td><td>拓普集团、三花智控、瑞鹄模具</td><td>&#9203; 等待毛利修复</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">07</span><h2>七、风险提示</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="lb warn">
+<div class="li">毛利率持续下行风险：核心标的 H1 毛利率中位数约 28.9%，拓普 18.8%、广东鸿图 10.9%、中大力德 23.3% 已明显偏薄。若价格战延续，规模效应难以覆盖降价压力，净利润可能继续低于收入增速甚至转负。</div>
+<div class="li">「量增利不增」固化风险：中报净利增速中位数（+3.9%）仅为营收增速（+19.0%）的五分之一，17/28 家利润正增长。若这一剪刀差延续到全年，市场对赛道的盈利预期可能进一步下修。</div>
+<div class="li">估值高企风险：绿的谐波 PE 360.3x、中大力德 215.3x、鸣志电器 295.4x、奥比中光 421.8x、安培龙 1036x 仍处高位，业绩稍不及预期即面临大幅杀估值。</div>
+<div class="li">客户集中与订单不确定性风险：截至 2026-09-29，A 股物理AI标的均未公开披露具名人形机器人客户或订单金额，市面上流传的供应关系多为市场推测。若整机量产节奏放缓，上游定点可能延后。</div>
+<div class="li">技术路线切换风险：减速器（谐波/RV）与丝杠（行星滚柱/滚珠）存在路线竞争，VLA 端到端模型若实现突破，可能改变硬件价值分配与成本结构。</div>
+<div class="li">估值分化风险：板块 PE 中位数 48.5x，但瑞鹄 11.2x 与安培龙 1036x 并存，极端分化意味着选错标的的代价远大于指数波动。</div>
+<div class="li">地缘与供应链风险：谐波减速器、高端丝杠磨削设备等核心环节仍依赖日本进口设备与材料，贸易限制可能影响国产扩产节奏。</div>
+<div class="li">产能爬坡不及预期风险：多家标的处于扩产期，折旧摊销与低负荷运行在 H1 已压制毛利率，若订单落地延后，固定成本压力将进一步放大。</div>
+</div>
+
+</div>
+</div>
+
+<div class="sec">
+<div class="sh" onclick="this.querySelector('.toggle').classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hide')">
+<span class="icon">08</span><h2>八、核心结论</h2><span class="toggle">▼</span>
+</div>
+<div class="sb">
+
+<div class="lb gold">
+<div class="li" style="font-size:14px;color:var(--a);font-weight:700">物理AI已从「概念定价」进入「业绩验证」阶段：需求真实（营收 +19.0%），但利润尚未兑现（净利 +3.9%）。投资逻辑应从押注赛道贝塔切换到精选业绩兑现的个股阿尔法——关注具备软件/算力属性与高毛利模组的标的，回避纯硬件代工的量增利不增陷阱。</div>
+</div>
+
+<div class="kv">
+<div class="kvi"><div class="kvk">行业评级</div><div class="kvv gold">谨慎乐观</div><div class="kvsub">回调到位 · 业绩待验证</div></div>
+<div class="kvi"><div class="kvk">首选标的</div><div class="kvv gold">凌云光</div><div class="kvsub">净利 +583% / PE 15.4x / 涨幅 0.5%</div></div>
+<div class="kvi"><div class="kvk">确定性最高</div><div class="kvv gold">绿的谐波</div><div class="kvsub">25 净利 +121% / H1 +31% / 涨幅 +43.6%</div></div>
+<div class="kvi"><div class="kvk">估值洼地</div><div class="kvv up">瑞鹄模具</div><div class="kvsub">PE 11.2x / ROE 16.9% / 回调 30.4%</div></div>
+<div class="kvi"><div class="kvk">最大弹性</div><div class="kvv gold">雷赛智能</div><div class="kvsub">营收 +39.9% / 净利 +62.8% 同步加速</div></div>
+<div class="kvi"><div class="kvk">规避标的</div><div class="kvv dn">中大力德</div><div class="kvsub">PE 215x / H1 净利 -40.1%</div></div>
+</div>
+
+<div class="src">
+&#12296;数据来源&#12297; 同花顺 thsdk（2025 年报、2026 中报、2026-09-29 收盘行情）· 同花顺概念板块成分股（人形机器人 470 只 / 机器视觉 251 只 / 减速器 139 只）· 覆盖标的 49 只，核心 28 只<br>
+&#12296;数据说明&#12297; 所有财务数据取自上市公司公开披露；国产化率与全球份额为行业研究估计值，已在正文标注口径；客户信息严格区分公司披露与市场传闻<br>
+&#12296;免责声明&#12297; 本报告仅供研究参考，不构成投资建议。股市有风险，投资需谨慎。数据截至 2026-09-29。
+</div>
+
+</div>
+</div>
+
+</div>
+
+<div class="ft">
+物理AI行业深度分析 &middot; 2026-09-29 &middot; WorkBuddy AI 生成<br>
+本报告仅为产业链研究参考，不构成任何投资建议。投资有风险，入市需谨慎。
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.sch').forEach(function(h){
+  h.addEventListener('click',function(){
+    var sb=this.nextElementSibling;
+    sb.classList.toggle('hide');
+  });
+});
+</script>
+
+</body>
+</html>

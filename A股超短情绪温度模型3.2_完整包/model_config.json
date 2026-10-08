@@ -1,0 +1,97 @@
+{
+  "version": "A-SHORT-SENTIMENT-3.2",
+  "factor_weights": {
+    "F": 0.34,
+    "L": 0.24,
+    "R": 0.18,
+    "A": 0.15,
+    "B": 0.06,
+    "V": 0.03
+  },
+  "F": {
+    "lianban_feedback": 0.6,
+    "limitup_feedback": 0.4,
+    "tanh_scale_pct": 3.0
+  },
+  "L": {
+    "consecutive_pct": 0.35,
+    "space_pct": 0.25,
+    "next_space_pct": 0.2,
+    "chain_ratio_pct": 0.2
+  },
+  "R": {
+    "down_limit_weight": 0.55,
+    "seal_quality_weight": 0.45,
+    "down_exp_scale": 18.0
+  },
+  "A": {
+    "limit_up_pct": 0.65,
+    "first_board_pct": 0.35
+  },
+  "J": {
+    "leader": 0.35,
+    "follower": 0.25,
+    "promotion": 0.4,
+    "promotion_1to2": 0.45,
+    "promotion_2to3": 0.35,
+    "promotion_3plus": 0.2,
+    "temperature_max_adjust": 1.5,
+    "tanh_scale": 35.0
+  },
+  "temperature": {
+    "intercept": 18.0,
+    "q_slope": 0.87
+  },
+  "corrections": {
+    "hot_bonus": 1.5,
+    "hot_conditions": {
+      "Q_gte": 75,
+      "F_gte": 90,
+      "R_gte": 80,
+      "A_gte": 75
+    },
+    "breadth_penalty_max": 4.0,
+    "breadth_start": 25.0,
+    "breadth_full": 10.0,
+    "down_penalty_max": 3.0,
+    "down_start": 8,
+    "down_full": 26,
+    "bomb_penalty_max": 3.0,
+    "bomb_start_pct": 45.0,
+    "bomb_full_pct": 65.0,
+    "cooling_penalty": 1.5,
+    "inertia_penalty": 2.0
+  },
+  "repair": {
+    "M_gte": 5.0,
+    "min_positive_core_changes": 3,
+    "F_gte": 50.0,
+    "B_gte": 20.0
+  },
+  "phase": {
+    "high_tide": {
+      "S_gte": 82,
+      "F_gte": 85,
+      "A_gte": 65,
+      "R_gte": 65,
+      "J_gt": -30
+    },
+    "ice": {
+      "S_lte": 55,
+      "F_lt_any": 55,
+      "B_lt_any": 25,
+      "R_lt_any": 50
+    },
+    "warming": {
+      "S_gte": 60,
+      "M_gte": 3,
+      "F_gte": 60,
+      "L_gte": 50
+    }
+  },
+  "normalization": {
+    "same_regime_window": 250,
+    "fallback_all_window": 250,
+    "min_same_regime_samples": 60
+  }
+}

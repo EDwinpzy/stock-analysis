@@ -1,0 +1,89 @@
+{
+  "_comment": "3.2 核心模型之外的扩展层：把市场阶段/接缝映射为个股评分环境权重。core.py 的冻结参数不受本文件影响。",
+  "version": "env-weights-1.0",
+  "styles": {
+    "leader": "龙头/空间龙头",
+    "high_relay": "高位接力/连板追涨",
+    "low_first": "低位首板",
+    "theme": "题材强度",
+    "oversold": "超跌修复",
+    "defensive": "防守/低波动",
+    "ice_repair": "冰点修复候选"
+  },
+  "phase_multipliers": {
+    "高潮": {
+      "leader": 1.18,
+      "theme": 1.12,
+      "high_relay": 1.05,
+      "low_first": 0.95,
+      "oversold": 0.85,
+      "defensive": 0.85,
+      "ice_repair": 0.8
+    },
+    "升温": {
+      "leader": 1.12,
+      "theme": 1.08,
+      "high_relay": 1.05,
+      "low_first": 1.0,
+      "oversold": 0.92,
+      "defensive": 0.92,
+      "ice_repair": 0.9
+    },
+    "修复": {
+      "leader": 1.05,
+      "theme": 1.05,
+      "high_relay": 0.95,
+      "low_first": 1.1,
+      "oversold": 1.1,
+      "defensive": 1.0,
+      "ice_repair": 1.12
+    },
+    "降温": {
+      "leader": 0.98,
+      "theme": 0.98,
+      "high_relay": 0.85,
+      "low_first": 1.05,
+      "oversold": 1.05,
+      "defensive": 1.05,
+      "ice_repair": 1.0
+    },
+    "退潮": {
+      "leader": 0.9,
+      "theme": 0.92,
+      "high_relay": 0.72,
+      "low_first": 1.12,
+      "oversold": 1.15,
+      "defensive": 1.15,
+      "ice_repair": 1.05
+    },
+    "冰点": {
+      "leader": 0.88,
+      "theme": 0.9,
+      "high_relay": 0.68,
+      "low_first": 1.08,
+      "oversold": 1.12,
+      "defensive": 1.18,
+      "ice_repair": 1.05
+    }
+  },
+  "seam_tilt": {
+    "J_strong_conv": 30,
+    "J_strong_div": -30,
+    "tilt_cap": 0.08,
+    "positive_styles": ["leader", "high_relay", "theme"],
+    "negative_styles": ["defensive", "oversold", "low_first"]
+  },
+  "ice_repair_conditions": {
+    "max_temperature": 55,
+    "J_gte": 10,
+    "require_promotion_improving": true,
+    "require_leader_alive": true,
+    "bonus": 1.25
+  },
+  "clamp": {
+    "multiplier_min": 0.7,
+    "multiplier_max": 1.3,
+    "score_min": 0,
+    "score_max": 100
+  }
+}
