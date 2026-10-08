@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "daily-briefing-pro",
+  "version": "3.23.9",
+  "description": "提供A股每日简报、情绪面板、个股分析、行业研究和K线行情看板。",
+  "author": {
+    "name": "EDwin"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "A股行情",
+        "shortDescription": "A股简报、情绪面板、个股分析与行业研究",
+        "longDescription": "覆盖A股每日简报、情绪温度面板、个股深度分析、行业产业链分析与K线行情看板。数据须注明来源；获取失败或缺失时如实说明，不编造内容。",
+        "developerName": "EDwin",
+        "category": "Productivity",
+        "capabilities": [
+          "Interactive"
+        ],
+        "defaultPrompt": "生成今天的A股简报，或分析A股情绪、个股与行业。",
+        "composerIcon": "./assets/logo-v3.23.8.png",
+        "logo": "./assets/logo-v3.23.8.png"
+      }
+    }
+  }
+}

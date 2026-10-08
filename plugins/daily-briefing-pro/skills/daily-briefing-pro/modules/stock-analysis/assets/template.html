@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{STOCK_NAME}}（{{STOCK_CODE}}）深度研究报告 — {{DATE}}</title>
+<style>
+:root{--bg:#0e0e14;--bg2:#15151c;--bg3:#1c1c25;--bd:#2a2a36;--t1:#e8e8ee;--t2:#a0a0b0;--t3:#6a6a78;--ab:#5ba8f5;--ag:#2ecc71;--ar:#e74c3c;--ao:#f5a623;--ay:#ffd700;--ac:#4ecdc4}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;font-size:13px;margin:0;padding:0}
+.c{max-width:1280px;margin:0 auto;padding:20px 24px 40px}
+.hero{background:linear-gradient(90deg,var(--ar),var(--ao),var(--ay),var(--ag),var(--ab));background-size:400% 100%;animation:g 10s ease infinite;border-radius:8px;padding:32px;margin-bottom:24px}
+@keyframes g{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero h1{font-size:24px;font-weight:700;margin:0 0 8px}
+.hero .sub{font-size:14px;color:var(--t2);margin-bottom:12px}
+.hero .meta{display:flex;gap:10px;flex-wrap:wrap}
+.hero .meta span{background:rgba(255,255,255,.1);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge.green{background:var(--ag);color:var(--bg)}.badge.yellow{background:var(--ay);color:var(--bg)}.badge.red{background:var(--ar);color:var(--t1)}.badge.blue{background:var(--ab);color:var(--t1)}.badge.cyan{background:var(--ac);color:var(--bg)}.badge.orange{background:var(--ao);color:var(--bg)}
+.sec{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;margin-bottom:20px;overflow:hidden}
+.sh{padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.sh h2{font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px}
+.sb{padding:20px}
+.sc{border:1px solid var(--bd);border-radius:6px;margin-bottom:14px;overflow:hidden}
+.sch{padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px}
+.sch .ht{font-size:11px;font-weight:700;color:var(--t3);white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
+.sch h3{font-size:13px;font-weight:600;margin:0;flex:1}
+.sch .tag{background:var(--bd);color:var(--t2);padding:2px 8px;border-radius:10px;font-size:10px}
+.scb{padding:16px 18px}
+.vp{display:inline-block;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700}
+.vp.lo{background:var(--ar);color:var(--t1)}.vp.mid{background:var(--ao);color:var(--bg)}.vp.hi{background:var(--ag);color:var(--bg)}
+.st{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-right:6px}
+.st.gold{background:var(--ay);color:var(--bg)}.st.mb2{background:var(--ab);color:var(--t1)}.st.cy{background:var(--ac);color:var(--bg)}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{background:var(--bg3);padding:9px 10px;text-align:left;border-bottom:2px solid var(--bd);font-weight:600;color:var(--t1)}
+.dt td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--t2);line-height:1.45}
+.dt tr:hover{background:var(--bg3)}.dt .up{color:var(--ar)}.dt .dn{color:var(--ag)}
+.lb{border-left:4px solid var(--ab);background:rgba(91,168,245,.05);padding:14px;border-radius:0 6px 6px 0;margin:12px 0}
+.lb.gold{border-left-color:var(--ay);background:rgba(255,215,0,.05)}
+.lb.warn{border-left-color:var(--ag);background:rgba(46,204,113,.05)}
+.lb.danger{border-left-color:var(--ar);background:rgba(231,76,60,.05)}
+.lb strong{font-size:13px;color:var(--t1);margin:0 0 6px;display:block}
+.hl{background:rgba(255,215,0,.1);padding:12px;border-radius:6px;border:1px dashed var(--ay);margin:12px 0}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gi{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:12px}
+.gi.fatal{border-color:var(--ar)}.gi .gi-icon{font-size:16px;margin-bottom:4px}.gi .gi-title{font-size:11px;font-weight:700;margin-bottom:3px}.gi .gi-desc{font-size:10px;color:var(--t2)}
+.src{font-size:9.5px;color:var(--t3);margin-top:16px;padding-top:12px;border-top:1px dashed var(--bd)}
+.ft{margin-top:40px;padding-top:20px;border-top:1px solid var(--bd);font-size:11px;color:var(--t3);text-align:center}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+ul,ol{margin:0;padding-left:18px}ul li,ol li{margin-bottom:4px}
+@media(max-width:768px){.c{padding:14px}.hero{padding:24px 18px}.hero h1{font-size:18px}.row2{grid-template-columns:1fr}.grid6{grid-template-columns:repeat(2,1fr)}.dt{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="c">
+
+<!-- ═══ 1. HERO ═══ -->
+<div class="hero">
+<h1>{{STOCK_NAME}}（{{STOCK_CODE}}）深度研究报告</h1>
+<div class="sub">{{SUBTITLE}}</div>
+<div class="meta">
+<span>代码：{{STOCK_CODE}}</span><span>市值：{{MARKET_CAP}}</span><span>股价：¥{{PRICE}}</span><span>评级：<span class="badge {{RATING_COLOR}}">{{RATING}}</span></span><span>行业：{{INDUSTRY}}</span>
+</div></div>
+
+<!-- ═══ 2. 核心结论 ═══ -->
+<div class="sec"><div class="sh"><h2>📌 核心结论</h2><span class="badge {{RATING_COLOR}}">{{RATING}} · {{SCORE}}</span></div><div class="sb">
+<div class="hl"><p style="margin:0;font-size:15px;font-weight:700">{{CORE_CONCLUSION}}</p></div>
+<table class="dt" style="margin-top:14px">
+<tr><td width="130"><strong>综合评分</strong></td><td>{{SCORE_DETAIL}}</td></tr>
+<tr><td><strong>估值水位</strong></td><td>{{VAL_LEVEL}}</td></tr>
+<tr><td><strong>合理估值</strong></td><td>{{VAL_RANGE}}</td></tr>
+<tr><td><strong>关键看点</strong></td><td>{{KEY_WATCH_SUMMARY}}</td></tr>
+<tr><td><strong>主要风险</strong></td><td>{{KEY_RISK_SUMMARY}}</td></tr>
+</table>
+</div></div>
+
+<!-- ═══ 3. 公司概览 & 估值 ═══ -->
+<div class="sec"><div class="sh"><h2>📊 公司概览 & 估值</h2><span class="badge {{VAL_BADGE_COLOR}}">{{VAL_BADGE_TEXT}}</span></div><div class="sb">
+<div class="row2">
+<div class="sc"><div class="sch"><div class="ht">基本信息</div><h3>{{COMPANY_FULL_NAME}}</h3></div><div class="scb">
+<table class="dt">
+<tr><td width="100">注册地</td><td>{{REGISTERED_ADDRESS}}</td></tr>
+<tr><td>实际控制人</td><td>{{ACTUAL_CONTROLLER}}</td></tr>
+<tr><td>控股股东</td><td>{{CONTROLLING_SHAREHOLDER}}</td></tr>
+<tr><td>主营业务</td><td>{{MAIN_BUSINESS}}</td></tr>
+<tr><td>上市时间</td><td>{{LISTING_DATE}}</td></tr>
+<tr><td>ST状态</td><td>{{ST_STATUS}}</td></tr>
+</table>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">财务快照</div><h3>近3年核心指标</h3></div><div class="scb">
+<table class="dt">
+<tr><th>指标</th><th>{{YEAR1}}</th><th>{{YEAR2}}</th><th>{{YEAR3}}</th><th>{{YEAR4}}</th></tr>
+{{FINANCE_TABLE}}
+</table>
+</div></div>
+</div>
+<div class="sc"><div class="sch"><div class="ht">估值矩阵</div><h3>当前水位 + 同业对比</h3><div class="tag">{{VAL_TAG}}</div></div><div class="scb">
+<table class="dt">
+<tr><th>指标</th><th>{{STOCK_SHORT_NAME}}</th>{{PEER_HEADER}}</tr>
+{{PEER_TABLE}}
+</table>
+</div></div>
+<div class="lb gold"><strong>三情景估值区间</strong>
+<table class="dt" style="margin-bottom:10px">
+<tr><th>情景</th><th>估值方法</th><th>合理市值(亿)</th><th>股价区间(元)</th><th>概率</th></tr>
+{{SCENARIO_TABLE}}
+</table>
+<p style="margin:8px 0 0;font-weight:700;color:var(--ar)">{{SCENARIO_CONCLUSION}}</p></div>
+</div></div>
+
+<!-- ═══ 4. 产品 & 客户 ═══ -->
+<div class="sec"><div class="sh"><h2>📦 产品 & 客户</h2><span class="badge {{PRODUCT_BADGE_COLOR}}">{{PRODUCT_BADGE_TEXT}}</span></div><div class="sb">
+<table class="dt">
+<tr><th>业务板块</th><th>{{PRODUCT_YEAR}}营收(亿)</th><th>占比</th><th>毛利率</th><th>趋势</th><th>核心看点</th><th>关键客户</th></tr>
+{{PRODUCT_TABLE}}
+</table>
+<p class="src">🟢=公司公告/年报确认；⚠️=市场推测</p>
+</div></div>
+
+<!-- ═══ 5. 基本面深度分析 ═══ -->
+<div class="sec"><div class="sh"><h2>🔬 基本面深度分析</h2><span class="badge {{FUNDAMENTAL_BADGE_COLOR}}">{{FUNDAMENTAL_BADGE_TEXT}}</span></div><div class="sb">
+<div class="row2">
+<div class="sc"><div class="sch"><div class="ht">护城河</div><h3>五维护城河评级</h3></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>评级</th><th>依据</th></tr>
+{{MOAT_TABLE}}
+</table>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">壁垒量化</div><h3>六维壁垒打分 {{BARRIER_TOTAL_SCORE}}/30</h3><div class="tag">{{BARRIER_VERDICT}}</div></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>得分</th><th>量化证据</th><th>同行对比</th></tr>
+{{BARRIER_SCORE_TABLE}}
+</table>
+<div class="lb {{BARRIER_LB_COLOR}}" style="margin-top:10px"><strong>壁垒结论：</strong>{{BARRIER_CONCLUSION}}</div>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">不可替代性</div><h3>四维替代性评估</h3><div class="tag">{{IRREPLACE_VERDICT}}</div></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>判断</th><th>依据</th><th>风险点</th></tr>
+{{IRREPLACE_TABLE}}
+</table>
+<div class="lb {{IRREPLACE_LB_COLOR}}" style="margin-top:10px"><strong>不可替代性结论：</strong>{{IRREPLACE_CONCLUSION}}</div>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">核心矛盾</div><h3>关键博弈</h3></div><div class="scb">
+{{CONTRADICTION_BOX}}
+</div></div>
+</div>
+<div class="row2" style="margin-top:0">
+<div class="lb gold" style="margin:0"><strong>核心看点</strong>
+<ol>{{KEY_WATCH}}</ol></div>
+<div class="lb danger" style="margin:0"><strong>主要风险</strong>
+<ol>{{KEY_RISK}}</ol></div>
+</div>
+</div></div>
+
+<!-- ═══ 6. 消息面 & 资金 & 筹码 ═══ -->
+<div class="sec"><div class="sh"><h2>📰 消息面 & 资金 & 筹码</h2><span class="badge {{CAPITAL_BADGE_COLOR}}">{{CAPITAL_BADGE_TEXT}}</span></div><div class="sb">
+<div class="sc"><div class="sch"><div class="ht">公告·异动·龙虎榜</div><h3>近半年关键事件</h3></div><div class="scb">
+<table class="dt">
+<tr><th>时间</th><th>事件</th><th>类型</th><th>方向</th><th>影响</th></tr>
+{{NEWS_TABLE}}
+</table>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">资金方向 & 股东</div><h3>三路资金多空 + 十大流通股东变动</h3></div><div class="scb">
+<div class="row2">
+<table class="dt">
+<tr><th>资金类型</th><th>方向</th><th>详情</th></tr>
+{{CAPITAL_TABLE}}
+</table>
+<table class="dt">
+<tr><th>股东</th><th>变动</th><th>解读</th></tr>
+{{HOLDER_TABLE}}
+</table>
+</div>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">筹码结构</div><h3>六维诊断 {{CHIP_TOTAL_SCORE}}/12</h3><div class="tag">{{CHIP_VERDICT}}</div></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>得分</th><th>依据</th><th>判断</th></tr>
+{{CHIP_SCORE_TABLE}}
+</table>
+<div class="lb {{CHIP_LB_COLOR}}" style="margin-top:10px"><strong>筹码结论：</strong>{{CHIP_CONCLUSION}}</div>
+</div></div>
+<div class="lb warn"><strong>资金博弈核心判断：</strong> {{CAPITAL_CONCLUSION}}</div>
+</div></div>
+
+<!-- ═══ 7. 博主观点 ═══ -->
+<div class="sec"><div class="sh"><h2>🗣️ 博主观点</h2><span class="badge {{BLOGGER_BADGE_COLOR}}">{{BLOGGER_BADGE_TEXT}}</span></div><div class="sb">
+<div class="row2">
+<div class="sc"><div class="sch"><div class="ht">多空统计</div><h3>淘股吧 + 雪球博主观点汇总</h3></div><div class="scb">
+<table class="dt">
+<tr><th>平台</th><th>看多</th><th>看空</th><th>中性</th><th>合计</th></tr>
+{{BLOGGER_STATS_TABLE}}
+</table>
+<div class="lb {{BLOGGER_CONSENSUS_COLOR}}" style="margin-top:12px"><strong>博主共识：</strong>{{BLOGGER_CONSENSUS}}</div>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">交叉验证</div><h3>博主观点 vs 基本面</h3></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>博主看法</th><th>基本面事实</th><th>判断</th></tr>
+{{BLOGGER_CROSS_TABLE}}
+</table>
+</div></div>
+</div>
+<div class="sc" style="margin-top:14px"><div class="sch"><div class="ht">观点明细</div><h3>提及该股的博主帖子</h3><div class="tag">{{BLOGGER_MENTION_COUNT}}条</div></div><div class="scb">
+<table class="dt">
+<tr><th>平台</th><th>博主</th><th>类型</th><th>观点方向</th><th>核心内容</th><th>👍</th></tr>
+{{BLOGGER_DETAIL_TABLE}}
+</table>
+<p class="src">数据来源：淘股吧/雪球头部博主当日帖子，按赞数排序；方向由AI语义分析判断</p>
+</div></div>
+</div></div>
+
+<!-- ═══ 8. 前瞻指引 ═══ -->
+<div class="sec"><div class="sh"><h2>🔄 前瞻指引</h2><span class="badge {{OUTLOOK_BADGE_COLOR}}">{{OUTLOOK_BADGE_TEXT}}</span></div><div class="sb">
+<div class="sc"><div class="sch"><div class="ht">预期差</div><h3>市场共识 vs 实际可能</h3></div><div class="scb">
+<table class="dt">
+<tr><th>假设</th><th>市场共识</th><th>偏差方向</th><th>验证节点</th></tr>
+{{EXPECTATION_TABLE}}
+</table>
+</div></div>
+<div class="sc"><div class="sch"><div class="ht">催化剂日历</div><h3>关键事件时间线</h3></div><div class="scb">
+<table class="dt">
+<tr><th>时间</th><th>事件</th><th>重要性</th><th>预期影响</th></tr>
+{{CATALYST_TABLE}}
+</table>
+</div></div>
+</div></div>
+
+<!-- ═══ 9. 风险全景 ═══ -->
+<div class="sec"><div class="sh"><h2>🚩 风险全景</h2><span class="badge {{RISK_BADGE_COLOR}}">{{RISK_BADGE_TEXT}}</span></div><div class="sb">
+<div class="row2">
+<div class="sc" style="margin-bottom:0"><div class="sch"><div class="ht">四维评级</div><h3>综合健康度 {{HEALTH_SCORE}}</h3></div><div class="scb">
+<table class="dt">
+<tr><th>维度</th><th>评分</th><th>依据</th></tr>
+{{HEALTH_TABLE}}
+</table>
+</div></div>
+<div class="sc" style="margin-bottom:0"><div class="sch"><div class="ht">红旗信号</div><h3>致命+警告</h3></div><div class="scb" style="padding:12px 14px"><div class="grid6" style="gap:8px">
+{{RED_FLAG_GRID}}
+</div></div></div>
+</div>
+<div class="lb danger" style="margin:14px 0 0"><strong>反身性：{{REFLEXIVITY_TITLE}}</strong>
+<p style="margin:4px 0 0">{{REFLEXIVITY_CONTENT}}</p></div>
+<div class="hl" style="border-color:var(--ar);background:rgba(231,76,60,.05);margin-top:10px"><strong>踩踏推演 · 最坏情况：</strong> {{STAMPEDE_CONTENT}}</div>
+</div></div>
+
+<!-- ═══ 10. 行动清单 ═══ -->
+<div class="sec"><div class="sh"><h2>✅ 行动清单</h2><span class="badge {{ACTION_BADGE_COLOR}}">{{ACTION_BADGE_TEXT}}</span></div><div class="sb">
+<table class="dt">
+<tr><th width="30">#</th><th>投资者类型</th><th>操作</th><th>逻辑</th></tr>
+{{ACTION_TABLE}}
+</table>
+<div class="hl" style="border-color:var(--ar);background:rgba(231,76,60,.05);margin:12px 0;padding:10px 14px"><strong>减仓条件（≥1触发即执行）：</strong> {{SELL_CONDITION}}</div>
+</div></div>
+
+<!-- ═══ 11. FOOTER ═══ -->
+<div class="src">
+<p><strong>数据来源</strong>：{{DATA_SOURCES}}</p>
+<p><strong>参与专家</strong>：{{EXPERT_LIST}}</p>
+</div>
+<div class="ft">
+<p>📄 报告生成：{{DATETIME}} | 古见远（研究总监）汇编</p>
+<p>⚠️ 以上内容由 AI 基于公开信息整理生成，仅供参考，不构成任何投资建议或个股推荐。投资有风险，决策需谨慎。</p>
+</div>
+
+</div>
+</body>
+</html>

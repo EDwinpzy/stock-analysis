@@ -1,0 +1,176 @@
+{
+  "date": "2026-09-21",
+  "data_date": "2026-09-21",
+  "selfstock_count": 22,
+  "news_count": 15,
+  "news": [
+    {
+      "time": "21:06",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "营业部最青睐个股曝光 5股净买入超亿元",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880261065.html",
+      "related_codes": [
+        "600721"
+      ]
+    },
+    {
+      "time": "19:24",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "8月曾走出7连板，600721股价再异动，公司提示不涉及创新药研发",
+      "source": "每日经济新闻",
+      "url": "http://finance.eastmoney.com/a/202609213880159750.html",
+      "related_codes": [
+        "600721"
+      ]
+    },
+    {
+      "time": "17:32",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "主力动向：9月21日特大单净流入147.13亿元",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880097872.html",
+      "related_codes": [
+        "000636"
+      ]
+    },
+    {
+      "time": "17:32",
+      "date": "2026-09-21",
+      "type": "利好",
+      "title": "维生素概念上涨4.24%，5股主力资金净流入超亿元",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880096550.html",
+      "related_codes": [
+        "002365"
+      ]
+    },
+    {
+      "time": "17:32",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "25.28亿主力资金净流入，肝炎概念涨4.15%",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880098393.html",
+      "related_codes": [
+        "002412"
+      ]
+    },
+    {
+      "time": "17:32",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "筹码连续集中股名单（附股）",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880095852.html",
+      "related_codes": [
+        "002900"
+      ]
+    },
+    {
+      "time": "17:12",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "百花医药600721龙虎榜数据09-21",
+      "source": "东方财富Choice数据",
+      "url": "http://finance.eastmoney.com/a/202609213880068911.html",
+      "related_codes": [
+        "600721"
+      ]
+    },
+    {
+      "time": "17:03",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "百花医药连续3个交易日收盘价格涨幅偏离值累计达20%",
+      "source": "财中社",
+      "url": "http://finance.eastmoney.com/a/202609213880065693.html",
+      "related_codes": [
+        "600721"
+      ]
+    },
+    {
+      "time": "16:52",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "基础化工行业今日净流入资金14.32亿元，双星新材等8股净流入资金超亿元",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880059569.html",
+      "related_codes": [
+        "002407"
+      ]
+    },
+    {
+      "time": "16:52",
+      "date": "2026-09-21",
+      "type": "利空",
+      "title": "中芯国际概念下跌0.25%，主力资金净流出55股",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880061632.html",
+      "related_codes": [
+        "002407"
+      ]
+    },
+    {
+      "time": "16:52",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "医药生物行业资金流入榜：哈药股份、恒瑞医药等净流入资金居前",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880060177.html",
+      "related_codes": [
+        "600613"
+      ]
+    },
+    {
+      "time": "16:51",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "电子行业9月21日资金流向日报",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880060644.html",
+      "related_codes": [
+        "000636"
+      ]
+    },
+    {
+      "time": "16:25",
+      "date": "2026-09-21",
+      "type": "利好",
+      "title": "今日158只个股突破年线",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880036385.html",
+      "related_codes": [
+        "002900"
+      ]
+    },
+    {
+      "time": "16:24",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "9月21日盘后固定价格交易额11.01亿元",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880036725.html",
+      "related_codes": [
+        "000636"
+      ]
+    },
+    {
+      "time": "16:24",
+      "date": "2026-09-21",
+      "type": "中性",
+      "title": "55只A股筹码大换手（9月21日）",
+      "source": "证券时报网",
+      "url": "http://finance.eastmoney.com/a/202609213880035740.html",
+      "related_codes": [
+        "600272"
+      ]
+    }
+  ],
+  "status": "ok",
+  "source": "东方财富个股新闻API (AkShare)",
+  "note": "逐只自选股查询东方财富个股新闻，仅保留2026-09-21前3天内且不晚于目标日的条目"
+}

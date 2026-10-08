@@ -1,0 +1,3 @@
+interface:
+  display_name: "行业分析"
+  short_description: "分析行业格局、产业链、核心标的和风险，生成HTML报告"

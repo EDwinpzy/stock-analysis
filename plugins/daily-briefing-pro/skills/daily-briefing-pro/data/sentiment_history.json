@@ -1,0 +1,75 @@
+{
+  "model": "A-SHORT-SENTIMENT-3.2",
+  "history": [
+    {
+      "date": "2026-09-02",
+      "score": 64.2,
+      "cycle_label": "降温｜退潮加速"
+    },
+    {
+      "date": "2026-09-03",
+      "score": 57.6,
+      "cycle_label": "退潮｜下跌收敛/退潮衰竭"
+    },
+    {
+      "date": "2026-09-04",
+      "score": 42.0,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-07",
+      "score": 90.1,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-08",
+      "score": 79.6,
+      "cycle_label": "修复｜退潮加速"
+    },
+    {
+      "date": "2026-09-09",
+      "score": 65.1,
+      "cycle_label": "退潮｜动能平稳"
+    },
+    {
+      "date": "2026-09-10",
+      "score": 43.9,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-11",
+      "score": 43.4,
+      "cycle_label": "冰点｜下跌收敛/退潮衰竭"
+    },
+    {
+      "date": "2026-09-14",
+      "score": 67.9,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-15",
+      "score": 53.8,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-16",
+      "score": 89.9,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-17",
+      "score": 66.6,
+      "cycle_label": "修复｜退潮加速"
+    },
+    {
+      "date": "2026-09-18",
+      "score": 81.1,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-21",
+      "score": 95.1,
+      "cycle_label": "高潮｜动能平稳"
+    }
+  ]
+}

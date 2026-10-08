@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DailyPulse — 2026.07.03 周四</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+/* 与行业分析/财报深色主题统一 */
+--bg:#0b0f19;--bg2:rgba(17,24,39,.68);--bg3:#0f172a;--bg4:#1a2332;
+--a:#f59e0b;--a2:#fbbf24;--a-glow:rgba(245,158,11,.25);
+--up:#ef4444;--up-bg:rgba(239,68,68,.1);--up-glow:rgba(239,68,68,.3);
+--dn:#22c55e;--dn-bg:rgba(34,197,94,.1);--dn-glow:rgba(34,197,94,.3);
+--inf:#3b82f6;--inf-bg:rgba(59,130,246,.1);
+--cyn:#38bdf8;--cyn-bg:rgba(56,189,248,.1);
+--gld:#fbbf24;--gld-bg:rgba(251,191,36,.1);
+--wrn:#f97316;--wrn-bg:rgba(249,115,22,.1);
+--t1:#f3f4f6;--t2:#9ca3af;--t3:#6b7280;
+--bd:rgba(255,255,255,.055);--bd2:rgba(255,255,255,.1);
+--display:'Space Grotesk','Inter',system-ui,sans-serif;
+--sans:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+--mono:'JetBrains Mono','Cascadia Code',monospace;
+--ease-out:cubic-bezier(.16,1,.3,1);
+}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:15px;line-height:1.7;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 700px 500px at 10% 5%,rgba(231,76,60,.04),transparent),radial-gradient(ellipse 500px 600px at 90% 85%,rgba(86,212,204,.03),transparent),radial-gradient(ellipse 400px 400px at 45% 50%,rgba(110,168,254,.015),transparent);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.up{color:var(--up)}.dn{color:var(--dn)}
+
+header{backdrop-filter:blur(32px) saturate(1.8);-webkit-backdrop-filter:blur(32px) saturate(1.8);background:rgba(8,8,13,.75);border-bottom:1px solid var(--bd);padding:0 24px;height:54px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;transition:box-shadow .3s}
+header.elevated{box-shadow:0 1px 0 var(--bd),0 8px 32px rgba(0,0,0,.5)}
+.logo{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.hdr-date{font-size:13px;color:var(--t2);font-family:var(--mono);font-weight:500}
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--up);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;background:var(--up-bg);border-radius:20px;border:1px solid rgba(231,76,60,.18)}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--up);animation:lp 2s ease-in-out infinite;box-shadow:0 0 8px var(--up-glow)}
+@keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+
+.c{padding:24px 32px 52px;position:relative;z-index:1}
+
+/* HERO: 情绪+折线图强制一行 + 4指数第二行强制一行 */
+.hero{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.hero-row1{display:flex;gap:12px;flex-wrap:nowrap}
+.sent-box{backdrop-filter:blur(20px) saturate(1.4);background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:13px 16px;display:grid;grid-template-columns:minmax(96px,auto) minmax(150px,1fr);column-gap:14px;row-gap:7px;flex:0 1 480px;min-width:360px;flex-shrink:0}
+.sent-main{grid-row:1/3;min-width:96px;display:flex;flex-direction:column;justify-content:center}
+.sent-val{font-family:var(--display);font-size:36px;font-weight:700;line-height:1;background:linear-gradient(135deg,var(--up),var(--cyn));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sent-lbl{font-size:12px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.sent-desc{font-size:12px;font-weight:700;color:var(--up);line-height:1.45;max-width:150px}
+.sent-deltas{display:flex;align-items:center;gap:12px;min-width:0}
+.sent-deltas div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sent-deltas span{font-size:9px;color:var(--t3);white-space:nowrap}
+.sent-deltas b{font-family:var(--mono);font-size:14px;color:var(--t1);white-space:nowrap}
+.sent-formula{grid-column:1/-1;font-family:var(--mono);font-size:9px;color:var(--t3);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sent-note{color:var(--wrn);margin-left:5px}
+.sent-factors{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 7px;line-height:1.2}
+.sent-factor{font-family:var(--mono);font-size:9px;color:var(--t2);white-space:nowrap}
+.sent-date{grid-column:1/-1;text-align:right;font-family:var(--mono);font-size:9px;color:var(--t3)}
+
+/* 情绪折线图容器 — 强制与情绪指标同行 */
+.chart-box{backdrop-filter:blur(16px) saturate(1.3);background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:20px 14px 4px;flex:1;min-width:0;position:relative;overflow:hidden;cursor:crosshair}
+.chart-box::before{content:'市场温度 · 阶段柱状';position:absolute;top:6px;left:14px;font-size:9px;color:var(--t3);font-weight:600;letter-spacing:.06em;text-transform:uppercase;z-index:2}
+.chart-box canvas{width:100%!important;height:120px!important;display:block}
+.chart-tip{position:absolute;background:rgba(8,8,13,.92);border:1px solid var(--bd2);border-radius:6px;padding:6px 10px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10;backdrop-filter:blur(8px);white-space:nowrap}
+.chart-tip .v{color:var(--up);font-weight:700;font-family:var(--mono);font-size:14px}
+.chart-tip .d{color:var(--t3);font-size:9px;margin-top:1px}
+.chart-tip::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:rgba(8,8,13,.92)}
+.chart-tip.top::after{bottom:auto;top:-4px;border-top-color:transparent;border-bottom-color:rgba(8,8,13,.92)}
+.sbar{width:110px;height:5px;background:var(--bg4);border-radius:3px;position:relative;overflow:visible}
+.sfill{height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--dn),var(--wrn) 35%,var(--up) 100%);animation:bf 1.6s var(--ease-out) .6s forwards;position:relative}
+@keyframes bf{to{width:31%}}
+.sfill::after{content:'';position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;border-radius:50%;background:var(--up);box-shadow:0 0 10px var(--up-glow)}
+/* 4指数强制一行（上证/科创50/NASDAQ/KOSPI） */
+.ms{display:flex;gap:10px;flex:1;min-width:0;width:100%;flex-wrap:nowrap}
+.mc{backdrop-filter:blur(16px) saturate(1.3);background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px 10px;flex:1;min-width:0;position:relative;overflow:hidden;transition:all .25s var(--ease-out);cursor:default}
+.mc:hover{border-color:var(--bd2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.mc .lb{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc .vl{font-size:18px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
+.mc .cg{font-size:12px;font-weight:600;font-family:var(--mono);margin-top:2px}
+
+/* 自动流网格 — 核心布局 */
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:14px;margin-bottom:14px}
+.g .fw{grid-column:1/-1}
+
+/* Section */
+.sec{backdrop-filter:blur(16px) saturate(1.3);background:var(--bg2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:border-color .3s;display:flex;flex-direction:column}
+.sec:hover{border-color:var(--bd2)}
+.sh{padding:12px 18px;border-bottom:1px solid var(--bd);font-family:var(--display);font-size:14px;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sh .ico{color:var(--a);font-size:13px}
+.sh .meta{margin-left:auto;font-size:11px;color:var(--t3);font-weight:400}
+
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 16px;text-align:left;border-bottom:1px solid var(--bd);color:var(--t3);background:rgba(255,255,255,.015);white-space:nowrap}
+td{padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.03);font-size:13.5px;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tr{font-family:var(--mono);color:var(--t2);font-size:12px;white-space:nowrap}
+.t2{color:var(--t1);font-weight:500}
+.t3{color:var(--t3);font-size:12px}
+.tb{color:var(--inf);font-weight:600;white-space:nowrap}
+
+/* 板块轮动 — 报刊式排行header */
+.rot-head{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:12px 16px 10px;border-bottom:1px solid var(--bd);background:rgba(255,255,255,.012)}
+.rot-kpi{display:flex;flex-direction:column;gap:3px;min-width:66px}
+.rot-kpi-v{font-family:var(--display);font-size:21px;font-weight:700;color:var(--gld);line-height:1}
+.rot-kpi-v i{font-style:normal;font-size:11px;color:var(--t3);font-weight:600}
+.rot-kpi-l{font-size:10px;color:var(--t3);letter-spacing:.06em}
+.rot-note{flex:1;min-width:240px;font-size:11px;color:var(--t2);line-height:1.65}
+@media(max-width:600px){.rot-head{gap:12px}.rot-note{min-width:100%}}
+/* 板块轮动：窄屏收紧列宽与内边距，6 列完整可见，不依赖横向滚动 */
+@media(max-width:600px){
+.rot-tbl col{width:auto!important}
+.rot-tbl th{padding:6px 4px;font-size:9.5px;letter-spacing:0}
+.rot-tbl td{padding:6px 4px;font-size:11px}
+.rot-tbl .tr,.rot-tbl .tb,.rot-tbl .t2{font-size:11px}
+.rot-tbl .t3{font-size:10px}
+.rot-tbl .br,.rot-tbl .bo,.rot-tbl .bbl,.rot-tbl .bg_{min-width:0;padding:2px 4px;font-size:9.5px;border-radius:4px}
+}
+
+/* 大小周期节点票：沿用简报卡片/表格体系，时间轴使用真实交易日比例定位 */
+.node-cycle{grid-column:1/-1;margin:0 0 14px}
+.node-conclusion{padding:12px 16px 8px;color:var(--t2);font-size:13px;line-height:1.7}
+.node-conclusion strong{color:var(--a);margin:0 4px;font-weight:700}
+.node-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:4px 16px 0}
+.node-zoom{display:inline-flex;align-items:center;border:1px solid var(--bd);border-radius:5px;background:var(--bg2);overflow:hidden}
+.node-zoom button{width:30px;height:26px;border:0;background:transparent;color:var(--t2);font-size:14px;line-height:1;cursor:pointer;font-family:var(--sans)}
+.node-zoom button+button{border-left:1px solid var(--bd)}
+.node-zoom button:hover:not(:disabled){background:rgba(140,28,19,.08);color:var(--a)}
+.node-zoom button:disabled{opacity:.3;cursor:default}
+.node-zoom-val{min-width:50px;height:26px;line-height:26px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--t3);border-left:1px solid var(--bd);border-right:1px solid var(--bd)}
+.node-zoom .node-zoom-reset{width:auto;padding:0 10px;font-size:11px}
+.node-hint{font-size:10.5px;color:var(--t3);letter-spacing:.01em}
+.node-scroll{position:relative;overflow-x:auto;overflow-y:hidden;margin:8px 16px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);background:var(--bg2);cursor:grab}
+.node-scroll.dragging{cursor:grabbing}
+.node-scroll::-webkit-scrollbar{height:7px}
+.node-scroll::-webkit-scrollbar-track{background:rgba(27,25,21,.05)}
+.node-scroll::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.node-track{position:relative;width:calc(100% * var(--node-zoom,1));min-width:920px}
+.node-axis{position:relative;height:27px;border-bottom:1px solid var(--bd);font-family:var(--mono);font-size:9.5px;color:var(--t3)}
+.node-axis span{position:absolute;top:6px;transform:translateX(-50%);white-space:nowrap}
+.node-axis span.edge{transform:none}
+.node-axis span.edge-end{transform:translateX(-100%)}
+.node-axis-empty{position:static;transform:none;color:var(--t3)}
+.node-lanes{position:relative}
+.node-grid{position:absolute;top:0;bottom:0;width:1px;background:rgba(27,25,21,.06);pointer-events:none}
+.node-grid.strong{background:rgba(27,25,21,.15)}
+.node-row-band{position:absolute;left:0;right:0;background:rgba(27,25,21,.03);pointer-events:none}
+.node-bar{position:absolute;height:24px;border-radius:4px;padding:0 8px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;container-type:inline-size;box-shadow:0 1px 2px rgba(27,25,21,.12);transition:box-shadow .12s ease,filter .12s ease}
+.node-bar:hover{box-shadow:0 3px 9px rgba(27,25,21,.22);filter:saturate(1.12);z-index:6}
+.node-bar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+.node-bar.major{background:linear-gradient(90deg,rgba(140,28,19,.94),rgba(179,38,30,.74));border:1px solid rgba(140,28,19,1);color:#fdf9f2;box-shadow:0 2px 7px rgba(140,28,19,.3)}
+.node-bar.major::before{background:#f3d9a4}
+.node-bar.major b{font-weight:700}
+.node-bar.major em{color:rgba(253,249,242,.92)}
+.node-bar.major small{color:rgba(253,249,242,.82);border-left-color:rgba(253,249,242,.34)}
+.node-bar.small{background:linear-gradient(90deg,rgba(31,78,121,.16),rgba(31,78,121,.05));border:1px solid rgba(31,78,121,.45)}
+.node-bar.small::before{background:var(--inf)}
+.node-bar.ghost{background:repeating-linear-gradient(45deg,rgba(27,25,21,.07) 0 6px,transparent 6px 13px);border:1px dashed var(--bd2);color:var(--t3);box-shadow:none}
+.node-bar.ghost::before{background:var(--t3)}
+.node-bar.ghost em{color:var(--t3)}
+/* 周期延续段：断板后没有连板但没走A。画成细虚线，避免整屏斜纹盖住实心节点 */
+.node-bar.cycle-tail{height:4px;border:0;border-radius:0;padding:0;box-shadow:none;container-type:normal}
+.node-bar.cycle-tail::before{display:none}
+.node-bar.major.cycle-tail{background:repeating-linear-gradient(90deg,rgba(140,28,19,.62) 0 9px,transparent 9px 16px)}
+.node-bar.small.cycle-tail{background:repeating-linear-gradient(90deg,rgba(31,78,121,.58) 0 9px,transparent 9px 16px)}
+.node-bar.cycle-tail:hover{background:repeating-linear-gradient(90deg,rgba(140,28,19,.85) 0 9px,transparent 9px 16px)}
+.node-bar b{font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.node-bar em{font-family:var(--mono);font-size:10px;font-style:normal;color:var(--t2)}
+.node-bar .node-crown{font-style:normal;font-size:10px;color:#f3d9a4;margin-right:-2px}
+.node-bar small{font-size:9px;color:var(--t3);border-left:1px solid var(--bd);padding-left:6px}
+/* 横轴已逐日标注，条内不再重复起止日期；太窄时按 置信度 → 连板数 让位 */
+@container (max-width:120px){.node-bar small{display:none}}
+@container (max-width:78px){.node-bar em{display:none}}
+.node-empty{padding:26px 0;text-align:center;color:var(--t3);font-size:12px}
+.node-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 16px 2px;font-size:10.5px;color:var(--t3)}
+.node-legend span{display:inline-flex;align-items:center;gap:5px}
+.node-dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+.node-dot.major{background:var(--a)}.node-dot.small{background:var(--inf)}
+.node-dot.ghost{background:var(--t3)}
+.node-dot.tail{background:repeating-linear-gradient(135deg,var(--t3) 0 2px,transparent 2px 4px)}
+.node-cycle-tag{display:inline-block;margin-left:8px;padding:1px 8px;border:1px solid var(--bd);border-radius:3px;font-size:11px;color:var(--t3)}
+@media(max-width:600px){
+ .node-toolbar{padding-left:12px;padding-right:12px}
+ .node-scroll{margin-left:12px;margin-right:12px}
+ .node-track{min-width:920px}
+}
+
+/* Badges */
+.br,.bo,.bbl,.bg_,.bcy,.bgd{display:inline-block;min-width:34px;text-align:center;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.br{background:rgba(231,76,60,.1);color:var(--up)}
+.bo{background:var(--wrn-bg);color:var(--wrn)}
+.bbl{background:var(--inf-bg);color:var(--inf)}
+.bg_{background:var(--up-bg);color:var(--up)}
+.bcy{background:var(--cyn-bg);color:var(--cyn)}
+.bgd{background:var(--gld-bg);color:var(--gld)}
+
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;margin:0 2px;white-space:nowrap;font-weight:600;line-height:1.6}
+.tag.r{background:rgba(231,76,60,.12);color:var(--up)}
+.tag.b{background:var(--inf-bg);color:var(--inf)}
+.tag.y{background:var(--gld-bg);color:var(--gld)}
+.tag.c{background:var(--cyn-bg);color:var(--cyn)}
+.tag.g{background:var(--dn-bg);color:var(--dn)}
+
+.si{display:flex;gap:8px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.03);align-items:flex-start;font-size:13.5px;line-height:1.55}
+.dy{display:flex;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.03);font-size:13.5px;line-height:1.55}
+.dyt{font-family:var(--mono);font-size:12px;color:var(--cyn);white-space:nowrap;padding-top:2px;font-weight:500;min-width:42px}
+.dy strong{font-size:13.5px;font-weight:600}
+.dy p{font-size:12.5px;color:var(--t2);margin-top:2px}
+
+.lbox{border-left:3px solid var(--gld);background:var(--gld-bg);padding:10px 16px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.65;margin:10px 16px 12px}
+.lbox b{color:var(--gld)}
+
+/* ⑤½ 博主多空统计 — 美化版 */
+.survey-wrap{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.survey-top{display:flex;gap:14px;flex-wrap:nowrap}
+.survey-gauge{flex:0 0 200px;backdrop-filter:blur(16px);background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.survey-gauge-title{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;width:100%;text-align:center}
+.survey-gauge-ring{position:relative;width:100px;height:100px}
+.survey-gauge-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.survey-gauge-ring .ring-bg{fill:none;stroke:var(--bg4);stroke-width:8}
+.survey-gauge-ring .ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.2s var(--ease-out)}
+.survey-gauge-ring .ring-fill.bull{stroke:var(--up);filter:drop-shadow(0 0 4px var(--up-glow))}
+.survey-gauge-ring .ring-fill.bear{stroke:var(--dn);filter:drop-shadow(0 0 4px var(--dn-glow))}
+.survey-gauge-ring .ring-fill.neutral{stroke:var(--inf);filter:drop-shadow(0 0 4px rgba(59,130,246,.25))}
+.survey-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.survey-gauge-val{font-family:var(--display);font-size:22px;font-weight:700;line-height:1}
+.survey-gauge-label{font-size:9px;color:var(--t3);font-weight:600;margin-top:2px}
+.survey-gauge-legend{display:flex;gap:10px;width:100%;justify-content:center;margin-top:2px}
+.survey-gauge-legend span{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--t2);font-weight:500}
+.survey-gauge-legend .dot-bull{width:6px;height:6px;border-radius:50%;background:var(--up)}
+.survey-gauge-legend .dot-bear{width:6px;height:6px;border-radius:50%;background:var(--dn)}
+.survey-gauge-legend .dot-neutral{width:6px;height:6px;border-radius:50%;background:var(--inf)}
+.survey-gauge-ratio{font-family:var(--mono);font-size:11px;color:var(--t2);margin-top:4px;padding:3px 10px;background:rgba(255,255,255,.03);border-radius:6px;text-align:center}
+.survey-gauge-ratio b{color:var(--gld);font-size:13px}
+
+.survey-sectors{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+.survey-sectors-title{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:0 0 8px;border-bottom:1px solid var(--bd);margin-bottom:6px}
+.survey-sector-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.02)}
+.survey-sector-row:last-child{border-bottom:none}
+.survey-sector-name{font-size:12px;font-weight:600;color:var(--inf);min-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.survey-sector-bar{flex:1;min-width:0;height:18px;background:var(--bg4);border-radius:4px;overflow:hidden;display:flex;position:relative}
+.survey-sector-bar .bar-bull{height:100%;background:linear-gradient(90deg,rgba(239,68,68,.7),rgba(239,68,68,.4));transition:width .8s var(--ease-out);position:relative}
+.survey-sector-bar .bar-bear{height:100%;background:linear-gradient(90deg,rgba(34,197,94,.4),rgba(34,197,94,.7));transition:width .8s var(--ease-out)}
+.survey-sector-bar .bar-neutral{height:100%;background:linear-gradient(90deg,rgba(59,130,246,.3),rgba(59,130,246,.5));transition:width .8s var(--ease-out)}
+.survey-sector-bar .bar-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--t1);text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none;letter-spacing:.02em}
+.survey-sector-count{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:28px;text-align:right;white-space:nowrap}
+
+.survey-platforms{display:flex;gap:10px;flex-wrap:wrap}
+.survey-plat-card{flex:1;min-width:140px;backdrop-filter:blur(16px);background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:4px;transition:all .25s var(--ease-out)}
+.survey-plat-card:hover{border-color:var(--bd2);transform:translateY(-1px)}
+.survey-plat-name{font-size:11px;font-weight:700;color:var(--gld);font-family:var(--display)}
+.survey-plat-stats{display:flex;gap:6px;align-items:baseline}
+.survey-plat-stats .sp-bull{font-size:14px;font-weight:700;color:var(--up);font-family:var(--mono)}
+.survey-plat-stats .sp-sep{font-size:10px;color:var(--t3)}
+.survey-plat-stats .sp-bear{font-size:14px;font-weight:700;color:var(--dn);font-family:var(--mono)}
+.survey-plat-stats .sp-neutral{font-size:11px;color:var(--inf);font-family:var(--mono);margin-left:2px}
+.survey-plat-meta{font-size:10px;color:var(--t3)}
+.survey-plat-meta b{color:var(--t2);font-weight:600}
+
+@media(max-width:600px){.survey-top{flex-wrap:wrap}.survey-gauge{flex:0 0 100%}.survey-sectors{flex:0 0 100%}.survey-platforms{flex-direction:column}}
+
+/* Strategy — 三卡强制一行 */
+.strat{display:flex;gap:12px;padding:14px}
+.strat .sc{flex:1;min-width:0}
+.sc{padding:16px;backdrop-filter:blur(16px);background:var(--bg2);border:1px solid var(--bd);border-radius:12px;position:relative;overflow:hidden;transition:all .25s var(--ease-out)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc.long{border-color:rgba(231,76,60,.15)}.sc.long::before{background:linear-gradient(90deg,var(--up),var(--cyn),transparent)}
+.sc.wait{border-color:rgba(110,168,254,.15)}.sc.wait::before{background:linear-gradient(90deg,var(--inf),var(--gld),transparent)}
+.sc.risk{border-color:rgba(46,204,113,.15)}.sc.risk::before{background:linear-gradient(90deg,var(--dn),var(--wrn),transparent)}
+.sc:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.sc h4{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sc.long h4{color:var(--up)}.sc.wait h4{color:var(--inf)}.sc.risk h4{color:var(--dn)}
+.sc h4 .dot{width:5px;height:5px;border-radius:50%;animation:dp 2s ease-in-out infinite}
+.sc.long .dot{background:var(--up);box-shadow:0 0 6px var(--up-glow)}
+.sc.wait .dot{background:var(--inf);box-shadow:0 0 6px rgba(110,168,254,.3)}
+.sc.risk .dot{background:var(--dn);box-shadow:0 0 6px var(--dn-glow)}
+@keyframes dp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+.sc li{font-size:13px;color:var(--t2);padding:3px 0 3px 14px;position:relative;list-style:none}
+.sc li::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:7px;height:1.5px}
+.sc.long li::before{background:var(--up)}.sc.wait li::before{background:var(--inf)}.sc.risk li::before{background:var(--dn)}
+
+.ft{text-align:center;padding:20px;font-size:12px;color:var(--t3)}
+.ft span{color:var(--a);font-weight:600}
+
+/* ⑪ 每日一句 — 金句横幅 */
+.quote-banner{position:relative;margin:0 0 14px;padding:18px 24px;backdrop-filter:blur(20px) saturate(1.4);background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(245,158,11,.03),rgba(56,189,248,.04));border:1px solid rgba(251,191,36,.12);border-radius:12px;overflow:hidden;transition:all .3s var(--ease-out)}
+.quote-banner:hover{border-color:rgba(251,191,36,.25);box-shadow:0 4px 24px rgba(245,158,11,.08)}
+.quote-banner::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--gld),var(--a),var(--cyn));border-radius:3px 0 0 3px}
+.quote-mark{position:absolute;top:6px;right:18px;font-size:48px;line-height:1;color:rgba(251,191,36,.08);font-family:var(--display);pointer-events:none}
+.quote-text{font-size:16px;font-weight:700;color:var(--gld);line-height:1.6;padding-left:6px;margin-bottom:8px;font-family:var(--display);letter-spacing:-.01em}
+.quote-author{font-size:13px;color:var(--t2);padding-left:6px;margin-bottom:8px}
+.quote-author strong{color:var(--t1);font-weight:600}
+.quote-title{color:var(--t3);font-size:11.5px;margin-left:8px}
+.quote-principle{font-size:13px;color:var(--t2);padding:8px 12px;background:rgba(255,255,255,.02);border-radius:8px;line-height:1.6;margin-bottom:6px}
+.quote-icon{font-size:14px;margin-right:4px}
+.quote-tags{display:flex;gap:6px;padding-left:6px;flex-wrap:wrap}
+.quote-tag{font-size:10.5px;padding:2px 8px;border-radius:4px;background:rgba(251,191,36,.08);color:var(--gld);font-weight:600;letter-spacing:.03em}
+.quote-meta{position:absolute;bottom:14px;right:20px;font-size:10px;color:var(--t3);font-family:var(--mono)}
+
+@media(max-width:960px){.g{grid-template-columns:1fr}.chart-box{min-width:0}.ms{flex-wrap:nowrap}.mc{flex:1;min-width:0}}
+@media(max-width:600px){.c{padding:10px 12px 24px}header{padding:0 12px}.hero-row1{flex-wrap:wrap}.sent-box{flex-basis:100%;min-width:0}.chart-box{min-width:100%}.ms{flex-wrap:wrap}.mc{flex:0 0 calc(50% - 5px)}.g{grid-template-columns:1fr}.strat{flex-direction:column}}
+/* 窄屏下宽表（龙虎榜游资席位、机构研报）会超出卡片宽度，允许整卡横向滚动，避免右侧数据被裁掉 */
+@media(max-width:600px){.sec{overflow-x:auto}.sec>.sh{position:sticky;left:0;background:var(--bg2)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ==========================================================================
+   报刊风格主题（v3.20）— 纸面油墨 + 报头 + 左右两栏
+   说明：不新增/删除任何既有类名，只覆盖调色、字体、边框与分栏，
+   使所有板块自动继承同一套「报纸」语言。
+   ========================================================================== */
+:root{
+--paper:#f5f1e8;--ink:#1b1915;
+--bg:#f5f1e8;--bg2:#fffdf8;--bg3:#f1ece1;--bg4:#e6dfd0;
+--a:#8c1c13;--a2:#b3261e;--a-glow:rgba(140,28,19,.18);
+--up:#b3261e;--up-bg:rgba(179,38,30,.08);--up-glow:rgba(179,38,30,.22);
+--dn:#1c6b46;--dn-bg:rgba(28,107,70,.08);--dn-glow:rgba(28,107,70,.22);
+--inf:#1f4e79;--inf-bg:rgba(31,78,121,.08);
+--cyn:#155e63;--cyn-bg:rgba(21,94,99,.08);
+--gld:#8a6a12;--gld-bg:rgba(138,106,18,.10);
+--wrn:#9a5b00;--wrn-bg:rgba(154,91,0,.10);
+--t1:#1b1915;--t2:#45413a;--t3:#7c7566;
+--bd:rgba(27,25,21,.16);--bd2:rgba(27,25,21,.34);
+--serif:'Noto Serif SC','Source Han Serif SC','Songti SC','SimSun',Georgia,'Times New Roman',serif;
+--display:'Noto Serif SC','Source Han Serif SC','Songti SC','SimSun','Playfair Display',Georgia,serif;
+--sans:'Noto Serif SC','Source Han Serif SC','Songti SC','SimSun',Georgia,'Times New Roman',serif;
+--mono:'Georgia','Times New Roman','Songti SC',serif;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.78;font-variant-numeric:lining-nums tabular-nums}
+body::before{background:radial-gradient(ellipse 900px 520px at 14% -4%,rgba(140,28,19,.05),transparent 70%),radial-gradient(ellipse 760px 520px at 92% 104%,rgba(31,78,121,.045),transparent 70%)}
+body::after{background-image:repeating-linear-gradient(0deg,rgba(27,25,21,.022) 0 1px,transparent 1px 4px);opacity:.85}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+
+/* 顶部细条 */
+header{background:rgba(245,241,232,.95);border-bottom:1px solid var(--bd);height:42px}
+header.elevated{box-shadow:0 1px 0 var(--bd),0 6px 20px rgba(27,25,21,.07)}
+.logo{background:none;-webkit-text-fill-color:var(--ink);color:var(--ink);font-family:var(--display);font-size:16px;font-weight:900;letter-spacing:.18em}
+.hdr-date{font-family:var(--sans);font-size:12.5px;color:var(--t2);letter-spacing:.04em}
+.live-badge{color:var(--a);background:rgba(140,28,19,.06);border:1px solid rgba(140,28,19,.28);border-radius:2px;letter-spacing:.14em;font-family:var(--sans)}
+.live-dot{background:var(--a);box-shadow:none}
+
+/* 报头 */
+.np-mast{margin:4px 0 20px;padding:14px 0 11px;border-top:1px solid var(--ink);border-bottom:3px double var(--ink);text-align:center}
+.np-mast-kicker{font-family:'Playfair Display',var(--serif);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--a);margin-bottom:6px}
+.np-mast-title{font-family:var(--display);font-size:44px;line-height:1.12;font-weight:900;letter-spacing:.24em;color:var(--ink);text-indent:.24em}
+.np-mast-sub{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--t2);letter-spacing:.06em}
+.np-mast-sub .sep{color:var(--bd2)}
+.np-mast-sub b{font-weight:700;color:var(--ink)}
+
+/* 卡片统一为纸面（去玻璃拟态、去圆角、加细边） */
+.sent-box,.chart-box,.mc,.sec,.sc,.survey-gauge,.survey-plat-card{background:var(--bg2);border-color:var(--bd);border-radius:2px;backdrop-filter:none;-webkit-backdrop-filter:none}
+.sent-box,.chart-box,.ms .mc{border-top:2px solid var(--ink)}
+.sent-val{background:none;-webkit-text-fill-color:var(--a);color:var(--a);font-family:var(--display);font-size:34px;letter-spacing:.01em}
+.sent-lbl{font-size:11px;color:var(--t3);letter-spacing:.16em;font-weight:700}
+.sent-desc{color:var(--a);font-weight:700}
+.sent-deltas span,.sent-deltas b,.sent-formula,.sent-factor,.sent-date{font-family:var(--sans);letter-spacing:.02em}
+.sent-note{color:var(--wrn)}
+.chart-box::before{font-family:var(--sans);font-size:10px;color:var(--t3);letter-spacing:.12em;text-transform:none}
+.chart-tip{background:#fffdf8;border:1px solid var(--bd2);color:var(--ink);box-shadow:0 8px 20px rgba(27,25,21,.14);border-radius:2px}
+.chart-tip .v{color:var(--a)}
+.chart-tip .d{color:var(--t3)}
+.chart-tip::after{border-top-color:#fffdf8}
+.chart-tip.top::after{border-top-color:transparent;border-bottom-color:#fffdf8}
+.sbar{background:var(--bg4);border-radius:2px}
+.sfill{border-radius:2px}
+.sfill::after{width:9px;height:9px;box-shadow:none}
+.mc:hover{transform:none;box-shadow:none;border-color:var(--bd2)}
+.mc .lb{font-size:10.5px;letter-spacing:.12em;text-transform:none;color:var(--t3)}
+.mc .vl{font-family:var(--display);font-size:19px;font-weight:700}
+.mc .cg{font-family:var(--sans);font-weight:700}
+
+/* 左右两栏：中缝加竖线 */
+.g{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 26px;position:relative;margin-bottom:18px;align-items:start}
+.g::before{content:'';position:absolute;top:0;bottom:0;left:calc(50% - 13px);width:1px;background:var(--bd);pointer-events:none}
+.g .fw{grid-column:1/-1}
+
+/* 板块标题 — 报纸小标题 */
+.sec:hover{border-color:var(--bd2)}
+.sh{padding:11px 16px 10px;border-bottom:1px solid var(--ink);font-family:var(--display);font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:.03em}
+.sh .ico{color:var(--a);font-size:12px}
+.sh .meta{font-family:var(--sans);font-size:11px;color:var(--t3);letter-spacing:.02em}
+
+/* 表格 — 铅印细线 */
+th{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:none;padding:8px 14px;border-bottom:1px solid var(--ink);color:var(--t3);background:transparent}
+td{padding:8px 14px;border-bottom:1px solid rgba(27,25,21,.10);font-size:13px}
+tr:hover td{background:rgba(140,28,19,.045)}
+.tr{font-family:var(--mono);color:var(--t2);font-size:12px}
+.t2{color:var(--ink);font-weight:500}
+.t3{color:var(--t3);font-size:12px}
+.tb{color:var(--inf);font-weight:700}
+
+/* 徽标改成「铅字章」 */
+.br,.bo,.bbl,.bg_,.bcy,.bgd{border:1px solid currentColor;background:transparent;border-radius:2px;padding:1px 6px;min-width:32px;font-size:10px;letter-spacing:.04em}
+.tag{border-radius:2px;padding:1px 6px;font-size:10.5px}
+.si,.dy{border-bottom:1px solid rgba(27,25,21,.10)}
+.dyt{font-family:var(--mono);color:var(--a);font-weight:700}
+.dy strong{font-weight:700}
+.lbox{border-left:3px solid var(--a);background:rgba(140,28,19,.05);border-radius:0;color:var(--t2)}
+.lbox b{color:var(--a)}
+
+/* 多空调查 */
+.survey-gauge-ratio{background:var(--bg3);border-radius:2px}
+.survey-gauge-ratio b{color:var(--a)}
+.survey-sector-row{border-bottom:1px solid rgba(27,25,21,.08)}
+.survey-sector-name{color:var(--ink)}
+.survey-sector-bar{background:var(--bg4);border-radius:2px}
+.survey-sector-bar .bar-label{color:var(--ink);text-shadow:none;font-weight:700}
+.survey-sector-count{font-family:var(--mono);color:var(--t3)}
+.survey-plat-card{border-radius:2px}
+.survey-plat-name{color:var(--a);font-family:var(--display)}
+
+/* 策略三卡 */
+.sc{border-radius:2px}
+.sc::before{height:3px}
+.sc.long::before{background:var(--up)}
+.sc.wait::before{background:var(--inf)}
+.sc.risk::before{background:var(--dn)}
+.sc:hover{transform:none;box-shadow:none;border-color:var(--bd2)}
+.sc h4{font-family:var(--display);font-size:15px;letter-spacing:.02em}
+.sc li{font-size:12.5px;color:var(--t2)}
+.sc li::before{width:6px;height:2px}
+
+/* 金句 — 报眼引语 */
+.quote-banner{background:var(--bg2);border:1px solid var(--bd);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);border-radius:2px;backdrop-filter:none;-webkit-backdrop-filter:none}
+.quote-banner:hover{border-color:var(--bd2);box-shadow:none}
+.quote-banner::before{display:none}
+.quote-mark{color:rgba(27,25,21,.07);font-size:54px;font-family:var(--display)}
+.quote-text{color:var(--ink);font-family:var(--display);font-size:17px;letter-spacing:.01em}
+.quote-author{color:var(--t2)}
+.quote-author strong{color:var(--ink)}
+.quote-title{color:var(--t3)}
+.quote-principle{background:var(--bg3);border-radius:2px;color:var(--t2)}
+.quote-tag{background:transparent;border:1px solid var(--bd2);color:var(--t2);border-radius:2px;letter-spacing:.06em;font-weight:600}
+.quote-meta{font-family:var(--sans);color:var(--t3)}
+
+.ft{color:var(--t3);font-size:11.5px;letter-spacing:.06em}
+.ft span{color:var(--a)}
+
+@media(max-width:960px){.g{grid-template-columns:1fr;gap:14px}.g::before{display:none}}
+/* 阶段柱状图图例：只列出当期真实出现过的情绪阶段 */
+.chart-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:6px 2px 8px;font-size:10px;color:var(--t3);letter-spacing:.02em}
+.cl-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.cl-item i{width:8px;height:8px;border-radius:1px;display:inline-block}
+@media(max-width:600px){
+.np-mast{margin-bottom:14px;padding:10px 0 9px}
+.np-mast-title{font-size:29px;letter-spacing:.14em;text-indent:.14em}
+.np-mast-kicker{font-size:9.5px;letter-spacing:.22em}
+.np-mast-sub{gap:8px;font-size:11px}
+.sh{font-size:14.5px}
+}
+
+/* ==========================================================================
+   报刊质感精修层（v3.22）— 纯纸墨语言：细线承重，去杂纹，节奏统一
+   ========================================================================== */
+/* 纸面：去掉条纹叠印与双色晕染，只保留顶部一点暖光，纸色更干净 */
+body{background:var(--paper)}
+body::before{background:radial-gradient(ellipse 1100px 420px at 50% -6%,rgba(140,28,19,.04),transparent 70%)}
+body::after{content:none}
+
+/* 铅字卡片体系：一律细墨线，投影只出现在悬停的一瞬间 */
+.sent-box,.chart-box,.mc,.sec,.sc,.survey-gauge,.survey-plat-card{
+  border:1px solid rgba(27,25,21,.14);
+  border-radius:4px;
+  box-shadow:none;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.sent-box,.chart-box,.ms .mc{border-top-color:rgba(27,25,21,.22)}
+.sec:hover,.sent-box:hover,.chart-box:hover{border-color:rgba(27,25,21,.24);box-shadow:0 10px 26px -20px rgba(27,25,21,.35)}
+
+/* 版心与节奏 */
+.c{padding:26px 36px 56px}
+.hero{gap:14px;margin-bottom:16px}
+.g{gap:20px 28px;margin-bottom:20px}
+.g::before{background:rgba(27,25,21,.09)}
+.node-cycle{margin:0 0 20px}
+.quote-banner{margin:0 0 20px}
+
+/* 报头：字距与呼吸 */
+.np-mast{margin:6px 0 22px;padding:16px 0 13px}
+.np-mast-title{font-size:46px;letter-spacing:.26em;text-indent:.26em}
+.np-mast-sub{font-size:11.5px;color:var(--t3)}
+.np-mast-sub b{color:var(--ink)}
+
+/* 顶栏 */
+header{background:rgba(250,247,240,.92);backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15);height:44px}
+
+/* 板块题头 */
+.sh{padding:12px 18px 10px;border-bottom:1px solid rgba(27,25,21,.18);font-size:15px;letter-spacing:.05em}
+.sh .ico{font-size:9px;vertical-align:2px}
+.sh .meta{font-size:10.5px;letter-spacing:.04em}
+
+/* 温度首屏 */
+.sent-val{font-size:36px}
+.sent-lbl{letter-spacing:.18em}
+.sbar{height:6px}
+
+/* 指数卡：涨跌方向 2px 顶线（有含义的编码），字阶收紧填满卡面 */
+.mc{padding:14px 18px 12px;border-radius:4px}
+.ms .mc{border-top-width:2px}
+.mc.up{border-top-color:rgba(179,38,30,.55)}
+.mc.dn{border-top-color:rgba(28,107,70,.5)}
+.mc .lb{font-size:10px;letter-spacing:.16em}
+.mc .vl{font-size:22px;letter-spacing:.01em}
+.mc .cg{font-size:12.5px;margin-top:3px}
+
+/* 表格：行距统一，末行去线，悬停更轻 */
+th{padding:9px 16px;border-bottom:1px solid rgba(27,25,21,.22);font-size:10px;letter-spacing:.12em}
+td{padding:9px 16px;border-bottom:1px solid rgba(27,25,21,.075);font-size:12.5px;line-height:1.65}
+table tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(140,28,19,.035)}
+
+/* 徽章：由描边铅字章改为低饱和色底，读感更静 */
+.br,.bo,.bbl,.bg_,.bcy,.bgd{border-radius:3px;padding:1.5px 7px;font-size:10px}
+.br{background:rgba(179,38,30,.07);border-color:rgba(179,38,30,.24);color:var(--up)}
+.bo{background:rgba(154,91,0,.07);border-color:rgba(154,91,0,.26);color:var(--wrn)}
+.bbl{background:rgba(31,78,121,.07);border-color:rgba(31,78,121,.26);color:var(--inf)}
+.bg_{background:rgba(179,38,30,.07);border-color:rgba(179,38,30,.24)}
+.bcy{background:rgba(21,94,99,.07);border-color:rgba(21,94,99,.28)}
+.bgd{background:rgba(138,106,18,.08);border-color:rgba(138,106,18,.28)}
+.tag{border-radius:3px;padding:1px 7px;font-size:10.5px}
+
+/* 信号/共识框：去 3px 侧条，改为印章色浅底 */
+.lbox{border-left:none;border:1px solid rgba(140,28,19,.16);background:rgba(140,28,19,.045);border-radius:4px}
+.lbox b{color:var(--a)}
+
+/* 策略三卡：方向色染纸，顶线减细 */
+.sc{border-radius:4px}
+.sc::before{height:2px;opacity:.8}
+.sc.long{background:#fdf5f1;border-color:rgba(179,38,30,.22)}
+.sc.wait{background:#f3f6fa;border-color:rgba(31,78,121,.22)}
+.sc.risk{background:#f2f7f3;border-color:rgba(28,107,70,.22)}
+.sc:hover{transform:none;box-shadow:none}
+.sc h4{font-size:15.5px}
+.sc li{padding:2.5px 0 2.5px 16px}
+
+/* 多空圆环：去霓虹光晕 */
+.survey-gauge-ring .ring-fill.bull,.survey-gauge-ring .ring-fill.bear,.survey-gauge-ring .ring-fill.neutral{filter:none}
+
+/* 金句报眼：保留双线，细化字阶与铺底 */
+.quote-banner{padding:20px 26px 16px}
+.quote-mark{font-size:60px;line-height:1;color:rgba(140,28,19,.16)}
+.quote-text{font-size:18px;font-weight:600;letter-spacing:.02em}
+.quote-principle{background:rgba(138,106,18,.07);border:1px solid rgba(138,106,18,.16);border-radius:4px;font-size:12.5px;padding:9px 14px}
+.quote-tag{border-radius:3px}
+
+/* 浏览器自带面：选区与焦点也归入纸墨体系 */
+::selection{background:rgba(140,28,19,.15);color:var(--ink)}
+:focus-visible{outline:2px solid rgba(140,28,19,.45);outline-offset:2px}
+
+/* 页脚 */
+.ft{margin-top:6px;font-size:11px;letter-spacing:.08em}
+
+@media(max-width:960px){
+.c{padding:20px 20px 40px}
+.g{gap:16px}
+.g::before{display:none}
+}
+@media(max-width:600px){
+.c{padding:14px 12px 28px}
+.np-mast-title{font-size:30px}
+.mc{padding:12px 14px 10px}
+.mc .vl{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header id="hdr"><span class="logo">DailyPulse</span><div class="hdr-right"><span class="hdr-date">2026.07.04</span><span class="live-badge"><span class="live-dot"></span>LIVE</span></div></header>
+<main class="c">
+
+<!-- ① HERO -->
+<section class="hero">
+<div class="hero-row1">
+  <div class="sent-box">
+    <div class="sent-main"><div class="sent-lbl">市场温度 S</div><div class="sent-val">44.9</div><div class="sent-desc">➖ 混沌｜下跌收敛</div></div>
+    <div class="sent-deltas"><span>Δ1 速度 <b class="dn">-0.8</b></span><span>Δ2 加速度 <b class="up">+14.8</b></span></div>
+    <div class="sbar"><div class="sfill" style="width:44.9%"></div></div>
+    <div class="sent-formula">11因子公式 · 百分比按小数参与 · 成交量=亿元</div>
+    <div class="sent-factors"><span class="sent-factor">空间 <b>4</b></span><span class="sent-factor">次高 <b>3</b></span><span class="sent-factor">涨停 <b>40</b></span><span class="sent-factor">跌停 <b>21</b></span><span class="sent-factor">首板 <b>33</b></span><span class="sent-factor">连板 <b>7</b></span><span class="sent-factor">炸板率 <b>31.03%</b></span><span class="sent-factor">成交量 <b>9581.9亿</b></span><span class="sent-factor">红盘 <b>643</b></span></div>
+    <div class="sent-date">数据日期 2026-09-11</div>
+  </div>
+  <!-- 情绪折线图：近两周 -->
+  <div class="chart-box">
+    <canvas id="sentChart"></canvas>
+    <div class="chart-tip" id="chartTip"><div class="v"></div><div class="d"></div></div>
+  </div>
+</div>
+<div class="ms">
+<div class="mc up"><div class="lb">上证</div><div class="vl">4,043</div><div class="cg up">▲0.37%</div></div>
+<div class="mc up"><div class="lb">科创50</div><div class="vl">1,019</div><div class="cg up">▲0.12%</div></div>
+<div class="mc dn"><div class="lb">纳斯达克</div><div class="vl">18,483</div><div class="cg dn">▼0.00%</div></div>
+<div class="mc up"><div class="lb">KOSPI</div><div class="vl">2,680</div><div class="cg up">▲0.54%</div></div>
+</div>
+</section>
+
+<!-- ⑪ 每日一句 -->
+<!-- QUOTE_PLACEHOLDER -->
+
+<!-- ② 自动流网格 -->
+<div class="g">
+
+<!-- 财经新闻 -->
+<section class="sec">
+<div class="sh"><span class="ico">◉</span> 财经科技新闻 <span class="meta">8条</span></div>
+<table>
+<colgroup><col style="width:56px"><col style="width:50px"><col><col style="width:60px"></colgroup>
+<tr><th>时间</th><th>类型</th><th>标题</th><th>来源</th></tr>
+<tr><td class="tr">18:14</td><td><span class="br">行业</span></td><td class="t2">华为何庭波发布V2版"韬定律"论文，利好国产晶圆代工、先进封装、键合设备、EDA</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">17:10</td><td><span class="br">政策</span></td><td class="t2">北京经信局：已构建全国领先AIGC产业链，专项政策持续赋能</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">16:41</td><td><span class="br">政策</span></td><td class="t2">工信部：支持北京在国家未来产业总体布局中发挥引领示范作用</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">16:11</td><td><span class="br">行业</span></td><td class="t2">机器人出口每4元产值有1元深圳造，深圳机器人全球卖爆</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">15:40</td><td><span class="bo">公司</span></td><td class="t2">宁德时代与北京绿交所等签署战略合作协议</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">11:08</td><td><span class="br">行业</span></td><td class="t2">三星Q3 DRAM拟提价20%，国产存储正向循环可期</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">11:08</td><td><span class="bo">公司</span></td><td class="t2">首款神经动力学芯片问世，有助于脑机接口等技术发展</td><td class="t3">财联社</td></tr>
+<tr><td class="tr">10:09</td><td><span class="br">行业</span></td><td class="t2">近20家芯片厂商7月集体调价：AI抢产能，车规+AI电源芯片涨幅最高25%</td><td class="t3">新浪</td></tr>
+</table>
+</section>
+
+<!-- 自选股新闻 — 强制与财经新闻同行 -->
+<section class="sec">
+<div class="sh"><span class="ico">◉</span> 自选股新闻 <span class="meta">5条</span></div>
+<table>
+<colgroup><col style="width:50px"><col><col style="width:56px"></colgroup>
+<tr><th>类型</th><th>标题</th><th>来源</th></tr>
+<tr><td><span class="br">行业</span></td><td class="t2">近20家芯片厂商7月集体调价，车规+AI电源芯片涨幅最高25%</td><td class="t3">百度</td></tr>
+<tr><td><span class="br">行业</span></td><td class="t2">三星Q3 DRAM拟提价20%，国产存储正向循环</td><td class="t3">财联社</td></tr>
+<tr><td><span class="br">行业</span></td><td class="t2">中国空调在欧洲卖爆，多品牌正加急补货</td><td class="t3">财联社</td></tr>
+<tr><td><span class="br">政策</span></td><td class="t2">北京经信局：专项政策持续赋能AIGC产业链</td><td class="t3">财联社</td></tr>
+<tr><td><span class="bg_">利好</span></td><td class="t2">高盛：投资者低配科技巨头，转向AI半导体</td><td class="t3">新浪</td></tr>
+</table>
+</section>
+
+<!-- 机构研报 — 独占一行 fw -->
+<section class="sec fw">
+<div class="sh"><span class="ico">◉</span> 机构研报 <span class="meta">21篇 · 研报客+IMA+网搜 三源融合</span></div>
+<table>
+<colgroup><col style="width:56px"><col style="width:52px"><col><col style="width:38px"><col style="width:52px"></colgroup>
+<tr><th>机构</th><th>赛道</th><th>观点</th><th>方向</th><th>来源</th></tr>
+<tr><td class="tb">华创</td><td><span class="bcy">光纤</span></td><td class="t2">特发信息深度：AI驱动光互联需求爆发，光棒涨价400%，MPO量价齐升</td><td><span class="bg_">利好</span></td><td class="t3">研报客</td></tr>
+<tr><td class="tb">国盛</td><td><span class="bcy">光纤</span></td><td class="t2">光模块H2业绩加速：1.6T放量+上游物料瓶颈缓解</td><td><span class="bg_">利好</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">长安</td><td><span class="bcy">光纤</span></td><td class="t2">光通信最好的时代：ARR与CAPEX闭环，光模块/光芯片价值占比提升</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="bcy">光纤</span></td><td class="t2">光互联进入景气加速期，龙头公司业绩增长明确</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb" style="color:var(--dn)">综合</td><td><span class="bcy">光纤</span></td><td class="t2">中际旭创两周8阴线蒸发千亿，27家看多但分歧加大</td><td><span class="bo">利空</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">中信</td><td><span class="br">半导体</span></td><td class="t2">功率半导体涨价延续至2027，供需改善+产能收缩+需求恢复</td><td><span class="bg_">利好</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">长安</td><td><span class="br">半导体</span></td><td class="t2">MLCC下半年加速紧缺：三星对代理商涨价15-40%</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="br">半导体</span></td><td class="t2">国产CPU产业投资图谱：技术进步+政策支持，份额提升显著</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">高盛</td><td><span class="br">半导体</span></td><td class="t2">投资者低配科技巨头，转向AI受益者半导体</td><td><span class="bcy">中性</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">网搜</td><td><span class="br">半导体</span></td><td class="t2">存储进入指数增长时代：AI算力驱动打破传统线性估值</td><td><span class="bg_">利好</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">东吴</td><td><span class="bgd">铜箔</span></td><td class="t2">诺德股份深度：铜箔盈利反转，需求产能率回升至93%</td><td><span class="bg_">利好</span></td><td class="t3">研报客</td></tr>
+<tr><td class="tb">银河</td><td><span class="bo">氟化工</span></td><td class="t2">7月金股：永和股份入选，配额制盈利改善</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">申万</td><td><span class="bbl">算力</span></td><td class="t2">7月十大金股：杰普特(激光器)+雅克科技(前驱体)</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">网搜</td><td><span class="bbl">算力</span></td><td class="t2">AI算力链全板块业绩弹性最强，中报预告领跑高增赛道</td><td><span class="bg_">利好</span></td><td class="t3">网搜</td></tr>
+<tr><td class="tb">长安</td><td><span class="bbl">策略</span></td><td class="t2">牛市下半场延续至2027：科技+央国企改革+券商消费为主线</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="bbl">券商</span></td><td class="t2">券商估值十年低位：业绩创新高+头部券商低估值打开空间</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="bo">养殖</span></td><td class="t2">强call养殖：猪周期产能去化加速至Q4，肉牛涨价至2028</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="bcy">风电</span></td><td class="t2">风电下半年业绩+订单+招标三维共振，金风/东方电缆订单饱满</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+<tr><td class="tb">长安</td><td><span class="bgd">金刚石</span></td><td class="t2">培育钻&金刚石散热：第四代半导体推动金刚石+铜/铝复合材料需求</td><td><span class="bg_">利好</span></td><td class="t3">IMA</td></tr>
+</table>
+<div class="lbox"><b>聚焦：</b>光通信/光纤预制棒紧缺涨价 + 半导体功率器件涨价延续 + AI算力链业绩兑现 + 锂电铜箔供需反转</div>
+</section>
+
+<!-- 淘股吧 -->
+<section class="sec">
+<div class="sh"><span class="ico">◉</span> 淘股吧 <span class="meta">5位博主</span></div>
+<table>
+<colgroup><col style="width:56px"><col style="width:38px"><col></colgroup>
+<tr><th>博主</th><th>更新</th><th>核心观点 + 标的</th></tr>
+<tr><td class="tb" style="color:var(--gld)">圆小二</td><td><span class="bgd">7/4</span></td><td class="t2"><b>量化时代节奏为王</b>：海外链退潮→降预期；半导体最后中军；气体套利；空调暗线 <span class="tag y">和远气体</span><span class="tag y">南大光电</span><span class="tag r">太极实业</span></td></tr>
+<tr><td class="tb">太阳微笑</td><td><span class="bg_">7/3</span></td><td class="t2">机器人或成主线(44涨停)；商业航天7/10火箭有预期 <span class="tag r">北京君正</span><span class="tag r">诺德股份</span></td></tr>
+<tr><td class="tb">九尾猫</td><td><span class="bo">7/2</span></td><td class="t2">科技跌到低谷，多维度冰点共振强烈看修复 <span class="tag r">金海通</span><span class="tag r">雅克科技</span></td></tr>
+<tr><td class="tb">东北玄</td><td><span class="bo">6/25</span></td><td class="t2">RCL产业链深度拆解；半导体长期大趋势 <span class="tag r">北方华创</span><span class="tag r">中微公司</span></td></tr>
+<tr><td class="tb">只核</td><td><span class="bo">5/31</span></td><td class="t2">科技筹码下降通道看调整；关注机器人/长鑫 <span class="tag c">机器人</span><span class="tag c">长鑫</span></td></tr>
+</table>
+<div class="lbox"><b>共识：</b>科技缩容/调整阶段，从全面扩散→聚焦少数抗跌方向。半导体=最后中军。低位(机器人、商业航天、空调)酝酿预期差。</div>
+</section>
+
+<!-- 抖音 fw -->
+<section class="sec fw">
+<div class="sh"><span class="ico">◉</span> 抖音 <span class="meta">口罩哥 · 115万粉</span></div>
+<div class="dy"><span class="dyt">16:03</span><div><strong>机器人资本大考</strong><p>宇树联合创始人：机器人没大面积应用，具身智能大模型不够成熟；宇树科创板注册生效即将上市，<b>供应商先起</b>——存储元年+机器人元年</p></div></div>
+<div class="dy"><span class="dyt">15:33</span><div><strong>华尔街做市商被522政策kill掉1亿刀</strong><p>海纳国际起诉100+交易者内幕交易；关注<b>期权市场异动</b></p></div></div>
+<div class="dy"><span class="dyt">15:25</span><div><strong>三星crazy</strong><p>三星建台积电之外第二代工巨头，积压订单50万亿韩元；Meta用三星2纳米量产10万片；<b>算力租赁</b>被Meta/SpaceX验证</p></div></div>
+<div class="lbox"><b>线索：</b>宇树上市→供应商先行；存储+机器人双催化；三星2纳米重塑代工格局</div>
+</section>
+
+<!-- 未来大事件 -->
+<section class="sec">
+<div class="sh"><span class="ico">◉</span> 未来大事件 <span class="meta">关键时间窗口</span></div>
+<table>
+<colgroup><col style="width:64px"><col style="width:48px"><col><col style="width:48px"></colgroup>
+<tr><th>时间</th><th>类型</th><th>事件</th><th>影响</th></tr>
+<tr><td class="tr">7/10</td><td><span class="bbl">航天</span></td><td class="t2">可回收火箭发射，商业航天关键验证节点</td><td><span class="bg_">利好</span></td></tr>
+<tr><td class="tr">7月中</td><td><span class="br">行业</span></td><td class="t2">功率半导体Q3涨价执行：MOSFET/IGBT 8-12%</td><td><span class="bg_">利好</span></td></tr>
+<tr><td class="tr">7/15</td><td><span class="br">政策</span></td><td class="t2">豆包智能体功能正式下线，AI Agent产品调整</td><td><span class="bo">中性</span></td></tr>
+<tr><td class="tr">7/下</td><td><span class="bo">公司</span></td><td class="t2">风华高科(000636)中报披露，MLCC产能利用率验证</td><td><span class="bg_">利好</span></td></tr>
+<tr><td class="tr">7/下</td><td><span class="bo">公司</span></td><td class="t2">多氟多(002407)业绩预告，六氟磷酸锂价格确认</td><td><span class="bcy">中性</span></td></tr>
+<tr><td class="tr">Q3</td><td><span class="br">行业</span></td><td class="t2">NVIDIA Blackwell Ultra出货量翻倍，算力链景气验证</td><td><span class="bg_">利好</span></td></tr>
+<tr><td class="tr">Q3</td><td><span class="br">行业</span></td><td class="t2">三星DRAM提价20%执行期，存储涨价链利润兑现</td><td><span class="bg_">利好</span></td></tr>
+<tr><td class="tr">2027</td><td><span class="br">行业</span></td><td class="t2">META 2027资本开支"惊人地高"，算力基建持续扩张</td><td><span class="bg_">利好</span></td></tr>
+</table>
+</section>
+
+</div><!-- .g end -->
+
+<!-- ③ 策略 -->
+<section class="sec" style="margin-bottom:0">
+<div class="sh"><span class="ico">◉</span> 策略 <span class="meta">全源综合</span></div>
+<div class="strat">
+<div class="sc long"><h4><span class="dot"></span>做多</h4><ul><li>风华高科(000636) MLCC下半年加速紧缺(三星涨价15-40%)</li><li>诺德股份(600110) 铜箔供需反转+极薄占比50%</li><li>特发信息(000070) 光棒涨价400%+MPO量价齐升</li><li>永和股份 氟化工配额制盈利改善</li><li>人形机器人链 CCXI首选+宇树供应商先行</li></ul></div>
+<div class="sc wait"><h4><span class="dot"></span>观察等待</h4><ul><li>多氟多(002407) 六氟磷酸锂价格企稳待确认</li><li>功率半导体涨价幅度需观察Q3兑现</li><li>中际旭创 27家看多但两周8阴蒸发千亿</li><li>商业航天 7/10火箭发射为关键验证节点</li><li>宇树科技 拟上市，注册生效但时间未定</li></ul></div>
+<div class="sc risk"><h4><span class="dot"></span>风险提示</h4><ul><li>AI Agent开发不及预期(Serenity★★☆)</li><li>CPO板块个股暴跌(AAOI-17% AEHR-18%)</li><li>科技整体缩容→聚焦少数方向</li><li>522事件内幕交易争议→期权异动</li><li>三星2纳米追赶台积电→代工格局重塑</li></ul></div>
+</div>
+</section>
+
+<div class="ft">DailyPulse · <span>v4</span> · 2026.07.04</div>
+</main>
+<script>
+const h=document.getElementById('hdr');
+window.addEventListener('scroll',()=>{h.classList.toggle('elevated',window.scrollY>6)},{passive:true});
+document.querySelectorAll('.mc').forEach(c=>{c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%')})});
+
+// 情绪折线图 — 动画 + 鼠标hover tooltip + 自适应宽度
+(function(){
+  const canvas=document.getElementById('sentChart');
+  const tip=document.getElementById('chartTip');
+  if(!canvas||!tip)return;
+
+  // 市场温度 S 数据（由开盘啦原始数据按 11 因子公式计算）
+  const data=[69.2,78.9,78.5,88.5,71.4,78.8,86.2,50.9,53.3,69.8,72.3,30.5,31.0];
+  const labels=['6/16','6/17','6/18','6/22','6/23','6/24','6/25','6/26','6/29','6/30','7/1','7/2','7/3'];
+  const fullLabels=labels;
+  const minV=0,maxV=100;
+  const pad={t:18,b:14,l:26,r:10};
+  const dpr=window.devicePixelRatio||1;
+
+  let W,H,xStep,yScale,points=[];
+  let animProg=0,animId=null;
+
+  function yS(v){return pad.t+H*(1-(v-minV)/(maxV-minV))}
+
+  function size(){
+    const r=canvas.getBoundingClientRect();
+    W=r.width;H=120;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    xStep=(W-pad.l-pad.r)/(data.length-1);
+    points=data.map((v,i)=>({x:pad.l+i*xStep,y:yS(v),v,i}));
+  }
+
+  function draw(prog){
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+
+    // grid + Y labels (0/50/100 fixed)
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+    [0,25,50,75,100].forEach(v=>{const y=yS(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke()});
+    // Y axis labels
+    if(prog>=1){
+      ctx.fillStyle='rgba(255,255,255,.18)';ctx.font='500 9px "JetBrains Mono"';ctx.textAlign='right';
+      [0,50,100].forEach(v=>{const y=yS(v);ctx.fillText(v,pad.l-2,y+3)});
+    }
+
+    // how many points to show based on animation progress
+    const n=Math.max(1,Math.ceil(data.length*prog));
+    const pts=points.slice(0,n);
+    // for the last animated point, interpolate
+    const frac=data.length*prog-Math.floor(data.length*prog);
+    let lastPt=pts[pts.length-1];
+    if(n<data.length&&frac>0){
+      const prev=points[n-1],next=points[n];
+      lastPt={x:prev.x+(next.x-prev.x)*frac,y:prev.y+(next.y-prev.y)*frac,v:Math.round(prev.v+(next.v-prev.v)*frac)};
+      pts.push(lastPt);
+    }
+
+    // area fill
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.lineTo(lastPt.x,H-pad.b);ctx.lineTo(pts[0].x,H-pad.b);ctx.closePath();
+    const grd=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+    grd.addColorStop(0,'rgba(231,76,60,.18)');grd.addColorStop(1,'rgba(231,76,60,0)');
+    ctx.fillStyle=grd;ctx.fill();
+
+    // line
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle='#E74C3C';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+
+    // dots
+    pts.slice(0,-1).forEach((p,i)=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fillStyle=i===pts.length-2&&n<data.length?'#E74C3C':'rgba(231,76,60,.5)';ctx.fill();
+    });
+
+    // last dot glow
+    ctx.beginPath();ctx.arc(lastPt.x,lastPt.y,7,0,Math.PI*2);ctx.fillStyle='rgba(231,76,60,.12)';ctx.fill();
+    ctx.beginPath();ctx.arc(lastPt.x,lastPt.y,3.5,0,Math.PI*2);ctx.fillStyle='#E74C3C';ctx.fill();
+
+    // x labels (only when fully drawn)
+    if(prog>=1){
+      ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='500 9px "JetBrains Mono"';ctx.textAlign='center';
+      labels.forEach((l,i)=>{if(l)ctx.fillText(l,pad.l+i*xStep,H-1)});
+    }
+  }
+
+  // animation
+  function animate(){
+    animProg+=0.025;
+    if(animProg>1)animProg=1;
+    draw(animProg);
+    if(animProg<1)animId=requestAnimationFrame(animate);
+  }
+
+  // init
+  size();animProg=0;animate();
+
+  // resize handler
+  let resizeTimer;
+  window.addEventListener('resize',()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(()=>{size();draw(animProg)},100);
+  });
+
+  // hover tooltip
+  const canvasBox=canvas.parentElement;
+  canvasBox.addEventListener('mousemove',e=>{
+    if(animProg<1)return;
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    // find closest point
+    let closest=null,minDist=Infinity;
+    points.forEach(p=>{const d=Math.abs(p.x-mx);if(d<minDist){minDist=d;closest=p}});
+    if(!closest||minDist>30){tip.style.opacity='0';return}
+
+    const valEl=tip.querySelector('.v');
+    const dateEl=tip.querySelector('.d');
+    valEl.textContent=closest.v;
+    const sentLabel=closest.v>=70?'偏强':closest.v>=45?'中性':'偏弱';
+    dateEl.textContent=fullLabels[closest.i]+' · '+sentLabel;
+
+    // position tooltip above the point
+    let left=closest.x-tip.offsetWidth/2;
+    let top=closest.y-tip.offsetHeight-12;
+    // flip below if too high
+    if(top<0){top=closest.y+14;tip.classList.add('top')}else{tip.classList.remove('top')}
+    // clamp horizontal
+    left=Math.max(4,Math.min(W-tip.offsetWidth-4,left));
+
+    tip.style.left=left+'px';
+    tip.style.top=top+'px';
+    tip.style.opacity='1';
+
+    // highlight dot
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw(1);
+    // vertical line
+    ctx.strokeStyle='rgba(231,76,60,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(closest.x,pad.t);ctx.lineTo(closest.x,H-pad.b);ctx.stroke();
+    ctx.setLineDash([]);
+    // bigger dot
+    ctx.beginPath();ctx.arc(closest.x,closest.y,6,0,Math.PI*2);ctx.fillStyle='rgba(231,76,60,.2)';ctx.fill();
+    ctx.beginPath();ctx.arc(closest.x,closest.y,4,0,Math.PI*2);ctx.fillStyle='#E74C3C';ctx.fill();
+    ctx.beginPath();ctx.arc(closest.x,closest.y,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  });
+
+  canvasBox.addEventListener('mouseleave',()=>{
+    tip.style.opacity='0';
+    if(animProg>=1)draw(1);
+  });
+})();
+</script>
+</body>
+</html>

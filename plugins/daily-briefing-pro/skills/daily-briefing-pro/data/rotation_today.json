@@ -1,0 +1,177 @@
+{
+  "date": "2026-09-21",
+  "asof": "2026-09-15",
+  "status": "ok",
+  "source": "Industry Rotation Core v2.0.0",
+  "universe_label": "同花顺行业指数 (90 个板块)",
+  "top_k": 15,
+  "primary_horizon": 5,
+  "horizons": [
+    3,
+    5
+  ],
+  "train_last": {
+    "3": "2026-09-10",
+    "5": "2026-09-08"
+  },
+  "train_rows": {
+    "3": 236940,
+    "5": 236760
+  },
+  "entries": [
+    {
+      "code": "881172",
+      "name": "电子化学品",
+      "score_t5": 0.004301629316641917,
+      "score_t3": 0.0010616389779656591,
+      "rank_t5": 1,
+      "rank_t3": 4,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881121",
+      "name": "半导体",
+      "score_t5": 0.0027315862785372517,
+      "score_t3": 0.0010032421991958296,
+      "rank_t5": 2,
+      "rank_t3": 5,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881167",
+      "name": "非金属材料",
+      "score_t5": 0.0025488789974332355,
+      "score_t3": 0.0013439836011178003,
+      "rank_t5": 3,
+      "rank_t3": 1,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881123",
+      "name": "其他电子",
+      "score_t5": 0.00208292565645653,
+      "score_t3": 0.001231624360327251,
+      "rank_t5": 4,
+      "rank_t3": 2,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881267",
+      "name": "能源金属",
+      "score_t5": 0.0018873687679230235,
+      "score_t3": 8.532130033403677e-05,
+      "rank_t5": 5,
+      "rank_t3": 30,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881114",
+      "name": "金属新材料",
+      "score_t5": 0.0018384792496393629,
+      "score_t3": 0.0010823654756335914,
+      "rank_t5": 6,
+      "rank_t3": 3,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881124",
+      "name": "消费电子",
+      "score_t5": 0.0016975103208041974,
+      "score_t3": 0.0001406468785792189,
+      "rank_t5": 7,
+      "rank_t3": 26,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881122",
+      "name": "光学光电子",
+      "score_t5": 0.0016666330567873169,
+      "score_t3": 0.0006291397977092796,
+      "rank_t5": 8,
+      "rank_t3": 12,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881117",
+      "name": "通用设备",
+      "score_t5": 0.001553879845898447,
+      "score_t3": 8.537300326479449e-05,
+      "rank_t5": 9,
+      "rank_t3": 29,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881140",
+      "name": "化学制药",
+      "score_t5": 0.0015441513569190075,
+      "score_t3": -5.4209632448286256e-05,
+      "rank_t5": 10,
+      "rank_t3": 34,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881168",
+      "name": "工业金属",
+      "score_t5": 0.001333726711355781,
+      "score_t3": -0.00030198602192071765,
+      "rank_t5": 11,
+      "rank_t3": 51,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881282",
+      "name": "其他电源设备",
+      "score_t5": 0.0010404653076797545,
+      "score_t3": 0.00021749542326572114,
+      "rank_t5": 12,
+      "rank_t3": 22,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881129",
+      "name": "通信设备",
+      "score_t5": 0.0010344200699953419,
+      "score_t3": 0.000749761945309247,
+      "rank_t5": 13,
+      "rank_t3": 8,
+      "aligned": true,
+      "change": "baseline"
+    },
+    {
+      "code": "881281",
+      "name": "电池",
+      "score_t5": 0.001008771119887618,
+      "score_t3": 0.00048797566383084655,
+      "rank_t5": 14,
+      "rank_t3": 16,
+      "aligned": false,
+      "change": "baseline"
+    },
+    {
+      "code": "881105",
+      "name": "煤炭开采加工",
+      "score_t5": 0.0009995776022545563,
+      "score_t3": 8.026486631868826e-05,
+      "rank_t5": 15,
+      "rank_t3": 31,
+      "aligned": false,
+      "change": "baseline"
+    }
+  ],
+  "new_entries": [],
+  "dropped": [],
+  "compare_base": "",
+  "note": "模型只给行业相对排序，分数不是上涨概率；主周期 T+5，按 15 个板块等权调仓"
+}

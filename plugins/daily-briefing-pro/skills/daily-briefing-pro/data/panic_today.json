@@ -1,0 +1,186 @@
+{
+  "date": "2026-09-21",
+  "requested_date": "2026-09-21",
+  "data_date": "2026-09-21",
+  "score": 95.1,
+  "status": "ok",
+  "phase": "高潮",
+  "momentum": "动能平稳",
+  "cycle_label": "高潮｜动能平稳",
+  "delta1": 13.9,
+  "delta2": -0.6,
+  "note": "当日用实时口径补齐（已与开盘啦逐项对齐）",
+  "model": "A-SHORT-SENTIMENT-3.2",
+  "model_label": "情绪模型3.2 · 六因子加权 + 接缝修正 + 非线性校正",
+  "regime": "Bear",
+  "regime_label": "Bear（上证低于MA250）",
+  "j_label": "弱分歧→一致",
+  "repair_confirmed": false,
+  "components": {
+    "F": 94.6,
+    "L": 77.0,
+    "R": 82.0,
+    "A": 88.5,
+    "B": 80.9,
+    "V": 72.9,
+    "Q": 85.7,
+    "J": 28.2,
+    "M": 15.4
+  },
+  "factor_display": [
+    {
+      "name": "赚钱反馈F",
+      "value": 94.6,
+      "kind": "score"
+    },
+    {
+      "name": "连板生态L",
+      "value": 77.0,
+      "kind": "score"
+    },
+    {
+      "name": "风险质量R",
+      "value": 82.0,
+      "kind": "score"
+    },
+    {
+      "name": "进攻扩散A",
+      "value": 88.5,
+      "kind": "score"
+    },
+    {
+      "name": "市场广度B",
+      "value": 80.9,
+      "kind": "score"
+    },
+    {
+      "name": "量能确认V",
+      "value": 72.9,
+      "kind": "score"
+    },
+    {
+      "name": "基础强度Q",
+      "value": 85.7,
+      "kind": "score"
+    },
+    {
+      "name": "接缝J",
+      "value": 28.2,
+      "kind": "signed"
+    }
+  ],
+  "source": "实时口径（东财涨停池 + 新浪全市场，已与开盘啦逐项对齐）",
+  "details": {
+    "raw_inputs": {
+      "涨停": 103.0,
+      "跌停": 2.0,
+      "首板": 82.0,
+      "连板": 21.0,
+      "空间": 5.0,
+      "次高": 4.0,
+      "炸板率": 0.1953,
+      "成交额": 946819124308.0,
+      "红盘数": 4211.0
+    },
+    "factors": {
+      "F": 94.6,
+      "L": 77.0,
+      "R": 82.0,
+      "A": 88.5,
+      "B": 80.9,
+      "V": 72.9,
+      "Q": 85.7,
+      "J": 28.2,
+      "M": 15.4
+    },
+    "corrections": {
+      "C_hot": 1.5,
+      "C_J": 1.0,
+      "P_breadth": 0.0,
+      "P_down": 0.0,
+      "P_bomb": 0.0,
+      "P_cool": 0.0,
+      "P_inertia": 0.0
+    },
+    "j_parts": {
+      "leader": 60.2,
+      "follower": 14.9,
+      "promotion": 8.5
+    },
+    "panel_rows": 405,
+    "panel_start": "2025-01-21",
+    "failures": []
+  },
+  "history": [
+    {
+      "date": "2026-09-02",
+      "score": 64.2,
+      "cycle_label": "降温｜退潮加速"
+    },
+    {
+      "date": "2026-09-03",
+      "score": 57.6,
+      "cycle_label": "退潮｜下跌收敛/退潮衰竭"
+    },
+    {
+      "date": "2026-09-04",
+      "score": 42.0,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-07",
+      "score": 90.1,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-08",
+      "score": 79.6,
+      "cycle_label": "修复｜退潮加速"
+    },
+    {
+      "date": "2026-09-09",
+      "score": 65.1,
+      "cycle_label": "退潮｜动能平稳"
+    },
+    {
+      "date": "2026-09-10",
+      "score": 43.9,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-11",
+      "score": 43.4,
+      "cycle_label": "冰点｜下跌收敛/退潮衰竭"
+    },
+    {
+      "date": "2026-09-14",
+      "score": 67.9,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-15",
+      "score": 53.8,
+      "cycle_label": "冰点｜退潮加速"
+    },
+    {
+      "date": "2026-09-16",
+      "score": 89.9,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-17",
+      "score": 66.6,
+      "cycle_label": "修复｜退潮加速"
+    },
+    {
+      "date": "2026-09-18",
+      "score": 81.1,
+      "cycle_label": "修复｜上攻加速"
+    },
+    {
+      "date": "2026-09-21",
+      "score": 95.1,
+      "cycle_label": "高潮｜动能平稳"
+    }
+  ]
+}

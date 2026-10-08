@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-15",
+  "raw_date": "2026-09-15",
+  "data_date": "",
+  "opinions": [],
+  "status": "error",
+  "source": "serenitysaid.com",
+  "error": "HTTP Error 521: <none>",
+  "note": "Serenity抓取失败；未使用旧帖补齐"
+}

@@ -1,0 +1,3 @@
+interface:
+  display_name: "A股个股深度分析"
+  short_description: "按数据采集、诊断分析和HTML汇编生成暗黑投行风格个股报告"

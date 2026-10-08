@@ -1,0 +1,33 @@
+{
+  "focus_keywords": [
+    "AI算力 数据中心",
+    "被动元件 HVLP铜箔",
+    "算力金属",
+    "功率半导体 AlN陶瓷",
+    "氦气",
+    "氟化工 新能源材料",
+    "光纤光棒"
+  ],
+  "major_keywords": ["深度研究", "行业深度", "金股"],
+  "ima_knowledge_base_id": "7297585010204027",
+  "ima_knowledge_base_name": "长安投研【持续更新】",
+  "yanbaoke_script": "node scripts/search.mjs",
+  "yanbaoke_search_type": "content",
+  "yanbaoke_result_count": 50,
+  "web_search_queries": [
+    "券商研报 机构观点 {date}",
+    "AI算力 半导体 机构研报 {date}",
+    "氟化工 新能源材料 研报 {date}",
+    "光纤 光通信 机构研报 {date}"
+  ],
+  "date_fallback_days": 2,
+  "output_format": "text",
+  "industry_groups": {
+    "AI算力供应链": ["AI算力", "AI服务器", "算力供应链", "数据中心", "电源", "被动元件", "HVLP铜箔"],
+    "半导体涨价链": ["半导体", "功率半导体", "芯片涨价", "AlN陶瓷基板"],
+    "氦气产业链": ["氦气", "氦气产业链"],
+    "氟化工/新能源材料": ["氟化工", "新能源材料", "锂电铜箔"],
+    "光纤光通信": ["光纤", "光棒"],
+    "算力金属": ["算力金属", "铜箔"]
+  }
+}

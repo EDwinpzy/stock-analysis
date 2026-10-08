@@ -1,0 +1,553 @@
+{
+  "date": "2026-09-21",
+  "data_date": "2026-09-21",
+  "statistics": {
+    "date": "2026-09-21",
+    "total_analyses": 37,
+    "by_platform": {
+      "淘股吧": {
+        "bull": 12,
+        "bear": 1,
+        "neutral": 1,
+        "total": 14,
+        "blogger_count": 14
+      },
+      "雪球": {
+        "bull": 6,
+        "bear": 2,
+        "neutral": 15,
+        "total": 23,
+        "blogger_count": 23
+      }
+    },
+    "by_market": {
+      "bull": 12,
+      "bear": 2,
+      "neutral": 6
+    },
+    "by_sector": {
+      "科技": {
+        "bull": 12,
+        "bear": 1,
+        "neutral": 4,
+        "blogger_count": 17
+      },
+      "创新药": {
+        "bull": 8,
+        "bear": 1,
+        "neutral": 0,
+        "blogger_count": 9
+      },
+      "半导体/存储": {
+        "bull": 5,
+        "bear": 0,
+        "neutral": 0,
+        "blogger_count": 5
+      },
+      "PCB/覆铜板": {
+        "bull": 4,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 5
+      },
+      "AI算力/光通信": {
+        "bull": 2,
+        "bear": 0,
+        "neutral": 3,
+        "blogger_count": 5
+      },
+      "潮玩/消费": {
+        "bull": 1,
+        "bear": 2,
+        "neutral": 1,
+        "blogger_count": 4
+      },
+      "有色金属": {
+        "bull": 1,
+        "bear": 0,
+        "neutral": 2,
+        "blogger_count": 3
+      },
+      "港股": {
+        "bull": 3,
+        "bear": 0,
+        "neutral": 0,
+        "blogger_count": 3
+      },
+      "白酒": {
+        "bull": 1,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 2
+      },
+      "新能源车": {
+        "bull": 1,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 2
+      }
+    },
+    "by_sector_sorted": [
+      {
+        "sector": "科技",
+        "bull": 12,
+        "bear": 1,
+        "neutral": 4,
+        "blogger_count": 17
+      },
+      {
+        "sector": "创新药",
+        "bull": 8,
+        "bear": 1,
+        "neutral": 0,
+        "blogger_count": 9
+      },
+      {
+        "sector": "半导体/存储",
+        "bull": 5,
+        "bear": 0,
+        "neutral": 0,
+        "blogger_count": 5
+      },
+      {
+        "sector": "PCB/覆铜板",
+        "bull": 4,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 5
+      },
+      {
+        "sector": "AI算力/光通信",
+        "bull": 2,
+        "bear": 0,
+        "neutral": 3,
+        "blogger_count": 5
+      },
+      {
+        "sector": "潮玩/消费",
+        "bull": 1,
+        "bear": 2,
+        "neutral": 1,
+        "blogger_count": 4
+      },
+      {
+        "sector": "有色金属",
+        "bull": 1,
+        "bear": 0,
+        "neutral": 2,
+        "blogger_count": 3
+      },
+      {
+        "sector": "港股",
+        "bull": 3,
+        "bear": 0,
+        "neutral": 0,
+        "blogger_count": 3
+      },
+      {
+        "sector": "白酒",
+        "bull": 1,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 2
+      },
+      {
+        "sector": "新能源车",
+        "bull": 1,
+        "bear": 0,
+        "neutral": 1,
+        "blogger_count": 2
+      }
+    ]
+  },
+  "analyses": [
+    {
+      "platform": "淘股吧",
+      "blogger": "作手阿意",
+      "direction": "看多",
+      "sectors": [
+        "创新药"
+      ],
+      "is_market_view": true,
+      "reason": "有问题的，盘中没能及时回 OK，日内情绪继续维持在超预期状态，同时伴随了新周期的启动"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "小土堆爆金币",
+      "direction": "看多",
+      "sectors": [
+        "半导体/存储",
+        "PCB/覆铜板",
+        "创新药",
+        "科技",
+        "有色金属",
+        "港股"
+      ],
+      "is_market_view": true,
+      "reason": "集体高潮次日去弱留强谨慎新开，机会上看看上周科技老龙能否陆续反包转强，兄弟们认真看，多学思考路径很重要，希望都能借此突破"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "zarili",
+      "direction": "看多",
+      "sectors": [
+        "半导体/存储",
+        "PCB/覆铜板",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "去年业绩平平，今年一二季度开始爆发的，三季度一般也不会差"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "米开朗基瑞",
+      "direction": "看多",
+      "sectors": [
+        "半导体/存储",
+        "创新药",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "科技还有一个要注意的地方，医药之前是作为科技的半生主线，不排除明天会有让位的动作和想法，所以明天要注意医药分歧科技走强时"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "星辰趋势主升",
+      "direction": "看多",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "所以我一直说，同样的思路，很多人心性不够，是很难做得好的，要么多看几期，等心态练的 慢慢来嘛，我也不是一天就能达到这个认"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "庄哥说股",
+      "direction": "看多",
+      "sectors": [
+        "半导体/存储",
+        "PCB/覆铜板",
+        "创新药",
+        "科技"
+      ],
+      "is_market_view": false,
+      "reason": "走地产就是低位修复，老登逻辑，高度受压制"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "短狙作手",
+      "direction": "看空",
+      "sectors": [
+        "创新药",
+        "科技",
+        "潮玩/消费"
+      ],
+      "is_market_view": true,
+      "reason": "（第四天分享整体向好，这里不容易出现负反馈）暂时依旧不看空"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "可爱苏酥",
+      "direction": "看多",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "你是我见过白嫖最狠的了…［图片］ 分时的黄线就是支撑线，也就是均线，大半天都在均线下的，怎么还不能执行"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "镀金梦想",
+      "direction": "看多",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "第十九届镀金百万杯 @黄大仙小朋友 （操作模式：擅长做热点强势股，波段持股为主）  ［图片］ 实盘中的龙头选手你可以介绍"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "南山游龙",
+      "direction": "看多",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "不看，证券一般不动，只有指数突破的时候才动，赚不到什么钱"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "东北玄",
+      "direction": "看多",
+      "sectors": [
+        "创新药",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "如果是阶段性就是看2000年后的指数走势就行，有规律，尤其是23年之后拉升杀跌反弹震荡主升都是差不多的手法"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "太阳的微笑",
+      "direction": "看多",
+      "sectors": [
+        "创新药",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "科技股，现在逆势上涨的，通常就是有主力控盘的、值得继续关注的好宝宝"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "狼王行千里",
+      "direction": "看多",
+      "sectors": [
+        "创新药",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "三周期 正常载体应该是大科技 说的是三周期向上一批品种的的势头，反推 老周期反弹"
+    },
+    {
+      "platform": "淘股吧",
+      "blogger": "圆小二",
+      "direction": "中性",
+      "sectors": [
+        "AI算力/光通信",
+        "科技",
+        "潮玩/消费"
+      ],
+      "is_market_view": true,
+      "reason": "【9.21圆宝收评】总体来说，今天一天的操作应对算是知行合一。早盘已经讲得很清楚，科技今天只有S点，没有B点，所以今天按"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "稳我才",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "回复 @传说中de基民 : 摩根标普500代码017641限额10元。长信标普100代码519981限额100元。需要的"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "午夜神灵305",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "回复 @ERIXON : 没有这票才烦呢？我如果没有这个票，天天睡不好的，// @ERIXON :回复 @午夜神灵305"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "路人散去",
+      "direction": "中性",
+      "sectors": [
+        "有色金属"
+      ],
+      "is_market_view": false,
+      "reason": "Mysteel库存速递：中国铝锭现货库存总量为69.8万吨，较上期数据减少0.7万吨。 $云铝股份(SZ000807)$"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "如你能感同我的深受",
+      "direction": "看多",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "悖论 涨价的是三环集团，理论上来说应该是三环集团最有理由和逻辑上涨📈📈📈📈 结果现实就是，其它的成交量迅速放大，然后被量"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "切了个菜",
+      "direction": "看空",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "投资的风险是可以控制的，你可以分散，可以止损，可以等待"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "买股票的老木匠",
+      "direction": "看多",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "他测算的数据大概是这样的： 筛选过去三年滚动窗口内，阶段低点上涨至 5 倍，首次触及当天收盘前买入"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "庶人哑士",
+      "direction": "中性",
+      "sectors": [
+        "AI算力/光通信"
+      ],
+      "is_market_view": false,
+      "reason": "回复 @呆书房的小散 : 感谢分享！非常有用的信息。 请问老兄是怎么了解到这些信息的？是从业者吗？// @呆书房的小散 "
+    },
+    {
+      "platform": "雪球",
+      "blogger": "三咩开泰",
+      "direction": "看多",
+      "sectors": [
+        "科技",
+        "港股",
+        "白酒"
+      ],
+      "is_market_view": true,
+      "reason": "$会稽山(SH601579)$ 我说了不会翻倍就结束的，白酒经销商，黄酒股票买了，酒会不断囤货，业绩涨，股价也涨，股票赚"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "踏遍青山966",
+      "direction": "中性",
+      "sectors": [
+        "有色金属"
+      ],
+      "is_market_view": false,
+      "reason": "$紫金矿业(SH601899)$ 国庆节前，紫金矿业和中金黄金唯一大涨或者大跌的希望来自于国际黄金期货或现货价格 有些传"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "睿知睿见",
+      "direction": "中性",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "两年科技牛，A股的三大变化 距离2024年9月24日马上就要满两年了！ 如果你是一个老股民，应该能感到本次牛市中，股市发"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "寻觅光影",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": true,
+      "reason": "$C沈鼓(SH601091)$ 为什么炒它，这两个字翻过来看看，股神！中国A股之低智，丢人都丢到家了！"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "飞跃重重山岭",
+      "direction": "中性",
+      "sectors": [
+        "白酒"
+      ],
+      "is_market_view": true,
+      "reason": "$五粮液(SZ000858)$ jd上五粮液15日销售件数比飞天要多很多啊 飞天在jd上 1800+ 随时可以买到 也不"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "逆向思维巴帮主",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "回复 @v展翔v : 药明康德股价在90的时候我多次发帖唱多，鼓励大家买入，现在股价涨起来了，我就不咋谈了。 现在康方生"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "汉中路股侠",
+      "direction": "看多",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "信心比黄金重要，同样也说明，信心一旦丢失过，修复起来也很困难"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "仁者爱人普度众生",
+      "direction": "看多",
+      "sectors": [
+        "AI算力/光通信"
+      ],
+      "is_market_view": false,
+      "reason": "长假前是布局绝佳时间窗口，算力产业链全面反攻已经开启 回顾九二四牛市以来，每个长假之后都迎来上涨趋势行情"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "快乐精灵之价值波段",
+      "direction": "看多",
+      "sectors": [
+        "AI算力/光通信",
+        "半导体/存储",
+        "PCB/覆铜板",
+        "创新药",
+        "新能源车",
+        "潮玩/消费",
+        "港股"
+      ],
+      "is_market_view": false,
+      "reason": "//... 午评：可能上周我的确谨慎过头了，投资真的难，一次误判可能就50%没了，所以， 2到7成滚动仓操作， 加仓尽量"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "临摹醉红颜",
+      "direction": "中性",
+      "sectors": [
+        "AI算力/光通信",
+        "PCB/覆铜板"
+      ],
+      "is_market_view": false,
+      "reason": "回复 @AI改变生活 : 哎呀记错了 2025年只有2万人 比胜宏2025年年底多3000// @AI改变生活 :回复 "
+    },
+    {
+      "platform": "雪球",
+      "blogger": "回收再利用",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "在当下这时间点上，无论小到股票投资大到买房择业。建议一定要思考一个问题： 我们比别人有特殊优势可以趟出一条路来避免踩坑；"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "养叔的猫",
+      "direction": "看空",
+      "sectors": [
+        "潮玩/消费"
+      ],
+      "is_market_view": true,
+      "reason": "本周开局家电集体跪了， $海尔智家(SH600690)$ 跌破20，格力电器，美的也同步下跌，1990加了海尔1％仓位"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "爱学习的糖",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "段永平：99%的人在错误方向上干了一辈子，也不愿换方向赚大钱 段永平经常谈一句话：做对的事情，把事情做对。 许多人只记住"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "硅头",
+      "direction": "中性",
+      "sectors": [],
+      "is_market_view": false,
+      "reason": "$罗博特科(SZ300757)$ 630亿元压价大哥竟然不出现，有点失落……"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "九三零三",
+      "direction": "中性",
+      "sectors": [
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "回复 @跑步爱好者 : 当然不算啊，只能说有人慢慢在做// @跑步爱好者 :回复 @九三零三 :国轩今天算异动吗  回复"
+    },
+    {
+      "platform": "雪球",
+      "blogger": "十谷鱼粉",
+      "direction": "中性",
+      "sectors": [
+        "新能源车",
+        "科技"
+      ],
+      "is_market_view": true,
+      "reason": "手里的大飞机四剑客终于又重新开涨，航发科技终于又涨回来了.... 早上减了点电池，因为没有与大盘共振，新开了歼35的沈飞"
+    }
+  ],
+  "tgb_raw": {
+    "active_bloggers": 14,
+    "total_posts": 340
+  },
+  "xueqiu_raw": {
+    "active_bloggers": 23,
+    "total_posts": 70
+  },
+  "source": "淘股吧登录页面 + 雪球登录时间线",
+  "status": "ok",
+  "note": "覆盖：淘股吧14人、雪球23人；仅统计目标日期且经内容规则筛选的有效观点"
+}
