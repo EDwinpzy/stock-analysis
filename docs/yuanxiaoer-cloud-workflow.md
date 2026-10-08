@@ -9,6 +9,8 @@
 
 GitHub Actions 负责采集，ChatGPT 云端任务负责蒸馏，两者是独立阶段。仓库中的工作流文件只会创建采集阶段；它不会创建 ChatGPT 定时任务。ChatGPT 云端任务尚未确认前，仍须保留现有本地 Codex 定时任务作为回退，不得把本地执行称为云端执行。
 
+2026-10-09 的推送触发测试已通过：GitHub Actions 完整扫描 23/23 页、226 篇主帖，0 错误，待处理队列为空，采集文件成功写回。每天 21:00 的计划触发尚未实际运行验证；ChatGPT 网页端蒸馏定时任务仍未创建。
+
 ## 蒸馏规则
 
 - 只处理 `data/yuanxiaoer/pending_distillation.json` 中的项目。逐项读取对应的 `data/yuanxiaoer/posts/<id>.json`，只使用作者 ID `12089754` 的主贴正文和本人回复，不混入读者观点。
