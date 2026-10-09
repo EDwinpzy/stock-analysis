@@ -1,0 +1,18 @@
+{
+  "name": "yuanxiaoer",
+  "version": "0.1.0",
+  "description": "圆小二超短情绪交易体系蒸馏与回测工具：节点判定、情绪周期、主线识别、买点卖点，以及一套口径正确的 A 股回测框架。",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "圆小二",
+    "shortDescription": "圆小二超短交易体系蒸馏 + 口径正确的 A 股回测框架",
+    "longDescription": "从 224 篇主贴、75672 条跟帖蒸馏出的超短情绪交易体系，含节点判定、情绪周期、主线识别、个股角色、买卖点与仓位纪律。附 9 个可复现的回测脚本，采用次日开盘买入、公平对照、市场中性化与统计显著性检验；已验证布林走平上穿有效、推荐信号有显著超额、2-5 板与节点标买点无效。",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "按圆小二体系分析当前市场：判断情绪周期、识别主线、给出可执行的买卖点。"
+  }
+}
