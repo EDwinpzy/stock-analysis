@@ -73,43 +73,76 @@ def fetch_eastmoney_news(limit: int = 15, target_date: str | None = None) -> lis
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
     
-    # 东方财富快讯API - 使用正确的参数
     url = "https://np-listapi.eastmoney.com/comm/web/getFastNewsList"
-    params = {
-        "client": "web",
-        "biz": "web_724",
-        "fastColumn": "102",
-        "sortEnd": "",
-        "pageSize": str(limit),
-        "req_trace": "1"
-    }
-    
-    full_url = f"{url}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(
-        full_url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Referer": "https://www.eastmoney.com/"
+    raw_items = []
+    seen_codes = set()
+    cursor = ""
+    page_size = 200 if target_date else limit
+    max_pages = 50 if target_date else 1
+
+    for _page in range(max_pages):
+        params = {
+            "client": "web",
+            "biz": "web_724",
+            "fastColumn": "102",
+            "sortEnd": cursor,
+            "pageSize": str(page_size),
+            "req_trace": "1"
         }
-    )
-    
-    try:
-        with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-    except Exception as e:
-        _FETCH_ERROR = str(e)
-        print(f"东方财富快讯获取失败: {e}", file=sys.stderr)
-        return []
-    
-    # 东方财富API返回code=1表示成功
-    if "data" not in data:
-        _FETCH_ERROR = f"API返回异常：{data}"
-        print(f"API返回异常: {data}", file=sys.stderr)
-        return []
-    
-    raw_items = data["data"].get("fastNewsList", [])
-    if target_date:
-        raw_items = filter_news_by_date(raw_items, target_date)
+        full_url = f"{url}?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(
+            full_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Referer": "https://www.eastmoney.com/"
+            }
+        )
+
+        try:
+            with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+        except Exception as e:
+            _FETCH_ERROR = str(e)
+            print(f"东方财富快讯获取失败: {e}", file=sys.stderr)
+            break
+
+        if "data" not in data:
+            _FETCH_ERROR = f"API返回异常：{data}"
+            print(f"API返回异常: {data}", file=sys.stderr)
+            break
+
+        payload = data.get("data") or {}
+        items = payload.get("fastNewsList") or []
+        if not items:
+            break
+
+        matching = filter_news_by_date(items, target_date) if target_date else items
+        for item in matching:
+            code = str(item.get("code") or "")
+            key = code or (
+                str(item.get("showTime") or ""),
+                str(item.get("title") or ""),
+                str(item.get("summary") or ""),
+            )
+            if key in seen_codes:
+                continue
+            seen_codes.add(key)
+            raw_items.append(item)
+            if len(raw_items) >= limit:
+                break
+
+        if len(raw_items) >= limit or not target_date:
+            break
+
+        item_dates = [_item_date(item) for item in items if _item_date(item)]
+        if item_dates and min(item_dates) < target_date:
+            break
+        next_cursor = str(payload.get("sortEnd") or "")
+        if not next_cursor or next_cursor == cursor:
+            break
+        cursor = next_cursor
+
+    raw_items = raw_items[:limit]
 
     news_list = []
     for item in raw_items:

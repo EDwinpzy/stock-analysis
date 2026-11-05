@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from network_config import create_requests_session
 from runtime_paths import get_data_dir
 from summary_cache import (
     get_cached_summary,
@@ -168,12 +169,10 @@ def fetch_reports(date: str, days: int = 3) -> list:
 
 def attach_report_body(report: dict) -> dict:
     """Bind each report to its original text and validate the stock association."""
-    import requests
     from bs4 import BeautifulSoup
     result = dict(report)
     try:
-        session = requests.Session()
-        session.trust_env = False
+        session = create_requests_session()
         response = session.get(result['source_url'], timeout=25)
         response.raise_for_status()
         response.encoding = 'utf-8'

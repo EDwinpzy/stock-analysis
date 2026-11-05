@@ -16,6 +16,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
+from network_config import create_requests_session
 from runtime_paths import get_data_dir
 DATA_DIR = get_data_dir(SCRIPT_DIR.parent)
 CN_TZ = timezone(timedelta(hours=8))
@@ -99,10 +100,8 @@ def load_cookie_string() -> str:
 
 def fetch_page(url: str, cookie_str: str) -> str:
     """HTTP GET请求页面，返回HTML文本"""
-    import requests
     import time
-    session = requests.Session()
-    session.trust_env = False
+    session = create_requests_session()
     session.headers.update({"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
     for attempt in range(3):
         try:

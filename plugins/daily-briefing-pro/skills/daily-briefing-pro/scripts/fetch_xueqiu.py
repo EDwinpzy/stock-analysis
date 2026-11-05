@@ -25,6 +25,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
+from network_config import playwright_launch_options
 from runtime_paths import get_data_dir
 
 DATA_DIR = get_data_dir(BASE_DIR)
@@ -96,7 +97,9 @@ async def collect(target_date: str, limit: int) -> dict:
     errors = []
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            **playwright_launch_options(headless=True)
+        )
         context = await browser.new_context(user_agent=UA)
         if cookies:
             try:

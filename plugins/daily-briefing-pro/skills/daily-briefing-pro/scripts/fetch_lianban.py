@@ -34,6 +34,7 @@ SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
 
 sys.path.insert(0, str(SCRIPT_DIR))
+from network_config import playwright_launch_options  # noqa: E402
 from runtime_paths import get_data_dir  # noqa: E402
 
 DATA_DIR = get_data_dir(BASE_DIR)
@@ -169,7 +170,9 @@ async def collect_lianban(target_date: str) -> dict:
     }
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            **playwright_launch_options(headless=True)
+        )
         context = await browser.new_context(user_agent=UA)
         page = await context.new_page()
         try:

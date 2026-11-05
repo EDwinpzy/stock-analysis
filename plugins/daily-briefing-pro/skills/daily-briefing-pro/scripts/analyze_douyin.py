@@ -33,6 +33,11 @@ from typing import Optional, List
 from urllib.parse import urljoin
 
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
+from network_config import (
+    curl_proxy_args,
+    httpx_client_kwargs,
+    playwright_launch_options,
+)
 
 
 def _resolve_cookie_path() -> Path:
@@ -294,7 +299,9 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
         raise RuntimeError("当前页面需要 Playwright 浏览器渲染，但环境未安装 playwright") from exc
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
+        browser = await playwright.chromium.launch(
+            **playwright_launch_options(headless=True)
+        )
         try:
             errors = []
             # The current mobile page often returns an empty shell. Desktop renders
@@ -394,7 +401,9 @@ async def parse_douyin_share_url(share_text: str) -> VideoInfo:
 
     # 先尝试轻量 HTTP 路径；抖音页面结构变化时再交给浏览器渲染。
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0, trust_env=False) as client:
+        async with httpx.AsyncClient(
+            **httpx_client_kwargs(follow_redirects=True, timeout=30.0)
+        ) as client:
             share_response = await client.get(share_url, headers=MOBILE_HEADERS)
             video_id = _extract_video_id(str(share_response.url)) or video_id
             detail_url = f"https://www.iesdouyin.com/share/video/{video_id}" if video_id else share_url
@@ -434,7 +443,7 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
     }
     
     curl_cmd = [
-        'curl', '--noproxy', '*', '-f', '-sS', '-L',
+        'curl', *curl_proxy_args(), '-f', '-sS', '-L',
         '--connect-timeout', '20', '--max-time', '90',
         '-H', f'Referer: {headers["Referer"]}',
         '-H', f'User-Agent: {headers["User-Agent"]}',
@@ -513,7 +522,7 @@ def extract_text_from_audio_groq(audio_path: Path, api_key: str) -> str:
         headers = {"Authorization": f"Bearer {api_key}"}
         
         timeout = httpx.Timeout(300.0)
-        with httpx.Client(timeout=timeout, trust_env=False) as client:
+        with httpx.Client(**httpx_client_kwargs(timeout=timeout)) as client:
             response = client.post(api_base, files=files, headers=headers)
             response.raise_for_status()
             return response.text.strip()
@@ -534,7 +543,7 @@ def extract_text_from_audio_openai(audio_path: Path, api_key: str) -> str:
         headers = {"Authorization": f"Bearer {api_key}"}
         
         timeout = httpx.Timeout(300.0)
-        with httpx.Client(timeout=timeout, trust_env=False) as client:
+        with httpx.Client(**httpx_client_kwargs(timeout=timeout)) as client:
             response = client.post(api_base, files=files, headers=headers)
             response.raise_for_status()
             result = response.json()
@@ -556,7 +565,7 @@ def extract_text_from_audio_siliconflow(audio_path: Path, api_key: str) -> str:
         headers = {"Authorization": f"Bearer {api_key}"}
         
         timeout = httpx.Timeout(300.0)
-        with httpx.Client(timeout=timeout, trust_env=False) as client:
+        with httpx.Client(**httpx_client_kwargs(timeout=timeout)) as client:
             response = client.post(api_base, files=files, headers=headers)
             response.raise_for_status()
             result = response.json()

@@ -28,6 +28,7 @@ from runtime_paths import get_data_dir
 import httpx
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from playwright.async_api import async_playwright
+from network_config import playwright_launch_options
 
 # 本地 Whisper 会为每个 analyzer 进程单独加载模型。8GB 显存机器上并发
 # 会让小模型同时争用 GPU，因此默认串行；用户可显式调到2，最大不超过2。
@@ -934,7 +935,9 @@ async def main():
 
     # 启动一个共享的 Playwright browser，所有博主复用
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            **playwright_launch_options(headless=True)
+        )
 
         for blogger_name, urls in blogger_map.items():
             # 只核验到「允许的最早回退日」，避免为整页历史视频逐条渲染详情页

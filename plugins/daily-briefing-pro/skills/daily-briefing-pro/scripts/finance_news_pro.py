@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import re
 
+from network_config import playwright_launch_options
+
 
 # ============== 数据源配置 ==============
 
@@ -274,7 +276,9 @@ def fetch_cls_news(limit: int = 15) -> List[Dict]:
         from playwright.sync_api import sync_playwright
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(
+                **playwright_launch_options(headless=True)
+            )
             page = browser.new_page()
             page.goto('https://www.cls.cn/telegraph', wait_until='domcontentloaded', timeout=30000)
             page.wait_for_timeout(3000)
@@ -382,7 +386,9 @@ def fetch_wallstreet_news(limit: int = 15) -> List[Dict]:
         from playwright.sync_api import sync_playwright
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(
+                **playwright_launch_options(headless=True)
+            )
             page = browser.new_page()
             page.goto('https://wallstreetcn.com/news/global', wait_until='domcontentloaded', timeout=30000)
             page.wait_for_timeout(3000)

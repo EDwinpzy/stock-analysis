@@ -28,6 +28,8 @@ from typing import Mapping, Sequence
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
+from network_config import playwright_launch_options
+
 DEFAULT_REPORT_SUBDIR = ("报告", "每日简报")
 CN = timezone(timedelta(hours=8))
 
@@ -278,7 +280,9 @@ def _check_browser() -> Check:
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(headless=True, timeout=30000)
+            browser = runtime.chromium.launch(
+                **playwright_launch_options(headless=True, timeout=30000)
+            )
             version = browser.version
             browser.close()
     except Exception as exc:  # noqa: BLE001
