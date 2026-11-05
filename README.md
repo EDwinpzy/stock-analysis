@@ -27,7 +27,9 @@ Python 项目，并提供当初约定的 `EmotionEngine` 接口。
 │   ├── panel_history.csv          # 真实历史面板，400 个交易日（2025-01-21 ~ 2026-09-14）
 │   └── input_template.csv         # 输入字段模板
 ├── docs/
-│   └── 使用文档.md                # 面向使用的说明（已随完整包 zip 一起分发）
+│   ├── README.md                  # 文档导航与维护约定
+│   ├── 使用文档.md                # 面向使用的说明（已随完整包 zip 一起分发）
+│   └── yuanxiaoer-cloud-workflow.md # 圆小二云端采集与蒸馏流程
 ├── reference/                     # 用户提供的 3.2 完整包原件（口径基准，不要改）
 ├── tools/
 │   └── run_model.py               # 命令行入口
@@ -38,6 +40,7 @@ Python 项目，并提供当初约定的 `EmotionEngine` 接口。
 
 `emotion/core.py` 是唯一有权定义公式的地方。`config/model_config.json` 是参数真值表，
 `tests/test_model.py::test_frozen_parameters_match_config` 会校验两者一致，防止口径漂移。
+使用说明与圆小二自动化流程见 [docs/README.md](docs/README.md)。
 
 ## 快速开始
 
