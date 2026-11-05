@@ -25,6 +25,8 @@ import uuid
 import urllib3
 import time  # 添加time模块用于sleep延迟
 
+from network_config import requests_proxies
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -122,7 +124,7 @@ class KaipanlaCrawler:
                 data=data,
                 headers=self.headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout  # 使用参数化的超时时间
             )
             response.raise_for_status()
@@ -272,7 +274,7 @@ class KaipanlaCrawler:
                 data=data,
                 headers=self.headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -468,7 +470,7 @@ class KaipanlaCrawler:
                 data=data,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -625,7 +627,7 @@ class KaipanlaCrawler:
                     data=data,
                     headers=self.headers,
                     verify=False,
-                    proxies={'http': None, 'https': None},
+                    proxies=requests_proxies(),
                     timeout=timeout
                 )
                 response.raise_for_status()
@@ -786,7 +788,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -981,7 +983,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1269,7 +1271,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1467,7 +1469,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1541,7 +1543,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1630,7 +1632,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1848,7 +1850,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -1938,7 +1940,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2025,7 +2027,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2123,7 +2125,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2257,7 +2259,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2398,7 +2400,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2566,7 +2568,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2780,7 +2782,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -2964,7 +2966,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -3121,7 +3123,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -3409,7 +3411,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -3610,7 +3612,7 @@ class KaipanlaCrawler:
                 data=data,
                 headers=api_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -3988,7 +3990,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -4128,7 +4130,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -4354,7 +4356,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -4489,7 +4491,7 @@ class KaipanlaCrawler:
                     data=data_params,
                     headers=self.headers,
                     verify=False,
-                    proxies={'http': None, 'https': None},
+                    proxies=requests_proxies(),
                     timeout=timeout
                 )
                 response.raise_for_status()
@@ -4628,7 +4630,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()
@@ -4767,7 +4769,7 @@ class KaipanlaCrawler:
                 data=data_params,
                 headers=self.sector_headers,
                 verify=False,
-                proxies={'http': None, 'https': None},
+                proxies=requests_proxies(),
                 timeout=timeout
             )
             response.raise_for_status()

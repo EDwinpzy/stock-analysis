@@ -11,9 +11,12 @@ API Key 由 CLI 自己从系统凭据库读取，本模块不接触、不落盘 
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from datetime import datetime, timedelta, timezone
+
+from network_config import is_cloud_runtime
 
 CN = timezone(timedelta(hours=8))
 SH_INDEX = "000001.SH"
@@ -39,9 +42,19 @@ def call(*args: str, timeout: int = 120) -> dict:
     if not exe:
         raise HithinkError("未安装 hithink-finance CLI")
     cmd = [exe, *args, "--format", "json", "--no-color"]
+    child_env = None
+    if is_cloud_runtime():
+        child_env = os.environ.copy()
+        child_env.setdefault("NODE_USE_ENV_PROXY", "1")
     try:
         proc = subprocess.run(
-            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            env=child_env,
         )
     except subprocess.TimeoutExpired as exc:
         raise HithinkError(f"命令超时：{' '.join(args)}") from exc

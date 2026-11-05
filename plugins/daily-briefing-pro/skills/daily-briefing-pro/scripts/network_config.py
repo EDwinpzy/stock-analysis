@@ -30,6 +30,11 @@ def create_requests_session():
     return session
 
 
+def requests_proxies():
+    """Override requests' proxy map only for the historical local bypass."""
+    return None if trust_env_proxy() else {"http": None, "https": None}
+
+
 def httpx_client_kwargs(**kwargs) -> dict:
     kwargs.setdefault("trust_env", trust_env_proxy())
     return kwargs

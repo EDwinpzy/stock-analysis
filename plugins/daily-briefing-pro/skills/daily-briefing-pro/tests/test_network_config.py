@@ -2,12 +2,13 @@ import os
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 import network_config
+import _hithink
 
 
 class NetworkConfigTests(unittest.TestCase):
@@ -79,6 +80,23 @@ class NetworkConfigTests(unittest.TestCase):
             self.assertTrue(network_config.httpx_client_kwargs(timeout=10)["trust_env"])
         with patch.dict(os.environ, {}, clear=True):
             self.assertFalse(network_config.httpx_client_kwargs(timeout=10)["trust_env"])
+
+    def test_requests_proxies_keep_local_bypass_and_cloud_environment(self):
+        with patch.dict(os.environ, {"DAILY_BRIEFING_CLOUD": "1"}, clear=True):
+            self.assertIsNone(network_config.requests_proxies())
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                network_config.requests_proxies(),
+                {"http": None, "https": None},
+            )
+
+    def test_hithink_child_gets_node_proxy_flag_in_cloud(self):
+        completed = Mock(stdout='{"ok":true,"data":{}}')
+        with patch.object(_hithink.shutil, "which", return_value="/usr/bin/hithink-finance"):
+            with patch.object(_hithink.subprocess, "run", return_value=completed) as run:
+                with patch.dict(os.environ, {"DAILY_BRIEFING_CLOUD": "1"}, clear=True):
+                    self.assertEqual(_hithink.call("market", "calendar"), {})
+        self.assertEqual(run.call_args.kwargs["env"]["NODE_USE_ENV_PROXY"], "1")
 
 
 if __name__ == "__main__":
