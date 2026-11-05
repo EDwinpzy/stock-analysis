@@ -22,6 +22,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -32,6 +33,44 @@ from typing import Optional, List
 from urllib.parse import urljoin
 
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
+
+
+def _resolve_cookie_path() -> Path:
+    """Use the same persistent cookie file as the daily collector."""
+    configured = os.environ.get("DOUYIN_COOKIE_PATH")
+    if configured:
+        return Path(configured).expanduser()
+    data_dir = os.environ.get("DAILY_BRIEFING_DATA_DIR")
+    if data_dir:
+        return Path(data_dir).expanduser() / "douyin_cookies.json"
+    return Path.home() / ".codex" / "daily-briefing-pro" / "data" / "douyin_cookies.json"
+
+
+COOKIE_PATH = _resolve_cookie_path()
+
+
+def load_douyin_cookies() -> list[dict]:
+    """Load Playwright cookies without exposing their values in diagnostics."""
+    try:
+        payload = json.loads(COOKIE_PATH.read_text(encoding="utf-8"))
+        cookies = payload.get("cookies", []) if isinstance(payload, dict) else payload
+        return [
+            item for item in cookies
+            if isinstance(item, dict) and item.get("name") and item.get("value")
+        ]
+    except (OSError, ValueError):
+        return []
+
+
+async def new_douyin_context(browser, **kwargs):
+    context = await browser.new_context(**kwargs)
+    cookies = load_douyin_cookies()
+    if cookies:
+        try:
+            await context.add_cookies(cookies)
+        except Exception as exc:
+            print(f"  [WARN] 抖音 Cookie 注入失败：{type(exc).__name__}", file=sys.stderr)
+    return context
 
 # 模拟移动端请求头
 MOBILE_HEADERS = {
@@ -175,6 +214,34 @@ def _find_video_item(router_data: dict | None) -> dict | None:
     return None
 
 
+def _find_aweme_detail(payload: dict | None, video_id: str) -> dict | None:
+    """Find the exact video item returned by Douyin's web detail API."""
+    target = str(video_id)
+    if not isinstance(payload, dict) or not target:
+        return None
+
+    def walk(value):
+        if isinstance(value, dict):
+            detail = value.get("aweme_detail")
+            if isinstance(detail, dict) and str(detail.get("aweme_id") or "") == target:
+                return detail
+            if (str(value.get("aweme_id") or "") == target
+                    and isinstance(value.get("video"), dict)):
+                return value
+            for child in value.values():
+                found = walk(child)
+                if found:
+                    return found
+        elif isinstance(value, list):
+            for child in value:
+                found = walk(child)
+                if found:
+                    return found
+        return None
+
+    return walk(payload)
+
+
 def _title_from_html(html_text: str) -> str:
     """从 SSR 页面标题提取可展示的标题，避免把 aweme_id 当成内容。"""
     match = re.search(r"<title[^>]*>(.*?)</title>", html_text or "", flags=re.IGNORECASE | re.DOTALL)
@@ -230,23 +297,60 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
         browser = await playwright.chromium.launch(headless=True)
         try:
             errors = []
+            # The current mobile page often returns an empty shell. Desktop renders
+            # the detail endpoint and its aweme JSON reliably, so try it first.
             browser_attempts = [
-                (MOBILE_HEADERS["User-Agent"], {"width": 390, "height": 844}),
-                (DESKTOP_USER_AGENT, {"width": 1280, "height": 900}),
+                ("desktop", DESKTOP_USER_AGENT, {"width": 1280, "height": 900}),
+                ("mobile", MOBILE_HEADERS["User-Agent"], {"width": 390, "height": 844}),
             ]
-            for user_agent, viewport in browser_attempts:
-                context = await browser.new_context(user_agent=user_agent, viewport=viewport)
+            for label, user_agent, viewport in browser_attempts:
+                context = await new_douyin_context(
+                    browser, user_agent=user_agent, viewport=viewport
+                )
                 page = await context.new_page()
+                detail_items = []
+                detail_event = asyncio.Event()
+                detail_tasks = []
+
+                async def capture_detail(response):
+                    if "/aweme/v1/web/aweme/detail/" not in response.url:
+                        return
+                    try:
+                        payload = await response.json()
+                        item = _find_aweme_detail(payload, video_id)
+                        if item:
+                            detail_items.append(item)
+                            detail_event.set()
+                    except Exception:
+                        pass
+
+                def on_response(response):
+                    if "/aweme/v1/web/aweme/detail/" in response.url:
+                        detail_tasks.append(asyncio.create_task(capture_detail(response)))
+
+                page.on("response", on_response)
                 navigation_error = ""
                 try:
                     try:
                         await page.goto(share_url, wait_until="domcontentloaded", timeout=30000)
                     except Exception as exc:
                         navigation_error = str(exc)
-                    await page.wait_for_timeout(3000)
+                    # The media API may arrive after DOMContentLoaded; wait for its
+                    # response instead of relying only on a short fixed delay.
+                    try:
+                        await asyncio.wait_for(detail_event.wait(), timeout=12)
+                    except asyncio.TimeoutError:
+                        pass
+                    if detail_tasks:
+                        await asyncio.gather(*detail_tasks, return_exceptions=True)
                     page_html = await page.content()
                     page_title = await page.title()
                     title = _title_from_html(page_html) or re.sub(r"\s*[-|｜]\s*抖音\s*$", "", page_title).strip()
+
+                    for item in detail_items:
+                        parsed = _video_info_from_item(item, video_id, fallback_title=title)
+                        if parsed.video_url or parsed.images:
+                            return parsed
 
                     video_url = ""
                     video_locator = page.locator("video").first
@@ -265,7 +369,7 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
                     detail = f"未找到视频媒体或 aweme 数据（最终地址: {page.url}）"
                     if navigation_error:
                         detail += f"；页面导航提示: {navigation_error[:160]}"
-                    errors.append(f"{user_agent[:24]}: {detail}")
+                    errors.append(f"{label}: {detail}")
                 finally:
                     await context.close()
             raise ValueError("；".join(errors) or "浏览器未返回视频数据")
@@ -321,6 +425,7 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
         filename += ".mp4"
     
     filepath = output_dir / filename
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     # 使用 curl 下载（支持重定向，添加 Referer 头）
     headers = {
@@ -329,7 +434,8 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
     }
     
     curl_cmd = [
-        'curl', '--noproxy', '*', '-f', '-sS', '-L', '--max-time', '120',
+        'curl', '--noproxy', '*', '-f', '-sS', '-L',
+        '--connect-timeout', '20', '--max-time', '90',
         '-H', f'Referer: {headers["Referer"]}',
         '-H', f'User-Agent: {headers["User-Agent"]}',
         '-o', str(filepath),
@@ -340,13 +446,19 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
     if os.name == 'nt':
         curl_cmd.insert(1, '--ssl-no-revoke')
 
-    # 抖音 CDN 偶发 TLS 握手失败（curl 退出码 35），重试通常即可成功，
-    # 因此这里做三次带退避的重试，而不是让整条视频的转录直接失败。
+    # 抖音 CDN 偶发 TLS 握手失败（curl 退出码 35），保留一次有限重试。
+    # 三次 120 秒下载会与 fetch_douyin 的 300 秒子进程截止时间冲突，
+    # 让完整分析在 Whisper 开始前就被父进程杀掉。
     last_detail = ""
-    for attempt in range(3):
+    for attempt in range(2):
         if attempt:
             time.sleep(2 * attempt)
-        result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=180)
+        try:
+            result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=100)
+        except subprocess.TimeoutExpired:
+            last_detail = "curl 单次下载超过 100 秒"
+            print(f"  [下载] 第{attempt + 1}次超过时限，重试…", file=sys.stderr)
+            continue
         if result.returncode == 0 and filepath.exists() and filepath.stat().st_size > 0:
             return filepath
         last_detail = (result.stderr or result.stdout or '').strip()
@@ -366,19 +478,19 @@ def extract_audio(video_path: Path, output_dir: Optional[Path] = None) -> Path:
     
     try:
         import ffmpeg
-        (
+        stream = (
             ffmpeg
             .input(str(video_path))
             .output(str(audio_path), acodec='libmp3lame', q=0)
-            .run(capture_stdout=True, capture_stderr=True, overwrite_output=True)
         )
+        command = ffmpeg.compile(stream, overwrite_output=True)
+        subprocess.run(command, capture_output=True, text=True, timeout=90, check=True)
         return audio_path
     except ImportError:
         # 降级：使用命令行 ffmpeg
-        import subprocess
         result = subprocess.run(
             ["ffmpeg", "-y", "-i", str(video_path), "-vn", "-acodec", "libmp3lame", "-ab", "320k", str(audio_path)],
-            capture_output=True, text=True
+            capture_output=True, text=True, timeout=90
         )
         if result.returncode != 0:
             raise Exception(f"ffmpeg 提取音频失败: {result.stderr}")
@@ -460,6 +572,16 @@ def extract_text_from_audio_local(audio_path: Path, model_size: str | None = Non
     model_size = model_size or os.environ.get('DOUYIN_WHISPER_MODEL', 'small')
     try:
         import whisper
+        import torch
+        # Bound CPU preprocessing/decoding threads on both CPU and CUDA runs.
+        # Parallel analyzer processes otherwise each inherit PyTorch's large
+        # machine-wide default and compete with the Whisper GPU workload.
+        try:
+            threads = int(os.environ.get('DOUYIN_WHISPER_THREADS', '4'))
+        except ValueError:
+            threads = 4
+        thread_limit = max(1, min(4, threads, os.cpu_count() or 4))
+        torch.set_num_threads(thread_limit)
         model = whisper.load_model(model_size)
         # 财经口播里中英混说常见，显式指定语言可减少自动检测带来的漂移。
         result = model.transcribe(str(audio_path), language='zh')

@@ -78,7 +78,9 @@ def _clean(text: str) -> str:
 async def collect(target_date: str, limit: int) -> dict:
     from playwright.async_api import async_playwright
 
-    users = load_users(limit)
+    # Use verified accessible accounts from the documented candidate list.
+    # Failed candidates are recorded separately and never counted as no posts.
+    users = load_users(limit + 30)
     if not users:
         return {
             "platform": "雪球", "date": target_date, "data_date": "", "bloggers": {},
@@ -87,7 +89,7 @@ async def collect(target_date: str, limit: int) -> dict:
         }
 
     cookies = load_cookies()
-    bloggers, active = {}, 0
+    bloggers, active, complete, queried = {}, 0, 0, 0
     errors = []
 
     async with async_playwright() as p:
@@ -104,22 +106,44 @@ async def collect(target_date: str, limit: int) -> dict:
         await page.wait_for_timeout(4000)
 
         for user in users:
+            if complete >= limit:
+                break
+            queried += 1
             uid, name = user["uid"], user["name"]
             try:
-                response = await page.request.get(
-                    f"https://xueqiu.com/statuses/user_timeline.json?user_id={uid}&page=1",
-                    headers={"Referer": f"https://xueqiu.com/u/{uid}"},
-                )
+                for retry in range(3):
+                    response = await page.request.get(
+                        f"https://xueqiu.com/statuses/user_timeline.json?user_id={uid}&page=1",
+                        headers={"Referer": f"https://xueqiu.com/u/{uid}"},
+                    )
+                    if response.status == 200:
+                        break
+                    await page.wait_for_timeout(1000)
                 if response.status != 200:
                     errors.append(f"{name}:HTTP{response.status}")
                     continue
                 payload = json.loads(await response.text())
+                if not isinstance(payload.get("statuses"), list):
+                    raise ValueError("时间线返回错误信封")
+                statuses = list(payload["statuses"])
+                for number in range(2, 51):
+                    if not statuses or min(int(s.get("created_at") or 0) for s in statuses) < int(datetime.strptime(target_date, "%Y-%m-%d").replace(tzinfo=CN).timestamp()*1000):
+                        break
+                    response = await page.request.get(f"https://xueqiu.com/statuses/user_timeline.json?user_id={uid}&page={number}", headers={"Referer": f"https://xueqiu.com/u/{uid}"})
+                    more = json.loads(await response.text())
+                    if response.status != 200 or not isinstance(more.get("statuses"), list):
+                        raise ValueError("时间线分页失败")
+                    if not more["statuses"]:
+                        break
+                    statuses.extend(more["statuses"])
+                else:
+                    raise ValueError("超过50页仍未覆盖目标日")
             except Exception as exc:
                 errors.append(f"{name}:{type(exc).__name__}")
                 continue
 
             posts = []
-            for status in payload.get("statuses") or []:
+            for status in statuses:
                 created = status.get("created_at")
                 if not created:
                     continue
@@ -133,14 +157,17 @@ async def collect(target_date: str, limit: int) -> dict:
                 title = _clean(status.get("title") or "")
                 posts.append({
                     "title": title,
-                    "content": body[:600],
+                    "content": body,
+                    "id": str(status.get("id") or ""),
+                    "source_url": f"https://xueqiu.com/{uid}/{status.get('id')}",
                     "created_at": moment.strftime("%Y-%m-%d %H:%M"),
                     "likes": int(status.get("like_count") or 0),
                     "retweets": int(status.get("retweet_count") or 0),
                 })
+            complete += 1
             if posts:
                 active += 1
-                bloggers[name] = {"name": name, "uid": uid, "data_date": target_date, "posts": posts}
+            bloggers[name] = {"name": name, "uid": uid, "data_date": target_date, "posts": posts}
 
         await browser.close()
 
@@ -149,14 +176,14 @@ async def collect(target_date: str, limit: int) -> dict:
         "date": target_date,
         "data_date": target_date if active else "",
         "bloggers": bloggers,
-        "status": "ok" if active else "empty",
+        "status": ("partial" if active else "error") if complete < limit else ("ok" if active else "empty"),
+        "coverage": {"expected_bloggers": limit, "queried_bloggers": queried, "complete_bloggers": complete, "failed_bloggers": max(0, limit-complete), "excluded_candidates": len(errors), "active_bloggers": active},
         "active_bloggers": active,
-        "queried_bloggers": len(users),
+        "queried_bloggers": queried,
         "source": "雪球时间线接口（Playwright 浏览器内请求上下文）",
         "failures": errors[:10],
         "note": (
-            f"查询{len(users)}位雪球博主，{active}位在{target_date}有发帖"
-            if active else f"查询{len(users)}位雪球博主，{target_date}均无发帖"
+            f"候选查询{queried}位，完整核验{complete}位雪球样本，{active}位在{target_date}有发帖；排除{len(errors)}位访问失败候选（未计作无动态）"
         ),
     }
 

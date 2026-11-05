@@ -389,7 +389,9 @@ def render(src: Path, out: Path, date_str: str) -> Path:
     doc = DOC_TEMPLATE
     for key, value in values.items():
         doc = doc.replace("{" + key + "}", value)
-    OUT.write_text(doc, encoding="utf-8")
+    # Keep generated HTML byte-identical across Windows and Linux builds.
+    with OUT.open("w", encoding="utf-8", newline="\r\n") as f:
+        f.write(doc)
     print("输出:", OUT, len(doc), "bytes")
     return OUT
 

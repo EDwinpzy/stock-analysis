@@ -20,16 +20,27 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from runtime_paths import get_data_dir
 
 import httpx
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from playwright.async_api import async_playwright
 
-# 并发转录数限制：本地 Whisper 会争抢 GPU/CPU，并发过高会把单条推到超时，
-# 因此默认 2；失败条目还会在 main() 里串行重试一次。
-MAX_CONCURRENT_TRANSCRIPTS = int(os.environ.get("DOUYIN_MAX_CONCURRENT", "2"))
+# 本地 Whisper 会为每个 analyzer 进程单独加载模型。8GB 显存机器上并发
+# 会让小模型同时争用 GPU，因此默认串行；用户可显式调到2，最大不超过2。
+def resolve_max_concurrent_transcripts(value: str | None = None) -> int:
+    raw = value if value is not None else os.environ.get("DOUYIN_MAX_CONCURRENT", "1")
+    try:
+        return min(2, max(1, int(raw)))
+    except (TypeError, ValueError):
+        return 1
+
+
+MAX_CONCURRENT_TRANSCRIPTS = resolve_max_concurrent_transcripts()
+TRANSCRIBE_TIMEOUT_SECONDS = 600
 # 当天无更新时允许回退的最近发布日窗口（抖音博主常在下午/晚间发布，周末照常更新）
 MAX_STALE_DAYS = int(os.environ.get("DOUYIN_MAX_STALE_DAYS", "7"))
 DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -46,7 +57,21 @@ DEFAULT_BLOGGERS = [
 EXTRA_BLOGGERS = os.environ.get("DOUYIN_BLOGGERS_EXTRA", "")
 
 SCRIPT_DIR = Path(__file__).parent
-COOKIE_PATH = Path(os.environ.get("DOUYIN_COOKIE_PATH") or (SCRIPT_DIR.parent / "data" / "douyin_cookies.json"))
+TRANSCRIPT_CACHE_DIR = get_data_dir(SCRIPT_DIR.parent) / 'douyin_transcripts'
+
+
+def _resolve_cookie_path() -> Path:
+    """Use the persistent runtime directory for cookies, not the install cache."""
+    configured = os.environ.get("DOUYIN_COOKIE_PATH")
+    if configured:
+        return Path(configured).expanduser()
+    data_dir = os.environ.get("DAILY_BRIEFING_DATA_DIR")
+    if data_dir:
+        return Path(data_dir).expanduser() / "douyin_cookies.json"
+    return Path.home() / ".codex" / "daily-briefing-pro" / "data" / "douyin_cookies.json"
+
+
+COOKIE_PATH = _resolve_cookie_path()
 
 
 def load_douyin_cookies() -> list[dict]:
@@ -301,6 +326,9 @@ async def fill_create_times(videos: list, browser, max_concurrent: int = 3,
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def fetch_one(v: dict) -> dict:
+        # 列表接口有时会直接返回真实发布时间；已有值无需再开浏览器核验。
+        if v.get('create_time'):
+            return v
         async with semaphore:
             ctx = await new_douyin_context(browser,
                 user_agent='Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15',
@@ -419,15 +447,29 @@ def summarize_with_deepseek(text: str) -> str:
     return ""
 
 
-def transcribe_video(video_url: str, provider: str = "auto") -> dict:
+def transcribe_video(video_url: str, provider: str = "local") -> dict:
     """调用 analyze_douyin.py 转录单个视频"""
     try:
-        result = subprocess.run(
-            ["python", str(SCRIPT_DIR / "analyze_douyin.py"), "--provider", provider, "--json", video_url],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(SCRIPT_DIR.parent), timeout=300,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"}
-        )
+        child_env = {
+            **os.environ,
+            "PYTHONIOENCODING": "utf-8",
+            # The analyzer runs in another process; give it the same resolved
+            # persistent cookie path even if the caller configured a relative path.
+            "DOUYIN_COOKIE_PATH": str(COOKIE_PATH.resolve()),
+        }
+        # Parent-owned temp directory ensures timeout/error paths also remove partial
+        # MP4/MP3 files left behind when analyze_douyin is terminated.
+        with tempfile.TemporaryDirectory(prefix="douyin_transcribe_") as output_dir:
+            command = [
+                sys.executable, str(SCRIPT_DIR / "analyze_douyin.py"),
+                "--provider", provider, "--json", "--output-dir", output_dir, video_url,
+            ]
+            result = subprocess.run(
+                command,
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                cwd=str(SCRIPT_DIR.parent), timeout=TRANSCRIBE_TIMEOUT_SECONDS,
+                env=child_env,
+            )
         data = {}
         for line in result.stdout.splitlines():
             line = line.strip()
@@ -444,9 +486,24 @@ def transcribe_video(video_url: str, provider: str = "auto") -> dict:
                 data = json.loads(result.stdout.strip())
             except Exception:
                 pass
-        return data
-    except subprocess.TimeoutExpired:
-        return {"status": "error", "error": "转录超时"}
+        if data:
+            return data
+        detail = (result.stderr or result.stdout or "").strip()
+        if result.returncode:
+            detail = detail or f"分析器退出码 {result.returncode}"
+        else:
+            detail = detail or "分析器未返回 JSON 结果"
+        return {"status": "error", "error": detail[:500]}
+    except subprocess.TimeoutExpired as exc:
+        detail = exc.stderr or exc.output or ""
+        if isinstance(detail, bytes):
+            detail = detail.decode("utf-8", errors="replace")
+        detail = str(detail).strip().splitlines()[-1:] or [""]
+        suffix = f"；末条日志：{detail[0][:180]}" if detail[0] else ""
+        return {
+            "status": "error",
+            "error": f"分析器超过{TRANSCRIBE_TIMEOUT_SECONDS}秒时限{suffix}",
+        }
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -456,20 +513,10 @@ def get_video_transcript_with_fallback(video: dict) -> dict:
     url = video.get("url", "")
     title = video.get("title", "")
 
-    # 第一次：auto 模式
-    data = transcribe_video(url, "auto")
+    cached = load_video_transcript(video)
+    data = cached or transcribe_video(url, os.environ.get("DOUYIN_TRANSCRIPT_PROVIDER", "local"))
     title = _resolve_video_title(title, data)
     transcript = data.get("transcript", "") if isinstance(data, dict) else ""
-
-    # 第二次：只有配置了远程 ASR 才值得再兜一次本地 Whisper；
-    # 否则 auto 本来就走本地，重复一轮只是白等一次模型加载。
-    has_remote_asr = any(os.environ.get(k) for k in
-                         ("GROQ_API_KEY", "OPENAI_API_KEY", "SILICONFLOW_API_KEY"))
-    if not transcript and has_remote_asr:
-        print(f"  [auto] 转录为空，尝试本地 Whisper 兜底: {title[:30]}...", file=sys.stderr)
-        data = transcribe_video(url, "local")
-        title = _resolve_video_title(title, data)
-        transcript = data.get("transcript", "") if isinstance(data, dict) else ""
 
     if not transcript:
         # 转录失败时只保留标题+话题标签作为明确标注的元数据兜底。
@@ -485,13 +532,58 @@ def get_video_transcript_with_fallback(video: dict) -> dict:
         data["transcript"] = ""
         data["fallback_text"] = fallback_text
         data["warning"] = ("转录失败，已使用标题+话题标签兜底"
-                           + (f"（原因：{detail[:80]}）" if detail else ""))
+                           + (f"（原因：{detail[:240]}）" if detail else ""))
     else:
         data = data if isinstance(data, dict) else {}
 
     data["_resolved_title"] = title
+    if transcript and not data.get('warning') and not data.get('error'):
+        save_video_transcript(video, data)
 
     return data
+
+
+def _video_cache_identity(video: dict) -> dict | None:
+    url = str(video.get('url') or '')
+    match = re.fullmatch(r'https://www\.douyin\.com/video/(\d{10,25})', url)
+    if not match:
+        return None
+    return {'id': match.group(1), 'url': url, 'create_time': video.get('create_time'),
+            'model': os.environ.get('DOUYIN_WHISPER_MODEL', 'small'), 'version': 1}
+
+
+def load_video_transcript(video: dict) -> dict | None:
+    identity = _video_cache_identity(video)
+    if not identity:
+        return None
+    try:
+        payload = json.loads((TRANSCRIPT_CACHE_DIR / f"{identity['id']}.json").read_text(encoding='utf-8'))
+        if payload.get('identity') != identity:
+            return None
+        data = payload.get('data') or {}
+        if not isinstance(data, dict) or not str(data.get('transcript') or '').strip() or data.get('warning') or data.get('error'):
+            return None
+        return {**data, 'transcript_source': 'verified_video_cache'}
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def save_video_transcript(video: dict, data: dict) -> None:
+    identity = _video_cache_identity(video)
+    if not identity or not str(data.get('transcript') or '').strip() or data.get('warning') or data.get('error'):
+        return
+    TRANSCRIPT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    # Never persist media paths (temporary files), cookies, or analyzer logs.
+    payload = {'identity': identity, 'data': {key: data[key] for key in ('transcript', '_resolved_title') if key in data},
+               'verified_at': datetime.now(timezone(timedelta(hours=8))).isoformat()}
+    fd, name = tempfile.mkstemp(prefix='transcript-', suffix='.tmp', dir=TRANSCRIPT_CACHE_DIR)
+    path = Path(name)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as stream:
+            json.dump(payload, stream, ensure_ascii=False)
+        os.replace(path, TRANSCRIPT_CACHE_DIR / f"{identity['id']}.json")
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def extract_video_info(video: dict) -> dict:
@@ -501,6 +593,7 @@ def extract_video_info(video: dict) -> dict:
     fallback_text = data.get('fallback_text', '')
     warning = data.get('warning', '')
     summary = summarize_with_deepseek(transcript)
+    summary_source = "ai" if summary else ""
     display_title = data.get("_resolved_title") or video.get("title", "")
 
     # 列表接口不给标题时，用转录开头生成可读标题，避免简报里出现「视频 768…」占位。
@@ -508,13 +601,12 @@ def extract_video_info(video: dict) -> dict:
         cleaned = re.sub(r"[\s，。、！？,.!?]+", "", transcript)
         if cleaned:
             display_title = cleaned[:20] + ("…" if len(cleaned) > 20 else "")
-            warning = (warning + "；" if warning else "") + "标题取自转录开头"
+            video['title_source'] = '转录开头'
 
-    # 有转录但 AI 总结没产出时，退一次重试；仍失败则给出明确标注的转录摘录。
-    if transcript and not summary:
-        summary = summarize_with_deepseek(transcript)
+    # AI 总结失败时给出明确标注的转录摘录，不能把它误标成 AI 总结。
     if transcript and not summary:
         summary = "（AI总结未生成，转录摘录）" + transcript[:80]
+        summary_source = "transcript"
 
     combined_text = f"{display_title} {transcript} {fallback_text}"
     symbols = extract_symbols(combined_text)
@@ -528,7 +620,8 @@ def extract_video_info(video: dict) -> dict:
         "symbols": symbols,
         "direction": direction,
         "warning": warning,
-        "summary_source": "ai" if summary else ("title_hashtags" if fallback_text else ("transcript" if transcript else "unavailable")),
+        "title_source": video.get('title_source', '原始标题'),
+        "summary_source": summary_source or ("title_hashtags" if fallback_text else ("transcript" if transcript else "unavailable")),
         "created_at": ts_to_bj_str(video.get("create_time", 0)),
     }
 
@@ -750,6 +843,61 @@ async def fetch_blogger_videos(name: str, share_url_or_secuid: str, browser,
     return videos
 
 
+def finalize_douyin_output(
+    output: dict,
+    expected_video_count: int,
+    collection_errors: list[str] | None = None,
+) -> dict:
+    """Mark a run complete only when every selected video has a transcript."""
+    collection_errors = collection_errors or []
+    videos = [
+        video
+        for blogger in output.get("bloggers", [])
+        for video in blogger.get("videos", [])
+        if isinstance(video, dict)
+    ]
+    transcript_count = sum(bool(str(video.get("transcript") or "").strip()) for video in videos)
+    video_count = len(videos)
+    missing_transcripts = max(expected_video_count - transcript_count, 0)
+
+    output["expected_video_count"] = expected_video_count
+    output["video_count"] = video_count
+    output["transcript_count"] = transcript_count
+
+    notes = [str(output.get("note") or "").strip()] if output.get("note") else []
+    if expected_video_count == 0:
+        output["status"] = "error"
+        notes.append(f"最近{MAX_STALE_DAYS}天无可核验视频；未使用旧缓存冒充当日内容。")
+    else:
+        incomplete = missing_transcripts > 0 or video_count < expected_video_count or bool(collection_errors)
+        if transcript_count == 0:
+            output["status"] = "error"
+        elif incomplete:
+            output["status"] = "partial"
+        else:
+            output["status"] = "ok"
+
+        if missing_transcripts:
+            notes.append(
+                f"转录未完整：{transcript_count}/{expected_video_count}条获得语音文本，"
+                f"{missing_transcripts}条仅有标题/话题等元数据兜底。"
+            )
+
+        failed = [
+            f"{video.get('title') or video.get('url') or '未知视频'}：{video['warning']}"
+            for video in videos if video.get("warning")
+        ]
+        if failed:
+            notes.append("转录或下载失败明细：" + "；".join(failed[:3]))
+
+    if collection_errors:
+        detail = "；".join(str(error)[:120] for error in collection_errors[:3])
+        notes.append(f"主页或条目采集异常{len(collection_errors)}项：{detail}")
+
+    output["note"] = "；".join(note for note in notes if note)
+    return output
+
+
 async def main():
     today = bj_now_str()
     output = {
@@ -771,8 +919,9 @@ async def main():
         key = "口罩哥" if "口罩哥" in name else name
         blogger_map.setdefault(key, []).append(url)
 
-    warnings = []
+    collection_errors = []
     notes = []
+    expected_video_count = 0
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_TRANSCRIPTS)
 
     async def process_one_video(video: dict, blogger_name: str) -> dict:
@@ -799,7 +948,7 @@ async def main():
                     all_videos.extend(vids)
                 except Exception as exc:
                     # 单个入口失败不能打断整轮采集，其它博主仍需照常产出
-                    warnings.append(f"{blogger_name}: 主页抓取失败 {type(exc).__name__}")
+                    collection_errors.append(f"{blogger_name}:主页抓取失败 {type(exc).__name__}")
                     print(f"  [WARN] {blogger_name} 入口失败: {type(exc).__name__}: {exc}",
                           file=sys.stderr)
 
@@ -848,34 +997,16 @@ async def main():
 
             blogger_item = {"name": blogger_name, "data_date": used_date if selected else "", "videos": []}
             blogger_item["last_seen_date"] = LATEST_SEEN.get(blogger_name, "")
+            expected_video_count += len(selected)
             # 并发处理该博主选中的视频
             tasks = [process_one_video(v, blogger_name) for v in selected]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for result in results:
                 if isinstance(result, Exception):
-                    warnings.append(f"{blogger_name}: 处理异常 {result}")
+                    collection_errors.append(f"{blogger_name}:处理异常 {str(result)[:160]}")
                     continue
-                if result.get("warning"):
-                    warnings.append(f"{blogger_name}: {result['warning']}")
                 blogger_item["videos"].append(result)
-
-            # 并发跑本地 Whisper 时偶尔会被 GPU/CPU 争抢拖到超时，失败的条目在这里
-            # 串行重试一次；只替换真正拿到转录的结果。
-            retry_targets = [v for v, r in zip(selected, results)
-                             if isinstance(r, dict) and not r.get("transcript")]
-            for video in retry_targets:
-                print(f"  串行重试转录: {video['aweme_id']}", file=sys.stderr)
-                loop = asyncio.get_running_loop()
-                retry = await loop.run_in_executor(None, extract_video_info, video)
-                if not retry.get("transcript"):
-                    continue
-                for idx, item in enumerate(blogger_item["videos"]):
-                    if item.get("url") == retry.get("url"):
-                        blogger_item["videos"][idx] = retry
-                        break
-                warnings = [w for w in warnings
-                            if not (w.startswith(f"{blogger_name}: ") and "转录失败" in w)]
 
             output["bloggers"].append(blogger_item)
 
@@ -883,18 +1014,9 @@ async def main():
 
     actual_dates = sorted({b.get("data_date") for b in output["bloggers"] if b.get("data_date")})
     output["data_date"] = actual_dates[-1] if len(actual_dates) == 1 else (f"{actual_dates[0]}~{actual_dates[-1]}" if actual_dates else "")
-    total_videos = sum(len(b.get("videos", [])) for b in output["bloggers"])
-    output["video_count"] = total_videos
-    output["status"] = "ok" if total_videos > 0 else "error"
     if notes:
         output["note"] = "；".join(notes)
-    if warnings:
-        note_prefix = output.get("note", "")
-        output["note"] = (note_prefix + "；" if note_prefix else "") + "部分视频转录失败，已使用标题+话题标签兜底。"
-    if total_videos == 0:
-        note_prefix = output.get("note", "")
-        output["note"] = (note_prefix + "；" if note_prefix else "") + \
-            f"最近{MAX_STALE_DAYS}天无可核验视频；未使用旧缓存冒充当日内容。"
+    finalize_douyin_output(output, expected_video_count, collection_errors)
 
     print(json.dumps(output, ensure_ascii=False, indent=2))
 

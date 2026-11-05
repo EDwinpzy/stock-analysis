@@ -19,6 +19,7 @@ from urllib.parse import quote
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from market_temperature import format_delta
 from data_quality import dataset_state, data_error_reason
+from codex_summary_cli import semantic_summary_available, summarize_tasks
 from runtime_paths import get_data_dir
 from summary_cache import (
     NO_CLEAR_OPINION,
@@ -64,7 +65,7 @@ def load_json(filename: str) -> dict:
         print(f"  [WARN] 数据文件缺失: {filename}", file=sys.stderr)
         return {}
     try:
-        payload = json.load(open(path, encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding='utf-8-sig'))
         if not isinstance(payload, dict):
             print(f"  [WARN] 数据文件不是对象: {filename}", file=sys.stderr)
             return {}
@@ -84,8 +85,6 @@ def fetch_index_data(target_date: str | None = None) -> dict:
     index_errors = {}
 
     # 各市场北京时间收盘时刻（用于判断当天是否已收官）
-    close_hour = {"上证": 15, "科创50": 15, "纳斯达克": 5, "KOSPI": 15}
-
     def _cutoff_for(name: str) -> str | None:
         if not target_date:
             return None
@@ -93,10 +92,16 @@ def fetch_index_data(target_date: str | None = None) -> dict:
             day = datetime.strptime(target_date, "%Y-%m-%d")
         except ValueError:
             return target_date
-        now = datetime.now()
-        if day.date() == now.date() and now.hour < close_hour.get(name, 15):
-            return (day - timedelta(days=1)).strftime("%Y-%m-%d")
-        return target_date
+        from zoneinfo import ZoneInfo
+        market_zone, close_time = {
+            "纳斯达克": ("America/New_York", (16, 0)),
+            "KOSPI": ("Asia/Seoul", (15, 30)),
+        }.get(name, ("Asia/Shanghai", (15, 0)))
+        now = datetime.now(ZoneInfo(market_zone))
+        cutoff = now.date()
+        if (now.hour, now.minute) < close_time:
+            cutoff -= timedelta(days=1)
+        return min(day.date(), cutoff).isoformat()
 
     def _last_pair(frame, cutoff):
         if frame is None or len(frame) < 2:
@@ -159,7 +164,7 @@ def fetch_index_data(target_date: str | None = None) -> dict:
             index_errors[name] = f"{type(e).__name__}: {e}"
 
     try:
-        _record("纳斯达克", ak.index_us_stock_sina(symbol=".IXIC"), decimals=0)
+        _record("纳斯达克", ak.index_us_stock_sina(symbol=".IXIC"), decimals=2)
     except Exception as e:
         index_errors["纳斯达克"] = f"{type(e).__name__}: {e}"
 
@@ -168,9 +173,17 @@ def fetch_index_data(target_date: str | None = None) -> dict:
         if "KOSPI" in indices:
             break
         try:
-            _record("KOSPI", ak.index_global_hist_sina(symbol=symbol), decimals=0)
+            _record("KOSPI", ak.index_global_hist_sina(symbol=symbol), decimals=2)
         except Exception as e:
             index_errors["KOSPI"] = f"{symbol}: {type(e).__name__}: {e}"
+    if "KOSPI" not in indices:
+        try:
+            frame = ak.index_global_hist_em(symbol="韩国KOSPI").rename(columns={"日期": "date", "最新价": "close"})
+            _record("KOSPI", frame, decimals=2)
+            if "KOSPI" in indices:
+                index_errors.pop("KOSPI", None)
+        except Exception as e:
+            index_errors["KOSPI"] = f"东方财富备用源：{type(e).__name__}: {e}"
 
     for name, reason in index_errors.items():
         print(f"  [WARN] 指数{name}获取失败：{reason}", file=sys.stderr)
@@ -190,6 +203,12 @@ def _safe_float(value, default=None):
 def esc(value) -> str:
     """Escape source text before inserting it into the generated HTML."""
     return html_lib.escape("" if value is None else str(value), quote=True)
+
+
+def summary_direction(summary: str, default: str = '中性') -> str:
+    """Use an explicit semantic label; word occurrence is not a market stance."""
+    match = re.match(r'^【(看多|看空|中性|关注)】', str(summary or '').strip())
+    return match.group(1) if match else default
 
 
 def _date_label(data: dict) -> str:
@@ -256,7 +275,7 @@ def render_index_card(name: str, index: dict | None) -> str:
     if close is None or chg is None:
         return f'<div class="mc dn"><div class="lb">{esc(name)}</div><div class="vl">—</div><div class="cg dn">数据获取失败</div></div>'
     cls = mc_cls(chg)
-    return f'<div class="mc {cls}"><div class="lb">{esc(name)}</div><div class="vl">{close:,.0f}</div><div class="cg {cls}">{arrow(chg)}{abs(chg):.2f}%</div></div>'
+    return f'<div class="mc {cls}"><div class="lb">{esc(name)}</div><div class="vl">{close:,.2f}</div><div class="cg {cls}">{arrow(chg)}{abs(chg):.2f}%</div></div>'
 
 
 def _sentiment_color(phase: str) -> str:
@@ -859,8 +878,7 @@ def ai_summarize_opinions(raw_text: str, context: str = "博主观点", max_retr
         base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
         model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
     else:
-        print("  [WARN] 无 DEEPSEEK_API_KEY / OPENAI_API_KEY，无法生成语义摘要", file=sys.stderr)
-        return ""
+        return summarize_tasks([(raw_text, context)])[0]
 
     prompt = f"""你是一位专业的A股投资观点提炼师。请从以下{context}原始内容中，提炼出1-3句精炼的投资观点。
 
@@ -945,8 +963,7 @@ def ai_summarize_yanbao(report: dict, max_retries: int = 1) -> str:
         base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
         model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
     else:
-        print("  [WARN] 无 DEEPSEEK_API_KEY / OPENAI_API_KEY，研报无法生成语义逻辑", file=sys.stderr)
-        return ""
+        return summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑")])[0]
 
     rating = str(report.get("rate") or "")
     change = str(report.get("ratingChangeText") or "")
@@ -1002,7 +1019,7 @@ def ai_summarize_yanbao_parallel(reports: list) -> list:
     if not reports:
         return []
     if not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")):
-        return ["" for _ in reports]
+        return summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑") for report in reports])
 
     results = [""] * len(reports)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -1080,7 +1097,7 @@ def ai_summarize_batch_parallel(tasks: list) -> list:
     deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
     if not deepseek_key and not openai_key:
-        return [""] * len(tasks)
+        return summarize_tasks(tasks)
 
     def _call(task):
         raw_text, context = task
@@ -1388,7 +1405,7 @@ def summarize_douyin_video(video: dict) -> dict:
     symbols = symbols[:6]
 
     # 优先使用采集器已生成的AI摘要；没有摘要时再调用AI。
-    ai_configured = bool(os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"))
+    ai_configured = semantic_summary_available()
     ai_summary = summary_raw
     if not ai_summary and ai_configured:
         ai_summary = ai_summarize_opinions(transcript_s, context="抖音博主视频观点")
@@ -1526,7 +1543,7 @@ def render_survey_section(survey: dict, data_note: str = "") -> str:
         conclusions.append(f"最大共识方向：{top_sectors[0].get('sector', '')}（{count(top_sectors[0].get('blogger_count'))}人提及）")
     return f'''<section class="sec">
 <div class="sh"><span class="ico">◉</span> 博主多空统计 <span class="meta">{total}位有效观点 · {esc(ratio)}多空比{data_note}</span></div>
-<div class="survey-wrap"><div class="survey-top"><div class="survey-gauge"><span class="survey-gauge-title">大盘情绪</span><div class="survey-gauge-ring">{gauge_svg}<div class="survey-gauge-center"><span class="survey-gauge-val" style="color:{gauge_color}">{gauge_label}</span><span class="survey-gauge-label">{market_total}人</span></div></div><div class="survey-gauge-legend"><span><i class="dot-bull"></i>看多{bull}</span><span><i class="dot-bear"></i>看空{bear}</span><span><i class="dot-neutral"></i>中性{neutral}</span></div><div class="survey-gauge-ratio">多空比 <b>{esc(ratio)}</b></div></div><div class="survey-sectors"><span class="survey-sectors-title">板块多空分布</span>{''.join(sector_bars)}</div></div><div class="survey-platforms">{''.join(platform_cards)}</div><div class="lbox"><b>结论：</b>{esc('；'.join(conclusions) or '暂无额外结论')}</div></div>
+<div class="survey-wrap"><div class="survey-top"><div class="survey-gauge"><span class="survey-gauge-title">A股大盘采样观点</span><div class="survey-gauge-ring">{gauge_svg}<div class="survey-gauge-center"><span class="survey-gauge-val" style="color:{gauge_color}">{gauge_label}</span><span class="survey-gauge-label">{market_total}人</span></div></div><div class="survey-gauge-legend"><span><i class="dot-bull"></i>看多{bull}</span><span><i class="dot-bear"></i>看空{bear}</span><span><i class="dot-neutral"></i>中性{neutral}</span></div><div class="survey-gauge-ratio">多空比 <b>{esc(ratio)}</b></div></div><div class="survey-sectors"><span class="survey-sectors-title">涉及赛道的样本方向</span>{''.join(sector_bars)}</div></div><div class="survey-platforms">{''.join(platform_cards)}</div><div class="lbox"><b>结论：</b>{esc('；'.join(conclusions) or '暂无额外结论')}</div></div>
 </section>'''
 
 
@@ -1605,7 +1622,6 @@ def build_html(today: str, trade_date: str) -> str:
     # 加载所有数据
     news = load_json("news_today.json")
     panic = load_json("panic_today.json")
-    selfstock = load_json("selfstock_today.json")
     events = load_json("events_today.json")
     yanbao = load_json("yanbao_latest.json")
     tgb = load_json("tgb_today.json")
@@ -1628,7 +1644,7 @@ def build_html(today: str, trade_date: str) -> str:
 </section>'''
 
     # 读取CSS模板
-    template = open(BASE_DIR / "templates" / "briefing.html", encoding="utf-8").read()
+    template = (BASE_DIR / 'templates' / 'briefing.html').read_text(encoding='utf-8')
     css_start = template.find("<style>")
     css_end = template.find("</style>")
     css_block = template[css_start:css_end + 8]
@@ -1639,13 +1655,9 @@ def build_html(today: str, trade_date: str) -> str:
     today_display = f"{today.replace('-', '.')} {weekday_cn}"
     data_note = f"（{trade_date}交易数据）" if today != trade_date else ""
     news_note = section_data_note(news, today)
-    selfstock_window_start = (
-        datetime.strptime(trade_date, "%Y-%m-%d") - timedelta(days=2)
-    ).strftime("%Y-%m-%d")
-    selfstock_note = section_data_note(selfstock, trade_date, selfstock_window_start)
     lhb_note = section_data_note(lhb, trade_date, trade_date)
     yanbao_note = section_data_note(yanbao, today, trade_date)
-    survey_note = section_data_note(survey, today)
+    survey_note = section_data_note(survey, today, trade_date)
     tgb_note = section_data_note(tgb, today, trade_date)
     douyin_note = section_data_note(douyin, today, trade_date)
     events_note = section_data_note(events, today)
@@ -1677,9 +1689,8 @@ def build_html(today: str, trade_date: str) -> str:
         return cleared
 
     news = _enforce_freshness(news, today)
-    selfstock = _enforce_freshness(selfstock, trade_date, selfstock_window_start)
     lhb = _enforce_freshness(lhb, trade_date, trade_date)
-    survey = _enforce_freshness(survey, today)
+    survey = _enforce_freshness(survey, today, trade_date)
     tgb = _enforce_freshness(tgb, today, trade_date)
     douyin = _enforce_freshness(douyin, today, trade_date)
     events = _enforce_freshness(events, today)
@@ -1689,7 +1700,10 @@ def build_html(today: str, trade_date: str) -> str:
     rotation = _enforce_freshness(rotation, today, trade_date) if rotation else {}
 
     # 指数数据
-    indices = fetch_index_data(trade_date)
+    index_snapshot = load_json("indices_today.json")
+    indices = index_snapshot.get("indices") if index_snapshot.get("date") == today else None
+    if not indices:
+        indices = fetch_index_data(trade_date)
     index_cards = "".join(render_index_card(name, indices.get(name)) for name in ["上证", "科创50", "纳斯达克", "KOSPI"])
     index_errors = indices.get("_errors") if isinstance(indices.get("_errors"), dict) else {}
     dated = [
@@ -1751,6 +1765,10 @@ def build_html(today: str, trade_date: str) -> str:
         ntype = esc(n.get("type", "中性"))
         title = esc(n.get("title", ""))
         source = esc(n.get("source", ""))
+        if n.get('url'):
+            source = f'<a href="{esc(n["url"])}" target="_blank" rel="noopener">{source}</a>'
+        if n.get('direction_reason'):
+            title += f'<div class="t3">{esc(n["direction_reason"])}</div>'
         stock_tags = "".join(f' <span class="tag y">{esc(s)}</span>' for s in n.get("stocks", []) if s)
         news_rows.append(f'<tr><td class="tr">{esc(time_str)}</td><td><span class="{badge_cls(n.get("type", "中性"))}">{ntype}</span></td><td class="t2">{title}{stock_tags}</td><td class="t3">{source}</td></tr>')
     if not news_rows:
@@ -1761,30 +1779,6 @@ def build_html(today: str, trade_date: str) -> str:
 <table><colgroup><col style="width:56px"><col style="width:50px"><col><col style="width:60px"></colgroup>
 <tr><th>时间</th><th>类型</th><th>标题</th><th>来源</th></tr>
 {"".join(news_rows)}</table></section>"""
-
-    # ===== ③ 自选股新闻 =====
-    ss_news = selfstock.get("news", [])
-    if ss_news:
-        ss_rows = []
-        for n in ss_news[:15]:
-            ntype = n.get("type", "中性")
-            title = esc(n.get("title", ""))
-            source = esc(n.get("source", ""))
-            published = str(n.get("date") or "")[5:]
-            if n.get("time"):
-                published = f"{published} {n.get('time')}" if published else str(n.get("time"))
-            related = " ".join(f'<span class="tag y">{esc(code)}</span>' for code in n.get("related_codes", []) if code)
-            ss_rows.append(f'<tr><td class="tr">{esc(published)}</td><td><span class="{badge_cls(ntype)}">{esc(ntype)}</span></td><td class="t2">{title} {related}</td><td class="t3">{source}</td></tr>')
-        ss_count = len(ss_news)
-    else:
-        ss_rows = [f'<tr><td colspan="4" class="t3" style="text-align:center">{esc(selfstock_note or "暂无自选股相关新闻")}</td></tr>']
-        ss_count = 0
-    ss_meta = section_meta(selfstock, trade_date, selfstock_window_start, count=ss_count, unit="条")
-    ss_sec = f"""<section class="sec">
-<div class="sh"><span class="ico">◉</span> 自选股新闻 <span class="meta">{ss_meta}</span></div>
-<table><colgroup><col style="width:82px"><col style="width:50px"><col><col style="width:56px"></colgroup>
-<tr><th>时间</th><th>类型</th><th>标题</th><th>来源</th></tr>
-{"".join(ss_rows)}</table></section>"""
 
     # ===== ③½ 龙虎榜 =====
     lhb_total = lhb.get("total_stocks", 0)
@@ -1920,7 +1914,6 @@ def build_html(today: str, trade_date: str) -> str:
             continue
         if report_begin <= published <= report_end:
             reports.append(report)
-    reports = reports[:20]
     # 研报的「核心逻辑」不能拿标题充数：用 AI 在给定字段内改写成逻辑句，
     # 拿不到就如实回到标题并标注来源，不编造因果。
     yb_logic_results = ai_summarize_yanbao_parallel(reports)
@@ -1941,20 +1934,21 @@ def build_html(today: str, trade_date: str) -> str:
             logic, logic_tag = title, ' <span style="color:var(--t3);font-size:10px">（原始报告标题）</span>'
             yb_logic_failed += 1
         rate = str(r.get("rate", ""))
-        if rate in ["买入", "增持", "推荐"]:
+        if rate in ["买入", "增持", "推荐", "优于大市", "强烈推荐"]:
             dir_cls, dir_text = "bg_", "看多"
         elif rate in ["减持", "卖出"]:
             dir_cls, dir_text = "bo", "看空"
         else:
             dir_cls, dir_text = "bbl", "中性"
-        industry = infer_industry(title)
+        industry = str(r.get('industry') or infer_industry(title))
         stock_display = f"{code} {stock}".strip()
         source = str(r.get("source") or "东方财富研报API")
         publish_date = str(r.get("publishDate", ""))[:10]
-        yb_rows.append(f'<tr><td class="tb">{esc(org)}</td><td><span class="{ind_cls(industry)}">{esc(industry)}</span></td><td class="t2">{esc(stock_display) or "—"}</td><td><span class="{dir_cls}">{esc(dir_text)}</span></td><td class="t2">{esc(logic[:120])}{logic_tag}</td><td class="t3">{esc(source)} · {esc(publish_date)}</td></tr>')
+        source_link = f'<a href="{esc(r.get("source_url", ""))}" target="_blank" rel="noopener">{esc(source)}</a>'
+        yb_rows.append(f'<tr><td class="tb">{esc(org)}</td><td><span class="{ind_cls(industry)}">{esc(industry)}</span></td><td class="t2">{esc(stock_display) or "—"}</td><td><span class="{dir_cls}">{esc(rate or "未评级")}</span></td><td class="t2">{esc(logic[:150])}{logic_tag}</td><td class="t3">{source_link} · {esc(publish_date)}</td></tr>')
     focus_tracks = []
     for report in reports:
-        track = infer_industry(str(report.get("title", "")))
+        track = str(report.get('industry') or infer_industry(str(report.get("title", ""))))
         if track not in focus_tracks and track != "综合":
             focus_tracks.append(track)
     focus_text = "、".join(focus_tracks[:6]) if focus_tracks else "暂无足够研报样本归纳主线"
@@ -2118,7 +2112,7 @@ def build_html(today: str, trade_date: str) -> str:
 </section>"""
 
     # 统一使用经过状态校验的渲染器，空数据不会出现无限比或虚构结论。
-    survey_state, survey_reason = dataset_state(survey, today)
+    survey_state, survey_reason = dataset_state(survey, today, trade_date)
     survey_render_data = survey
     if survey_state in {"error", "stale", "future"}:
         survey_render_data = dict(survey)
@@ -2129,6 +2123,17 @@ def build_html(today: str, trade_date: str) -> str:
         survey_render_data,
         f"（{esc(survey_data_date)}数据）" if survey_data_date else "",
     )
+    reviewed = survey.get('reviewed_samples', survey.get('analyses', []))
+    audit_rows = []
+    for sample in reviewed:
+        platform, name = sample.get('platform', ''), sample.get('blogger', '')
+        original = next((p.get('bloggers', {}).get(name, {}) for p in survey.get('raw_platforms', []) if p.get('platform') == platform), {})
+        uid = original.get('uid', '')
+        url = ('https://www.tgb.cn/blog/' if platform == '淘股吧' else 'https://xueqiu.com/u/') + str(uid)
+        verdict = sample.get('direction', '中性') if sample.get('eligible', True) else '排除'
+        audit_rows.append(f'<tr><td>{esc(platform)}</td><td><a href="{esc(url)}" target="_blank" rel="noopener">{esc(name)}</a></td><td>{esc(verdict)}</td><td>{esc(sample.get("reason", ""))}</td></tr>')
+    audit_html = f'<div class="lbox">{esc(survey.get("note", ""))}<br>{esc(survey.get("sampling_method", ""))}</div><details><summary>查看{len(reviewed)}位活跃作者的判读与排除理由</summary><table><tr><th>平台</th><th>作者</th><th>判读</th><th>依据</th></tr>{"".join(audit_rows)}</table></details>'
+    survey_sec = survey_sec.replace('</section>', audit_html + '</section>')
 
     # ===== ⑥ 淘股吧 =====
     # 先收集所有博主的原始文本，并发调用 AI 总结
@@ -2164,7 +2169,7 @@ def build_html(today: str, trade_date: str) -> str:
             tgb_ai_results[i] = cached
 
     # 并发 AI 总结；已有精确缓存时无须重新请求。
-    tgb_ai_configured = bool(os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"))
+    tgb_ai_configured = semantic_summary_available()
     if tgb_ai_configured and pending_indices:
         pending_results = ai_summarize_batch_parallel([tgb_ai_tasks[i] for i in pending_indices])
         for i, result in zip(pending_indices, pending_results):
@@ -2271,6 +2276,8 @@ def build_html(today: str, trade_date: str) -> str:
                     summary = f"[AI总结失败-{name}]"
 
         if used_ai:
+            direction = summary_direction(summary)
+            symbols = [s for s in re.findall(r'【([^】]+)】', summary) if s not in {'中性', '看多', '看空', '关注'}]
             for s in symbols[:5]: tgb_symbols_all.add(s)
             tgb_directions.append(direction)
         else:
@@ -2296,7 +2303,10 @@ def build_html(today: str, trade_date: str) -> str:
         ai_tag = ' <span style="color:var(--cyn);font-size:10px">✦AI提炼</span>' if used_ai else ""
         summary_html = esc(summary)
         sym_tags = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in symbols[:5]) if used_ai else ""
-        tgb_rows.append(f'<tr><td class="tb" style="color:var(--gld)">{esc(name)}</td><td class="t2">{dir_badge}{title_part}{summary_html}{ai_tag} {sym_tags}</td></tr>')
+        sources = ' '.join(f'<a href="{esc(p.get("url", ""))}" target="_blank" rel="noopener">主帖原文</a>' for p in posts)
+        if replies:
+            sources += f' <a href="{esc(replies[0].get("url", ""))}" target="_blank" rel="noopener">回复来源</a>'
+        tgb_rows.append(f'<tr><td class="tb" style="color:var(--gld)">{esc(name)}</td><td class="t2">{dir_badge}{title_part}{summary_html}{ai_tag} {sym_tags}<div class="t3">{esc(d.get("data_date", ""))} · {sources}</div></td></tr>')
 
     if tgb_cache_dirty:
         try:
@@ -2340,14 +2350,14 @@ def build_html(today: str, trade_date: str) -> str:
 
     # ===== ⑦ 抖音 =====
     # 先收集所有视频的原始文本，并发调用 AI 总结
-    ai_configured = bool(os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"))
+    ai_configured = semantic_summary_available()
     dy_video_list = []  # [(blogger_idx, video_dict), ...]
     dy_ai_tasks = []
 
     for bi, b in enumerate(douyin.get("bloggers", [])):
         if not b.get("videos"):
             continue
-        for v in b["videos"][:8]:
+        for v in b["videos"]:
             transcript = v.get("transcript", "")
             title = v.get("title", "")
             transcript_s = trad_to_simp(transcript) if transcript else ""
@@ -2359,8 +2369,24 @@ def build_html(today: str, trade_date: str) -> str:
             else:
                 dy_ai_tasks.append(("", ""))
 
-    # 并发 AI 总结
-    dy_ai_results = ai_summarize_batch_parallel(dy_ai_tasks)
+    # The cache is bound to report date, video URL and the complete transcript.
+    dy_cache_path = DATA_DIR / 'douyin_ai_summaries.json'
+    dy_cache = load_summary_cache(dy_cache_path)
+    dy_ai_results = [''] * len(dy_ai_tasks)
+    pending = []
+    for i, (_, video, _, _) in enumerate(dy_video_list):
+        raw = dy_ai_tasks[i][0]
+        cached = get_cached_summary(dy_cache, today, 'douyin', video.get('url', ''), raw) if raw else None
+        if cached:
+            dy_ai_results[i] = cached
+        elif raw:
+            pending.append(i)
+    if ai_configured and pending:
+        for i, summary in zip(pending, ai_summarize_batch_parallel([dy_ai_tasks[j] for j in pending])):
+            if summary:
+                dy_ai_results[i] = summary
+                set_cached_summary(dy_cache, today, 'douyin', dy_video_list[i][1].get('url', ''), dy_ai_tasks[i][0], summary)
+        save_summary_cache(dy_cache, dy_cache_path)
 
     # 组装抖音卡片
     dy_items = []
@@ -2394,8 +2420,6 @@ def build_html(today: str, trade_date: str) -> str:
             ai_summary = dy_ai_results[ai_result_idx] if ai_result_idx < len(dy_ai_results) else ""
             ai_result_idx += 1
 
-            stored_summary = v.get("summary", "") if v.get("summary_source") == "ai" else ""
-            ai_summary = ai_summary or stored_summary
             used_ai = bool(ai_summary)
             if ai_summary:
                 if ai_summary == NO_CLEAR_OPINION:
@@ -2440,6 +2464,9 @@ def build_html(today: str, trade_date: str) -> str:
                         else:
                             summary = "AI语义总结失败，暂无可展示的视频文本"
 
+            # 正式简报只交付与本次转录相符的语义结论。
+            if not used_ai:
+                raise RuntimeError(f'抖音视频缺少与转录相符的语义摘要：{v.get("url", "")}；未写出完整简报')
             # 方向判断
             if ai_summary == NO_CLEAR_OPINION:
                 direction = "关注"
@@ -2461,6 +2488,10 @@ def build_html(today: str, trade_date: str) -> str:
             else:
                 direction = v.get("direction", "关注")
 
+            if used_ai:
+                direction = {'看多': '利好', '看空': '利空'}.get(summary_direction(summary), '关注')
+                symbols = [s for s in re.findall(r'【([^】]+)】', summary) if s not in {'中性', '看多', '看空', '关注'}]
+
             for s in symbols[:4]: dy_symbols_all.add(s)
             sym_tags = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in symbols[:4])
             if direction == "利好":
@@ -2471,7 +2502,8 @@ def build_html(today: str, trade_date: str) -> str:
                 dir_tag = '<span class="bbl">关注</span>'
             warn_tag = ' <span style="color:var(--wrn);font-size:10px">⚠标题/话题兜底</span>' if warning else ""
             ai_tag = ' <span style="color:var(--cyn);font-size:10px">✦AI提炼</span>' if used_ai else ""
-            dy_items.append(f'<div class="dy"><span class="dyt">{dir_tag}{warn_tag}{ai_tag}</span><div><strong>{esc(title_s[:50])}</strong><p>{esc(summary[:200])} {sym_tags}</p></div></div>')
+            title_note = '展示标题取自转录首句 · ' if v.get('title_source') == '转录开头' else ''
+            dy_items.append(f'<div class="dy"><span class="dyt">{dir_tag}{warn_tag}{ai_tag}</span><div><strong>{esc(title_s[:50])}</strong><p>{esc(summary[:250])} {sym_tags}</p><small class="t3">{title_note}{esc(b.get("name", ""))} · {esc(v.get("created_at", ""))} · <a href="{esc(v.get("url", ""))}" target="_blank" rel="noopener">视频原文</a></small></div></div>')
     dy_name_parts = [esc(b.get("name", "")) for b in douyin.get("bloggers", []) if b.get("name")]
     dy_name = " · ".join(dy_name_parts) if dy_name_parts else "抖音博主"
     dy_lbox_symbols = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in list(dy_symbols_all)[:8])
@@ -2492,13 +2524,18 @@ def build_html(today: str, trade_date: str) -> str:
     ev_rows = []
     for e in events.get("events", []):
         date = str(e.get("date", ""))
+        if e.get('time') and e['time'] != '00:00':
+            date += ' ' + str(e['time'])
         etype = str(e.get("type", ""))
         event = str(e.get("event", ""))[:80]
         impact = str(e.get("impact", "中性"))
         type_cls = {"宏观": "bbl", "消费": "bgd", "解禁": "bo", "PMI": "br"}.get(etype, "bbl")
         imp_cls = {"利好": "bg_", "利空": "bo", "中性": "bbl"}.get(impact, "bbl")
         source = str(e.get("source") or events.get("source") or "")
-        ev_rows.append(f'<tr><td class="tr">{esc(date)}</td><td><span class="{type_cls}">{esc(etype)}</span></td><td class="t2">{esc(event)}{(" <span class=\"t3\">" + esc(source) + "</span>") if source else ""}</td><td><span class="{imp_cls}">{esc(impact)}</span></td></tr>')
+        source_html = esc(source)
+        if e.get('source_url'):
+            source_html = f'<a href="{esc(e["source_url"])}" target="_blank" rel="noopener">{source_html}</a>'
+        ev_rows.append(f'<tr><td class="tr">{esc(date)}</td><td><span class="{type_cls}">{esc(etype)}</span></td><td class="t2">{esc(event)}{(" <span class=\"t3\">" + source_html + "</span>") if source else ""}</td><td><span class="{imp_cls}">{esc(impact)}</span></td></tr>')
     if not ev_rows:
         ev_rows = [f'<tr><td colspan="4" class="t3" style="text-align:center">{esc(events_note or "暂无带明确日期的可核验事件；未使用日期推算")}</td></tr>']
     event_meta = events.get("range", "") if str(events.get("status", "")).lower() == "ok" else (events_note or "目标窗口")
@@ -2517,7 +2554,7 @@ def build_html(today: str, trade_date: str) -> str:
     strategy_sec = f"""<section class="sec" style="margin-bottom:0">
 <div class="sh"><span class="ico">◉</span> 策略 <span class="meta">全源综合{data_note}</span></div>
 <div class="strat">
-<div class="sc long"><h4><span class="dot"></span>做多</h4><ul>{"".join(f'<li>{esc(item)}</li>' for item in long_items[:6])}</ul></div>
+<div class="sc long"><h4><span class="dot"></span>进攻线索（需确认）</h4><ul>{"".join(f'<li>{esc(item)}</li>' for item in long_items[:6])}</ul></div>
 <div class="sc wait"><h4><span class="dot"></span>观察等待</h4><ul>{"".join(f'<li>{esc(item)}</li>' for item in watch_items[:6])}</ul></div>
 <div class="sc risk"><h4><span class="dot"></span>风险提示</h4><ul>{"".join(f'<li>{esc(item[:60])}</li>' for item in risk_items[:5])}</ul></div>
 </div></section>"""
@@ -2627,7 +2664,7 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
     # ===== 组装完整HTML =====
     # 报头里的板块计数：真实渲染出来的板块数（含策略），不写死
     mast_sections = sum(
-        1 for block in (news_sec, ss_sec, lhb_sec, rotation_sec, node_cycle_sec, yb_sec,
+        1 for block in (hero, quote_html, news_sec, lhb_sec, rotation_sec, node_cycle_sec, yb_sec,
                         survey_sec, tgb_sec, dy_sec, events_sec, strategy_sec)
         if str(block).strip()
     )
@@ -2641,7 +2678,7 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
 {css_block}
 </head>
 <body>
-<header id="hdr"><span class="logo">每日简报</span><div class="hdr-right"><span class="hdr-date">{today_display}</span><span class="live-badge"><span class="live-dot"></span>LIVE</span></div></header>
+<header id="hdr"><span class="logo">每日简报</span><div class="hdr-right"><span class="hdr-date">{today_display}</span><span class="live-badge">每日快照</span></div></header>
 <main class="c">
 <div class="np-mast">
   <div class="np-mast-kicker">Daily A-Share Briefing</div>
@@ -2653,7 +2690,6 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
 {quote_html}
 <div class="g">
 {news_sec}
-{ss_sec}
 {lhb_sec}
 {rotation_sec}
 {yb_sec}
@@ -2673,8 +2709,8 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
         raise RuntimeError(
             "淘股吧有可核验内容但未取得 AI 语义摘要（"
             + "、".join(tgb_ai_failures)
-            + "）。请检查 ~/.codex/daily-briefing.env 或环境变量中的 "
-            "DEEPSEEK_API_KEY/OPENAI_API_KEY 是否有效；未写出简报，避免把原始跟帖当观点交付。"
+            + "）。请检查 Codex CLI 登录、模型访问及语义调用时限，或确认 "
+            "~/.codex/daily-briefing.env 中的 AI API Key 有效；未写出简报，避免把原始跟帖当观点交付。"
         )
 
     return full_html
@@ -2691,6 +2727,8 @@ if __name__ == "__main__":
     print(f"编译简报: {today} (交易日: {trade_date})", file=sys.stderr)
 
     try:
+        from briefing_integrity import require_complete
+        require_complete(DATA_DIR, today, trade_date)
         html = build_html(today, trade_date)
     except RuntimeError as exc:
         print(f"  [⛔] 编译已终止：{exc}", file=sys.stderr)
@@ -2699,7 +2737,8 @@ if __name__ == "__main__":
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     output_path = OUTPUT_DIR / f"{today}简报.html"
 
-    with open(output_path, "w", encoding="utf-8") as f:
+    # Keep generated HTML byte-identical across Windows and Linux builds.
+    with open(output_path, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(html)
 
     print(f"OK: {output_path}")

@@ -5,8 +5,8 @@
   · data/ths_industry_daily.csv  同花顺行业指数 90 板块日线
   · outputs/                     打分与回测结果
 
-本脚本只做三件事：调 predict → 读 outputs → 转成简报用的结构化 JSON。
-不改模型代码、不改模型参数、不覆盖它的历史产物。
+本脚本增量更新行业行情，核验完整覆盖后调 predict，并转成简报 JSON。
+保留训练历史备份，不改模型代码与参数。
 
 用法: python fetch_rotation.py [--date YYYY-MM-DD] [--refresh]
 """
@@ -17,17 +17,22 @@ import argparse
 import csv
 import json
 import os
+import re
 import subprocess
 import sys
-from datetime import datetime, timezone, timedelta
+import time
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone, timedelta, time as datetime_time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
 from runtime_paths import get_data_dir
+from _hithink import trade_dates
 
 DATA_DIR = get_data_dir(BASE_DIR)
 HISTORY_PATH = DATA_DIR / "rotation_history.json"
+ASOF_RE = re.compile(r"\bas of (\d{4}-\d{2}-\d{2})\b", re.IGNORECASE)
 
 CN = timezone(timedelta(hours=8))
 MODEL_DIR_CANDIDATES = [
@@ -62,6 +67,166 @@ def _num(value):
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def expected_trade_date(target_date: str, trading_days: list[str], now: datetime | None = None) -> str:
+    """Return the last exchange session available for a report date.
+
+    The report is commonly generated after the close. For a same-day run before
+    16:00 China time, use the previous session because today's daily bars may not
+    have settled yet. Exchange holidays come from the shared Hithink calendar;
+    weekdays alone are not enough to decide whether a cached model date is stale.
+    """
+    target = datetime.strptime(target_date, "%Y-%m-%d").date()
+    current = now or datetime.now(CN)
+    if target == current.date() and current.timetz().replace(tzinfo=None) < datetime_time(16, 0):
+        target -= timedelta(days=1)
+
+    valid_days = []
+    for value in trading_days:
+        try:
+            session = datetime.strptime(str(value), "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            continue
+        if session <= target:
+            valid_days.append(session)
+    if not valid_days:
+        raise ValueError(f"交易日历未覆盖目标日 {target_date}")
+    return max(valid_days).strftime("%Y-%m-%d")
+
+
+def prediction_asof(stdout: str) -> str | None:
+    """Read the actual date selected by this predict invocation, never old outputs."""
+    matches = ASOF_RE.findall(stdout or "")
+    if not matches:
+        return None
+    value = matches[-1]
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return None
+    return value
+
+
+def error_result(target_date: str, note: str, asof: str = "") -> dict:
+    return {
+        "date": target_date,
+        "asof": asof,
+        "status": "error",
+        "entries": [],
+        "new_entries": [],
+        "dropped": [],
+        "note": note,
+    }
+
+
+def refresh_benchmark_data(model_dir: Path, expected: str, force: bool = False) -> str:
+    """Refresh the CSI 300 benchmark cache when it lacks the expected session.
+
+    The model aligns industry bars with this separate benchmark file. Updating
+    industry bars alone still leaves predictions capped at the benchmark's old
+    last date, so both inputs must cover the requested session.
+    """
+    import pandas as pd
+    import akshare as ak
+
+    path = model_dir / 'data/benchmark_csi300.csv'
+    if path.exists():
+        old = pd.read_csv(path, encoding='utf-8-sig')
+        if {'date', 'close'} - set(old.columns):
+            raise ValueError('沪深300基准缓存缺少 date/close 列')
+        old = old[['date', 'close']].copy()
+        old['date'] = pd.to_datetime(old['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+        old['close'] = pd.to_numeric(old['close'], errors='coerce')
+        old = old.dropna(subset=['date', 'close'])
+        if not force and ((old['date'] == expected) & (old['close'] > 0)).any():
+            return expected
+    else:
+        old = pd.DataFrame(columns=['date', 'close'])
+
+    failures = []
+    for source in ('stock_zh_index_daily', 'stock_zh_index_daily_tx'):
+        try:
+            fresh = getattr(ak, source)(symbol='sh000300')
+            if {'date', 'close'} - set(fresh.columns):
+                raise ValueError('返回缺少 date/close 列')
+            fresh = fresh[['date', 'close']].copy()
+            fresh['date'] = pd.to_datetime(fresh['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+            fresh['close'] = pd.to_numeric(fresh['close'], errors='coerce')
+            fresh = fresh.dropna(subset=['date', 'close'])
+            fresh = fresh[(fresh['date'] <= expected) & (fresh['close'] > 0)]
+            if fresh.empty or fresh['date'].max() != expected:
+                raise ValueError(f'最新有效日期为 {fresh["date"].max() if not fresh.empty else "未知"}')
+
+            merged = pd.concat([old, fresh], ignore_index=True)
+            merged = merged.drop_duplicates('date', keep='last').sort_values('date')
+            if path.exists():
+                backup = path.with_name(f'benchmark_csi300.before-{expected}.csv')
+                if not backup.exists():
+                    backup.write_bytes(path.read_bytes())
+            temp = path.with_suffix('.refresh.tmp')
+            merged.to_csv(temp, index=False, encoding='utf-8-sig')
+            temp.replace(path)
+            return expected
+        except Exception as exc:
+            failures.append(f'{source}: {exc}')
+
+    raise ValueError(f'沪深300基准行情未补齐到 {expected}：' + ' / '.join(failures))
+
+
+def refresh_industry_data(model_dir: Path, expected: str, force: bool = False) -> dict:
+    """Update model inputs and commit industry bars only after validation.
+
+    Keep the older training history and model parameters intact. A partial
+    refresh must never be passed to prediction as a complete universe.
+    """
+    import pandas as pd
+    import akshare as ak
+    path = model_dir / 'data/ths_industry_daily.csv'
+    info = pd.read_csv(model_dir / 'data/ths_industry_info.csv', dtype={'code': str})
+    old = pd.read_csv(path, dtype={'code': str})
+    latest = old[old.date <= expected].groupby('code').date.max()
+    needed = info[info.code.map(latest).fillna('') < expected] if not force else info
+    columns = {'日期': 'date', '收盘价': 'close', '开盘价': 'open', '最高价': 'high', '最低价': 'low', '成交量': 'volume', '成交额': 'amount'}
+
+    def fetch(row):
+        for attempt in range(3):
+            try:
+                frame = ak.stock_board_industry_index_ths(symbol=row['name'], start_date=expected[:4] + '0101', end_date=expected.replace('-', '')).rename(columns=columns)
+                frame['date'] = pd.to_datetime(frame['date']).dt.strftime('%Y-%m-%d')
+                frame = frame[frame.date <= expected].copy()
+                if frame.empty or frame.date.max() != expected or not (pd.to_numeric(frame.close, errors='coerce') > 0).all():
+                    raise ValueError('最新交易日或收盘价无效')
+                frame['code'], frame['name'] = row['code'], row['name']
+                return frame[old.columns]
+            except Exception:
+                if attempt == 2:
+                    raise ValueError(f"行业行情未补齐：{row['name']}")
+                time.sleep(attempt + 1)
+
+    if not needed.empty:
+        print(f'[rotation] 增量更新 {len(needed)}/{len(info)} 个行业', file=sys.stderr)
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            parts = list(executor.map(fetch, needed.to_dict('records')))
+        merged = pd.concat([old, *parts], ignore_index=True).drop_duplicates(['code', 'date'], keep='last').sort_values(['date', 'code'])
+        backup = path.with_name(f'ths_industry_daily.before-{expected}.csv')
+        if not backup.exists():
+            backup.write_bytes(path.read_bytes())
+        temp = path.with_suffix('.refresh.tmp')
+        merged.to_csv(temp, index=False, encoding='utf-8-sig')
+        temp.replace(path)
+        old = merged
+    latest = old[old.date <= expected].groupby('code').date.max()
+    complete = int((info.code.map(latest) == expected).sum())
+    if complete != len(info):
+        raise ValueError(f'行业行情覆盖不完整：{complete}/{len(info)}')
+    benchmark_date = refresh_benchmark_data(model_dir, expected, force=force)
+    return {
+        'expected_industries': len(info),
+        'complete_industries': complete,
+        'data_date': expected,
+        'benchmark_data_date': benchmark_date,
+    }
 
 
 def load_history() -> dict:
@@ -176,9 +341,16 @@ def main() -> None:
         }, sys.stdout, ensure_ascii=False, indent=2)
         return
 
-    command = [sys.executable, str(model_dir / "run.py"), "predict", "--asof", args.date]
-    if args.refresh:
-        command.append("--refresh")
+    try:
+        expected = expected_trade_date(args.date, trade_dates())
+        config = json.loads((model_dir / 'config.json').read_text(encoding='utf-8'))
+        coverage = refresh_industry_data(model_dir, expected, args.refresh) if config.get('universe') == 'ths' else {}
+    except Exception as exc:
+        json.dump(error_result(args.date, f'无法更新或核验模型行情：{exc}'), sys.stdout, ensure_ascii=False, indent=2)
+        return
+    command = [sys.executable, str(model_dir / "run.py"), "predict", "--asof", expected]
+    if args.refresh and config.get('universe') != 'ths':
+        command.append('--refresh')
     print(f"[rotation] {model_dir}", file=sys.stderr)
     try:
         proc = subprocess.run(
@@ -197,20 +369,23 @@ def main() -> None:
                   sys.stdout, ensure_ascii=False, indent=2)
         return
 
-    manifest_path = model_dir / "outputs" / f"predict_manifest_{args.date}.json"
-    if manifest_path.exists():
-        try:
-            asof = json.loads(manifest_path.read_text(encoding="utf-8")).get("asof") or args.date
-        except Exception:
-            asof = args.date
-    else:
-        # 目标日不是交易日时模型会落到最近交易日，按产物里最大的日期取
-        candidates = sorted(
-            path.stem.split("_")[-1] for path in (model_dir / "outputs").glob("all_scores_*.csv")
-        )
-        asof = candidates[-1] if candidates else args.date
+    asof = prediction_asof(proc.stdout)
+    try:
+        expected = expected_trade_date(args.date, trade_dates())
+    except Exception as exc:
+        json.dump(error_result(args.date, f"无法核验模型交易日：{exc}", asof or ""),
+                  sys.stdout, ensure_ascii=False, indent=2)
+        return
+    if asof != expected:
+        json.dump(error_result(args.date, f"模型数据截至{asof or '未知'}，要求{expected}；请刷新行情后重算", asof or ""),
+                  sys.stdout, ensure_ascii=False, indent=2)
+        return
 
-    json.dump(build_result(args.date, model_dir, asof), sys.stdout, ensure_ascii=False, indent=2)
+    result = build_result(args.date, model_dir, asof)
+    result['coverage'] = coverage
+    if coverage and len(read_csv_rows(model_dir / 'outputs' / f'all_scores_{asof}.csv')) != coverage['complete_industries']:
+        result = error_result(args.date, '模型打分未覆盖全部行业', asof)
+    json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":

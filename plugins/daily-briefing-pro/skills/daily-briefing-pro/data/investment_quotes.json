@@ -482,9 +482,12 @@
   {
     "id": 41,
     "quote": "当潮水退去，你才知道谁在裸泳。",
+    "verified": true,
+    "source_url": "https://www.berkshirehathaway.com/letters/2001pdf.pdf",
+    "source_title": "伯克希尔2001年股东信，PDF第9页（中文意译）",
     "author": "Warren Buffett（沃伦·巴菲特）",
     "author_title": "伯克希尔·哈撒韦董事长",
-    "principle": "熊市验真：牛市里什么股都能涨，只有熊市才能看出谁有真本事。高杠杆、弱基本面的公司在退潮时最先倒下。",
+    "principle": "风险启示：这句话原用于再保险风险。做投资也应检查压力情景下的杠杆、现金流和交易对手风险；这是本简报的引申解读。",
     "tags": [
       "熊市",
       "风险管理",

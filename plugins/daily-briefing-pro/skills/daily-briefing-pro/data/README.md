@@ -17,7 +17,6 @@
 | `panic_today.json` | 市场温度 S、Δ1、Δ2、周期标签与 11 个因子 | `panic_greed_index_enhanced.py` |
 | `sentiment_history.json` | 市场温度历史序列（近 14 日用于折线图） | `panic_greed_index_enhanced.py` |
 | `news_today.json` | 财经科技新闻 | `fetch_news.py` |
-| `selfstock_today.json` | 自选股个股新闻/公告 | `fetch_selfstock_news.py` |
 | `lhb_today.json` | 龙虎榜（净买卖、机构、游资席位） | `fetch_longhubang.py` |
 | `yanbao_latest.json` | 机构研报（目标日前 3 天窗口） | `fetch_yanbao.py` |
 | `sentiment_survey_today.json` | 博主多空统计（淘股吧 + 雪球，note 中写明覆盖人数） | `fetch_sentiment_survey.py` |
@@ -30,6 +29,8 @@
 | `rotation_history.json` | 板块轮动历史快照（用于算新进/跌出，保留最近 60 期） | `fetch_rotation.py` |
 | `quote_today.html` | 每日金句横幅片段 | `pick_quote.py --html` |
 | `used_quotes.json` | 金句去重记录 | `pick_quote.py` |
+
+自选股新闻抓取器 `fetch_selfstock_news.py` 保留给专项新闻筛选使用，不再由 `run_all.py` 执行，也不再写入完整简报。
 
 ## 长期配置与静态数据
 

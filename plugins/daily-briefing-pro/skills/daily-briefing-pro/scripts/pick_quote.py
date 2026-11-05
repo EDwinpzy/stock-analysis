@@ -16,6 +16,7 @@ import random
 import os
 import sys
 from datetime import datetime
+from html import escape
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SKILL_DIR = os.path.dirname(SCRIPT_DIR)
@@ -39,8 +40,17 @@ def save_json(path, data):
 
 
 def pick_quote():
-    quotes = load_json(QUOTES_FILE)
-    used = load_json(USED_FILE)
+    quotes = [q for q in load_json(QUOTES_FILE) if q.get('verified') and q.get('source_url')]
+    if not quotes:
+        raise ValueError('没有已核验原始出处的名言')
+    used = load_json(USED_FILE) if os.path.exists(USED_FILE) else {}
+    target_date = datetime.now().strftime('%Y-%m-%d')
+    if '--date' in sys.argv:
+        target_date = sys.argv[sys.argv.index('--date') + 1]
+    selections = used.setdefault('selections', {})
+    previous = next((q for q in quotes if q['id'] == selections.get(target_date)), None)
+    if previous:
+        return previous, len({q['id'] for q in quotes} - set(used.get('used_ids', [])))
 
     used_ids = set(used.get("used_ids", []))
     all_ids = {q["id"] for q in quotes}
@@ -55,6 +65,7 @@ def pick_quote():
 
     chosen_id = random.choice(list(available))
     chosen = next(q for q in quotes if q["id"] == chosen_id)
+    selections[target_date] = chosen_id
 
     # 更新已用列表
     used_ids.add(chosen_id)
@@ -88,6 +99,7 @@ def to_html(quote_data, remaining):
     {" ".join(f'<span class="quote-tag">{t}</span>' for t in q['tags'])}
   </div>
   <div class="quote-meta">今日金句 · 剩余 {remaining} 条未用</div>
+  <div class="quote-meta"><a href="{escape(q['source_url'], quote=True)}" target="_blank" rel="noopener">{escape(q.get('source_title', '原始出处'))}</a></div>
 </section>"""
 
 

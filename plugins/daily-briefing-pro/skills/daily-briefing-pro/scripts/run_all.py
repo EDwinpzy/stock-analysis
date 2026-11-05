@@ -3,7 +3,7 @@
 每日简报Pro — 一体化编排脚本
 并行执行所有数据采集脚本，编译HTML简报
 
-架构: Group A(7个快速脚本并行) → Group B(3个内容脚本并行) → 编译HTML
+架构: Group A(快速数据并行采集) → Group B(内容并行采集) → 编译HTML
 
 用法: python run_all.py [--date YYYY-MM-DD]
 """
@@ -14,12 +14,17 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
+from urllib.parse import quote
 
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from runtime_paths import get_data_dir
 from summary_cache import cached_tgb_summaries_complete, load_summary_cache
 from trading_date import get_recent_trade_date
+from data_quality import data_error_reason
+from codex_summary_cli import semantic_summary_available
+from _hithink import trade_dates
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
@@ -47,7 +52,7 @@ def get_date():
         idx = sys.argv.index("--date")
         if idx + 1 < len(sys.argv):
             return sys.argv[idx + 1]
-    return datetime.now().strftime("%Y-%m-%d")
+    return datetime.now(ZoneInfo('Asia/Shanghai')).strftime("%Y-%m-%d")
 
 
 def compiler_preflight_error(script_dir: Path = SCRIPT_DIR) -> str:
@@ -150,10 +155,15 @@ def run_script(name: str, args: list, timeout: int = 120) -> dict:
             raw_stdout = stdout if name == "pick_quote.py" else stdout[:200]
             return {"_script": name, "_args": args, "_elapsed": elapsed, "_rc": 0, "_raw_stdout": raw_stdout}
 
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as exc:
         elapsed = time.time() - t0
         print(f"  [ERROR] {name} 超时 ({timeout}s)", file=sys.stderr)
-        return {"_script": name, "_args": args, "_elapsed": elapsed, "_error": "timeout"}
+        detail = exc.stderr or ''
+        if isinstance(detail, bytes):
+            detail = detail.decode('utf-8', errors='replace')
+        last_stage = '\n'.join(str(detail).splitlines()[-3:])[-600:]
+        return {"_script": name, "_args": args, "_elapsed": elapsed,
+                "_error": f"timeout ({timeout}s)", "note": f"采集超过{timeout}秒时限；末条阶段：{last_stage or '无阶段日志'}"}
     except Exception as e:
         elapsed = time.time() - t0
         print(f"  [ERROR] {name} 异常: {e}", file=sys.stderr)
@@ -179,7 +189,6 @@ def save_result(name: str, data: dict, suffix: str = ".json"):
     name_map = {
         "panic_greed_index_enhanced.py": "panic_today.json",
         "fetch_news.py": "news_today.json",
-        "fetch_selfstock_news.py": "selfstock_today.json",
         "fetch_future_events.py": "events_today.json",
         "fetch_yanbao.py": "yanbao_latest.json",
         "tgb_crawl.py": "tgb_today.json",
@@ -189,6 +198,7 @@ def save_result(name: str, data: dict, suffix: str = ".json"):
         "fetch_lianban.py": "lianban_today.json",
         "fetch_rotation.py": "rotation_today.json",
         "build_node_cycle.py": "node_cycle_today.json",
+        "fetch_indices.py": "indices_today.json",
     }
     filename = name_map.get(name, f"{name}_today{suffix}")
     path = DATA_DIR / filename
@@ -212,14 +222,14 @@ def run_group_a(raw_date: str, trade_date: str) -> dict:
         # （约 1.6 年 开盘啦 历史）需要数分钟，因此给足超时。
         ("panic_greed_index_enhanced.py", trade_args, 1200),
         ("fetch_news.py", ["--source", "eastmoney", "--limit", "15"] + raw_args, 60),
-        ("fetch_selfstock_news.py", trade_args, 60),
         ("fetch_longhubang.py", trade_args, 90),
-        ("fetch_yanbao.py", raw_args, 90),
+        ("fetch_yanbao.py", raw_args, 900),
         ("fetch_future_events.py", raw_args, 60),
         # 盘面补充：同花顺官方给盘面事实（可回填历史），连板网补新高新低/融资/次日观察
         ("fetch_lianban.py", raw_args, 240),
         # 行业轮动模型打分（离线调用，约 15s；模型目录可用 ROTATION_MODEL_DIR 指定）
         ("fetch_rotation.py", raw_args, 900),
+        ("fetch_indices.py", raw_args, 90),
         ("pick_quote.py", ["--html"] + raw_args, 30),
     ]
 
@@ -252,8 +262,13 @@ def run_group_b(date: str) -> dict:
     date_args = ["--date", date]
     scripts = [
         ("tgb_crawl.py", date_args, 120),
-        ("fetch_douyin.py", date_args, 600),
-        ("fetch_sentiment_survey.py", date_args, 300),
+        # Each video has its own bounded analyzer; allow several two-video
+        # batches without killing a healthy collection at the old 600s boundary.
+        ("fetch_douyin.py", date_args, 1800),
+        # Includes both platform collection (up to 420s) and the bounded
+        # parallel semantic review (840s). Keep the outer budget above their
+        # sum so completed/checkpointed batches are not killed prematurely.
+        ("fetch_sentiment_survey.py", ["--date", get_recent_trade_date(date)], 1300),
     ]
 
     results = {}
@@ -309,7 +324,7 @@ def required_modules_ready(results: dict, target_date: str | None = None) -> boo
     failures = []
     tgb = results.get("tgb_crawl.py", {}) if isinstance(results, dict) else {}
     douyin = results.get("fetch_douyin.py", {}) if isinstance(results, dict) else {}
-    if tgb.get("status") == "error" or tgb.get("error"):
+    if data_error_reason(tgb):
         failures.append(
             f"淘股吧：{tgb.get('note') or tgb.get('error')}"
             "（修复：登录 tgb.cn 后导出 Cookie 到 ~/.codex/tgb_cookies.json）"
@@ -319,24 +334,26 @@ def required_modules_ready(results: dict, target_date: str | None = None) -> boo
             "淘股吧：目标日及回退工作日没有可核验主帖/跟帖"
             "（修复：确认 Cookie 未过期，或核对 settings 中的博主ID）"
         )
-    ai_configured = bool(os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"))
+    ai_configured = semantic_summary_available()
     cache = load_summary_cache(DATA_DIR / "tgb_ai_summaries.json")
     cache_ready = cached_tgb_summaries_complete(cache, target_date or get_date(), tgb)
     if _tgb_activity(tgb) >= 1 and not ai_configured and not cache_ready:
         failures.append(
             "淘股吧：有可核验内容但缺少AI语义总结凭证"
-            "（修复：在 ~/.codex/daily-briefing.env 配置有效的 DEEPSEEK_API_KEY/OPENAI_API_KEY）"
+            "（修复：登录 Codex CLI，或在 ~/.codex/daily-briefing.env 配置有效的 AI API Key）"
         )
-    if douyin.get("status") == "error" or douyin.get("error"):
+    if data_error_reason(douyin):
         failures.append(
-            f"抖音：{douyin.get('note') or douyin.get('error')}"
-            "（修复：检查 data/douyin_cookies.json 是否过期）"
+            f"抖音：{douyin.get('note') or data_error_reason(douyin)}"
+            "（修复：根据具体采集/下载/转录错误检查对应步骤）"
         )
     elif _douyin_activity(douyin) < 1:
         failures.append(
             "抖音：目标日及回退工作日没有可核验视频"
             "（修复：检查 Cookie、ffmpeg 与 Whisper 转录环境）"
         )
+    elif any(not v.get('transcript') or v.get('warning') for b in douyin.get('bloggers', []) for v in b.get('videos', [])):
+        failures.append('抖音：目标视频转录未全部完成')
     if failures:
         raise RuntimeError("；".join(dict.fromkeys(failures)) + "。未编译HTML简报。")
     return True
@@ -348,62 +365,91 @@ def compile_html(date: str) -> dict:
     compiler = SCRIPT_DIR / "build_briefing.py"
     if not compiler.is_file():
         return {"_script": "build_briefing.py", "_rc": 127, "_error": f"缺少HTML编译器：{compiler}"}
-    result = run_script("build_briefing.py", ["--date", date], timeout=60)
+    result = run_script("build_briefing.py", ["--date", date], timeout=600)
     return result
 
 
 def compile_broadsheet(date: str) -> str:
-    """可选：把当日简报再排一版报刊风（需 --broadsheet 或 BRIEFING_BROADSHEET=1）。
-
-    报刊版是附加交付，渲染或验收失败只提示，不阻断主流程。
-    """
-    if "--broadsheet" not in sys.argv and os.environ.get("BRIEFING_BROADSHEET") != "1":
-        return ""
+    """生成并验收每日简报的最终报刊版交付。"""
     print("\n═══ 报刊风版式 ═══", file=sys.stderr)
     out_dir = default_output_dir()
     src_path = out_dir / f"{date}简报.html"
     out_path = out_dir / f"{date}简报-报刊版.html"
     if not src_path.exists():
-        print(f"  [WARN] 未找到当日简报 {src_path}，跳过报刊版", file=sys.stderr)
-        return ""
+        raise RuntimeError(f"找不到当日简报源文件：{src_path}")
 
     child_env = os.environ.copy()
     child_env["PYTHONIOENCODING"] = "utf-8"
     child_env["BRIEFING_OUTPUT_DIR"] = str(out_dir)
+    temp_path = out_path.with_name(f".{out_path.stem}.{os.getpid()}.tmp.html")
+    shots_path = out_dir / "_验收" / f"{date}-{os.getpid()}"
     steps = (
-        ("build_broadsheet.py", ["--src", str(src_path), "--out", str(out_path), "--date", date], 180),
-        ("verify_broadsheet.py", ["--out", str(out_path), "--src", str(src_path)], 300),
+        ("build_broadsheet.py", ["--src", str(src_path), "--out", str(temp_path), "--date", date], 180),
+        ("verify_broadsheet.py", ["--out", str(temp_path), "--src", str(src_path), "--shots", str(shots_path)], 300),
     )
-    for name, args, timeout in steps:
-        if not (SCRIPT_DIR / name).exists():
-            print(f"  [WARN] 缺少 {name}，跳过", file=sys.stderr)
-            break
-        try:
-            proc = subprocess.run(
-                ["python", str(SCRIPT_DIR / name)] + args,
-                capture_output=True, text=True, encoding="utf-8", errors="replace",
-                cwd=str(BASE_DIR), timeout=timeout, env=child_env
-            )
-        except subprocess.TimeoutExpired:
-            print(f"  [WARN] {name} 超时（{timeout}s）", file=sys.stderr)
-            continue
-        for line in (proc.stdout or "").strip().splitlines()[-4:]:
-            print(f"  {line}", file=sys.stderr)
-        if proc.returncode != 0:
-            print(f"  [WARN] {name} 返回码 {proc.returncode}（报刊版为附加交付，不阻断主流程）",
-                  file=sys.stderr)
+    try:
+        for name, args, timeout in steps:
+            if not (SCRIPT_DIR / name).exists():
+                raise RuntimeError(f"缺少报刊版必需脚本：{name}")
+            try:
+                proc = subprocess.run(
+                    [sys.executable, str(SCRIPT_DIR / name)] + args,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace",
+                    cwd=str(BASE_DIR), timeout=timeout, env=child_env
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError(f"{name} 超时（{timeout}s）") from exc
+            for line in (proc.stdout or "").strip().splitlines()[-6:]:
+                print(f"  {line}", file=sys.stderr)
+            for line in (proc.stderr or "").strip().splitlines()[-6:]:
+                print(f"  {line}", file=sys.stderr)
+            if proc.returncode != 0:
+                raise RuntimeError(f"{name} 验收失败，退出码 {proc.returncode}")
+            if name == "build_broadsheet.py" and not temp_path.is_file():
+                raise RuntimeError("报刊版编译器未生成输出文件")
+        os.replace(temp_path, out_path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
-    if out_path.exists():
-        print(f"  [OK] 报刊版：{out_path}", file=sys.stderr)
-        return str(out_path)
-    return ""
+    print(f"  [OK] 报刊版验收通过：{out_path}", file=sys.stderr)
+    return str(out_path)
+
+
+def delivery_button(report_path: Path) -> str:
+    """Create the final user-facing link for the verified report artifact."""
+    abs_path = str(report_path.resolve()).replace("\\", "/")
+    encoded = quote(abs_path, safe="/:")
+    return (
+        '<a href="file:///' + encoded + '" style="display:inline-block;padding:12px 28px;'
+        'font-family:\'Microsoft YaHei\',sans-serif;font-size:15px;font-weight:700;color:#0b0f19;'
+        'background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:8px;text-decoration:none;'
+        'box-shadow:0 4px 14px rgba(245,158,11,.35);border:1px solid rgba(255,255,255,.15);">'
+        '📄 打开今日简报</a>'
+    )
 
 
 def main():
     t0 = time.time()
+    if '--skip-transcription' in sys.argv:
+        print(json.dumps({'status': 'error', 'reason': '已取消跳过转录；完整简报必须完成抖音转录'}, ensure_ascii=False), file=sys.stderr)
+        raise SystemExit(2)
 
     # 确定日期
     raw_date = get_date()
+    if '--scheduled' in sys.argv:
+        try:
+            sessions = trade_dates()
+            # The CLI calendar covers the past year through the request date;
+            # its last row is the last *open* session, including on holidays.
+            reference_date = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%Y-%m-%d')
+            if not sessions or raw_date < min(sessions) or raw_date > reference_date:
+                raise RuntimeError('交易日历尚未覆盖目标日，不能推断休市')
+            if raw_date not in sessions:
+                print(json.dumps({'date': raw_date, 'status': 'skipped', 'reason': '交易所日历确认非交易日'}, ensure_ascii=False))
+                return
+        except Exception as exc:
+            print(json.dumps({'date': raw_date, 'status': 'error', 'reason': f'交易日历核验失败：{exc}'}, ensure_ascii=False), file=sys.stderr)
+            raise SystemExit(2)
     trade_date = get_recent_trade_date(raw_date)
     print(f"日期: {raw_date} → 交易日: {trade_date}", file=sys.stderr)
 
@@ -414,12 +460,18 @@ def main():
         raise SystemExit(2)
 
     # Step 1: Group A 并行
-    group_a = run_group_a(raw_date, trade_date)
+    resume = '--resume' in sys.argv
+    def persisted(filename):
+        try:
+            return json.loads((DATA_DIR / filename).read_text(encoding='utf-8-sig'))
+        except (OSError, ValueError):
+            return {'_error': f'缺少可解析的{filename}'}
+    group_a = {filename.removesuffix('_today.json'): persisted(filename) for filename in ('panic_today.json', 'news_today.json', 'events_today.json', 'yanbao_latest.json', 'lhb_today.json', 'lianban_today.json', 'rotation_today.json', 'indices_today.json')} if resume else run_group_a(raw_date, trade_date)
 
     # 节点票模型必须在连板池写入后再更新，保留近三个月滚动历史供次日重复计算。
     # 节点模型除连板历史回补外，还要为每个节点抓一次日线核验"是否走A"，
     # 行情源偶发限流时会有退避重试，因此超时给宽一些。
-    node_result = run_script("build_node_cycle.py", ["--date", trade_date], timeout=420)
+    node_result = persisted('node_cycle_today.json') if resume else run_script("build_node_cycle.py", ["--date", trade_date], timeout=420)
     if not node_result.get("_error"):
         save_result("build_node_cycle.py", node_result)
     else:
@@ -427,7 +479,7 @@ def main():
     group_a["build_node_cycle.py"] = node_result
 
     # Step 2: Group B 并行
-    group_b = run_group_b(raw_date)
+    group_b = {name: persisted(filename) for name, filename in {'tgb_crawl.py':'tgb_today.json', 'fetch_douyin.py':'douyin_today.json', 'fetch_sentiment_survey.py':'sentiment_survey_today.json'}.items()} if resume else run_group_b(raw_date)
 
     try:
         required_modules_ready(group_b, raw_date)
@@ -441,8 +493,8 @@ def main():
             "status": "blocked",
             "reason": str(exc),
             "elapsed_seconds": round(elapsed, 1),
-            "group_a": {name: not bool(data.get("_error")) for name, data in group_a.items()},
-            "group_b": {name: not bool(data.get("_error")) for name, data in group_b.items()},
+            "group_a": {name: not bool(data_error_reason(data)) for name, data in group_a.items()},
+            "group_b": {name: not bool(data_error_reason(data)) for name, data in group_b.items()},
         }
         print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
         raise SystemExit(2)
@@ -459,14 +511,27 @@ def main():
             "status": "error",
             "reason": compile_error,
             "elapsed_seconds": round(elapsed, 1),
-            "group_a": {name: not bool(data.get("_error")) for name, data in group_a.items()},
-            "group_b": {name: not bool(data.get("_error")) for name, data in group_b.items()},
+            "group_a": {name: not bool(data_error_reason(data)) for name, data in group_a.items()},
+            "group_b": {name: not bool(data_error_reason(data)) for name, data in group_b.items()},
         }
         print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
         raise SystemExit(3)
 
-    # Step 4: 可选报刊风版式（--broadsheet / BRIEFING_BROADSHEET=1）
-    broadsheet_path = compile_broadsheet(raw_date)
+    # Step 4: 报刊版是最终交付，编译或视觉验收失败时不交付未验收的原版。
+    try:
+        broadsheet_path = compile_broadsheet(raw_date)
+    except RuntimeError as exc:
+        elapsed = time.time() - t0
+        print(f"\n═══ 报刊版失败 ({elapsed:.1f}s) ═══", file=sys.stderr)
+        summary = {
+            "date": raw_date,
+            "trade_date": trade_date,
+            "status": "error",
+            "reason": str(exc),
+            "elapsed_seconds": round(elapsed, 1),
+        }
+        print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
+        raise SystemExit(4)
 
     elapsed = time.time() - t0
     print(f"\n═══ 完成 ({elapsed:.1f}s) ═══", file=sys.stderr)
@@ -477,30 +542,15 @@ def main():
         "trade_date": trade_date,
         "status": "ok",
         "elapsed_seconds": round(elapsed, 1),
-        "group_a": {name: not bool(data.get("_error")) for name, data in group_a.items()},
-        "group_b": {name: not bool(data.get("_error")) for name, data in group_b.items()},
+        "group_a": {name: not bool(data_error_reason(data)) for name, data in group_a.items()},
+        "group_b": {name: not bool(data_error_reason(data)) for name, data in group_b.items()},
     }
     if broadsheet_path:
         summary["broadsheet"] = broadsheet_path
     print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
 
-    # 输出交付按钮（如果编译成功）
-    button = compile_result.get("BUTTON") or compile_result.get("_raw_stdout", "")
-    if "打开今日简报" in str(button):
-        # 提取BUTTON行
-        for line in str(button).split("\n"):
-            if "打开今日简报" in line:
-                print(line.strip())
-                break
-    else:
-        # 手动生成按钮
-        from urllib.parse import quote
-        output_dir = default_output_dir()
-        output_path = output_dir / f"{raw_date}简报.html"
-        if output_path.exists():
-            abs_path = str(output_path).replace("\\", "/")
-            encoded = quote(abs_path, safe="/:")
-            print(f'<a href="file:///{encoded}" style="display:inline-block;padding:12px 28px;font-family:\'Microsoft YaHei\',sans-serif;font-size:15px;font-weight:700;color:#0b0f19;background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:8px;text-decoration:none;box-shadow:0 4px 14px rgba(245,158,11,.35);border:1px solid rgba(255,255,255,.15);">📄 打开今日简报</a>')
+    # 只交付通过模板和视觉验收的报刊版。
+    print(delivery_button(Path(broadsheet_path)))
 
 
 if __name__ == "__main__":

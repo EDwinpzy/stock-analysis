@@ -20,7 +20,7 @@ metadata:
     - A股个股分析
     - 个股行情
     - K线
-    version: 3.23.7
+    version: 3.23.11
     author: Codex
     dependencies:
       python: '>=3.12'
@@ -51,19 +51,18 @@ metadata:
 
 ## 概述
 
-全自动每日投资简报生成器。覆盖以下12个功能板块：
+全自动每日投资简报生成器。覆盖市场情绪、财经新闻、龙虎榜与板块轮动、研报、博主动态、未来事件和策略等内容：
 
 | # | 板块 | 数据源 | 执行方式 |
 |---|------|--------|---------|
 | ① | 市场温度与情绪周期 | 开盘啦API + 上证MA250（AkShare） | 情绪模型3.2（同景分位+接缝+六阶段） |
 | ② | 财经科技新闻 | 东方财富API | HTTP抓取 |
-| ③ | 自选股新闻公告 | 同花顺本地自选股 + 东方财富个股新闻API(AkShare) | 后台HTTP请求 |
 | ③½ | 龙虎榜 | 同花顺官方龙虎榜（hithink-finance）；AkShare(东方财富) 降级 | CLI 取数：个股榜+机构榜+游资派系榜 |
 | ③¾ | 板块轮动 | 行业轮动模型 v2.0.0（同花顺行业指数90板块） | 调外部模型 predict，离线打分 |
 | ④ | 机构研报观点 | ima + 研报客 + 东方财富 | 三源融合 |
 | ⑤½ | 博主多空统计 | 淘股吧50 + 雪球50 博主帖子 | 淘股吧urllib + 雪球浏览器内请求上下文 |
 | ⑥ | 淘股吧博主 | urllib HTTP + 登录Cookie | 后台HTTP请求（v3.5.1重写） |
-| ⑦ | 抖音博主观点 | Playwright（移动/桌面回退）+ 转录 | 抓取博主主页全部目标日视频；默认最多 3 条并发转录 |
+| ⑦ | 抖音博主观点 | Playwright（移动/桌面回退）+ 转录 | 抓取博主主页全部目标日视频；默认串行转录，可显式配置最多 2 条 |
 | ⑧ | 未来大事件 | 东方财富财经日历API | 后台HTTP请求 |
 | ⑧+ | 盘面补充（并入①与⑨） | 同花顺官方盘面事实（主）+ 连板网 lianban.net 补充（新高新低/融资/资金/次日观察） | CLI 取数 + Playwright 兜底渲染 |
 | ⑧½ | 大小周期节点票 | 节点模型 V1.0：同花顺连板池 + 米开朗基瑞淘股吧公开主帖/楼主回复可访问片段 | `scripts/build_node_cycle.py` 滚动历史 + HTML 时间轴 |
@@ -76,30 +75,41 @@ metadata:
 
 | 用户请求 | 入口脚本 | 默认交付 |
 |---|---|---|
-| 生成每日简报 | `scripts/run_all.py` | 暗黑主题 HTML + 对话总结 |
+| 生成每日简报 | `scripts/run_all.py` | 按固定报刊模板生成并验收 HTML + 对话总结 |
 | 研报提炼 | `scripts/fetch_yanbao.py`；三源专项模式见下文 | 当日机构观点表 |
 | 财经新闻深度分析 | `scripts/finance_news_pro.py` | 新闻、方向、影响层级、标的关联 |
 | 新闻快筛 | `scripts/news_screener.py` | 纯文本两组新闻，各不超过 15 条 |
 | 抖音博主观点 | `scripts/fetch_douyin.py`、`scripts/analyze_douyin.py` | 当日视频观点表 |
 | 淘股吧博主观点 | `scripts/tgb_crawl.py` | 博主核心观点 + 标的表 |
-| 头部博主多空调查 | `scripts/fetch_sentiment_survey.py` | 大盘/板块统计与核心结论 |
+| 博主样本多空调查 | `scripts/fetch_sentiment_survey.py` | 大盘/板块统计与核心结论 |
 | A 股个股分析/行情看板 | `modules/stock-analysis/`、`modules/stock-market-board/` | HTML 分析报告或行情页面 |
 | 大小周期节点票 | `scripts/build_node_cycle.py`；模型实现见 `scripts/node_cycle_model.py` | 简报内嵌嵌套时间轴、节点精简表与证据等级 |
 | 报刊风（纸张质感）版式 | `scripts/build_broadsheet.py`；样式资产 `templates/broadsheet.css` | 同数据的报刊版 HTML（纸感 + 双栏长表） |
 
 路径约定：脚本和静态资源从本 Skill 根目录读取；运行数据统一由 `scripts/runtime_paths.py` 管理，默认保存到 `~/.codex/daily-briefing-pro/data/`，可通过 `DAILY_BRIEFING_DATA_DIR` 覆盖。首次运行会把旧 Skill 目录和当前安装包中缺少的文件迁入持久目录，已有持久数据优先保留。不要从用户目录按旧 Skill 名称拼接脚本路径，也不要保留同名脚本副本。
 
+插件执行入口为本 Skill 目录内的 `scripts/run_all.py`。在源码项目中维护时，使用 `plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/run_all.py`；不要修改安装缓存。定时运行加 `--scheduled`：先用同花顺交易所日历核验，非交易日跳过；日历缺失或未覆盖目标日则报错，不用星期推断节假日。
+
+安装插件后，在本 Skill 目录执行 `python scripts/run_all.py --scheduled`。源码项目另提供 `tools/run_daily_briefing.py` 启动器，从任意工作目录调用项目源码并固定 UTF-8 编码与项目报告目录；此项目启动器不属于插件安装包。恢复指定日期已采集数据时使用 `--date YYYY-MM-DD --resume`，日期和逐模块完整性校验仍执行，不能把其他日期的数据当成本日结果。
+
+日报转录默认通过 `DOUYIN_TRANSCRIPT_PROVIDER=local` 指定本机 Whisper；保留显式选择云端服务的能力，完整简报没有跳过转录模式。
+
+博主调查按作者数及原文长度分批，通过有限并行调用 Codex，并逐批保存精确日期/原文哈希缓存。语义阶段有独立总时限；编排器的外层时限须覆盖平台采集与语义阶段之和。抖音的日期核验、媒体解析、下载及转录各自报告失败原因，成功转录保存按视频 ID 绑定的缓存，重跑不重复下载已经核验的同一视频。当前默认串行转录；`DOUYIN_MAX_CONCURRENT` 可显式配置最多 2 条，各设备的 PyTorch CPU 线程上限为 4。
+
+
+AI 总结先使用已配置的 API。没有独立 API Key 时，允许 `scripts/codex_summary_cli.py` 调用本机已登录的 Codex CLI，默认 `gpt-6-luna`、`max`，使用临时目录、只读沙箱、临时会话和 JSON Schema 输出。仅传入真实采集文本，拒绝工具调用结果、缺失索引或不完整批次；失败仍阻断必选语义总结，不能用截断原文替代。通过 `DAILY_BRIEFING_CODEX_FALLBACK=0` 可禁用；不得复制登录 token 或把密钥写进源码。下文“必须有 AI 凭证”均指可用的 API 或已登录 Codex 总结路径，精确日期/原文哈希缓存仍可复用。
+
 ## 报刊风模板（纸张质感版式）
 
-同一份简报数据可以另出一版**报刊版**：米色纸张质感 + 报头 + 头版导读 + 双栏长表，全部板块、全部数据行与图标一一保留。这是固定版式模板，不要每次重新设计。
+每日简报的最终交付必须使用**报刊版**：米色纸张质感 + 报头 + 头版导读 + 双栏长表，全部板块、全部数据行与图标一一保留。版式必须沿用固定模板，不得每次重新设计；模板编译或验收失败时停止交付。
 
 - 渲染：`python scripts/build_broadsheet.py [--src <当日简报.html>] [--out <输出.html>] [--date YYYY-MM-DD]`
   - 源文件默认取 `<cwd>/报告/每日简报/` 下日期最新的 `*简报.html`（自动排除已生成的报刊版）
   - 默认输出 `<日期>简报-报刊版.html`，与源简报同目录
 - 样式资产：`templates/broadsheet.css`（配色与纸张纹理；`__TEX_FINE__` / `__TEX_MOTTLE__` 占位符由渲染器注入）。调整纸感或配色只改这个文件。
-- 验收（必做）：`python scripts/verify_broadsheet.py --out <报刊版.html> --src <源简报.html>`
+- 自动验收（必做）：`scripts/run_all.py` 默认先生成源简报，再运行 `python scripts/verify_broadsheet.py --out <报刊版.html> --src <源简报.html>`
   - 自动核对板块数、数据行数（不含分栏重复的表头）、图标渲染、横向溢出，并输出桌面 1440 / 手机 390 截图与 4 段切片到 `<输出目录>/_验收/`
-  - **未通过不得交付**；通过后仍要肉眼过一遍截图再报告
+  - **未通过不得交付**；通过后仍要肉眼过一遍截图再报告。最终交付链接必须指向报刊版 HTML；源简报仅作为生成和核验输入。
 
 版式规则（固定口径，不要临时更改）：
 
@@ -145,7 +155,7 @@ metadata:
 
 核验细节（2026-09 起抖音改版后的实测口径）：移动端列表接口已不再返回 `create_time`，且移动端 UA 的详情页会被静默拦空（HTTP 200 但 DOM 为空），因此**详情页时间核验必须用桌面 UA 渲染**（每次约 6 秒，失败重试 1 次），只在桌面端取不到时才回退移动端。主页列表是新→旧排列，核验到早于目标窗口的条目即可停止，不必整页逐条渲染。桌面端 `/aweme/v1/web/aweme/post/` 常返回数天前的旧缓存，不能作为发布时间依据。
 
-默认最多 2 条并发转录（`DOUYIN_MAX_CONCURRENT` 可调，本地 Whisper 并发过高会把单条推到超时），`auto` 服务优先级为 Groq、OpenAI、SiliconFlow、本地 Whisper；无 API Key 仍必须尝试本地 Whisper。本地 Whisper 默认 `small` 模型并固定 `language=zh`（`DOUYIN_WHISPER_MODEL` 可改为 base/medium/large，`base` 对财经口播的专有名词与数字错误率明显偏高）；失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
+默认串行转录，可显式配置最多 2 条（`DOUYIN_MAX_CONCURRENT` 可调，本地 Whisper 并发过高会把单条推到超时），`auto` 服务优先级为 Groq、OpenAI、SiliconFlow、本地 Whisper；无 API Key 仍必须尝试本地 Whisper。本地 Whisper 默认 `small` 模型并固定 `language=zh`（`DOUYIN_WHISPER_MODEL` 可改为 base/medium/large，`base` 对财经口播的专有名词与数字错误率明显偏高）；失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
 
 当天未更新时的回退规则：按**自然日**回退到最近一个确有视频的发布日，最多 `DOUYIN_MAX_STALE_DAYS`（默认 7）天；不做工作日跳过，因为短视频博主周末照常更新。回退时必须在 `note` 与板块 meta 里写明实际数据日期，且不得用旧视频冒充当日内容；超过窗口仍无视频则如实标注账号最近发布时间。禁止保存视频/音频/Markdown/HTML 等专项产物。表格列为 `标题 | 核心观点 | 标的 | 方向`，最后给出核心主线；无法获取时间时不得凭猜测纳入当日结果。观点提炼提示词按语音转写场景编写：在内部纠正同音错字，只输出判断+逻辑+【标的】，禁止输出纠错清单或补充转录里没有的个股。
 
@@ -155,9 +165,9 @@ metadata:
 
 只保留目标日内容，过滤少于 10 字及签到、加油、闲聊等噪声；主帖优先并融合高赞跟帖，主帖缺失时标注“当日无主帖，仅跟帖动态”。输出 `博主 | 核心观点 + 标的` 两列，观点 cell 内可含主帖标题、AI 提炼摘要、标的标签及跟帖精华；专项查询不生成文件。
 
-#### 头部博主多空调查
+#### 博主样本多空调查
 
-用户说“博主观点统计/多空调查/市场情绪调查”时，分别采集雪球和淘股吧头部博主，目标各 50 人，只保留目标日帖子。淘股吧通过 Cookie 的 HTTP 接口抓取；雪球需要已登录的 Playwright 浏览器提取主页时间线。过滤“昨天/前天”等相对时间和闲聊内容，同一博主多帖合并分析。
+用户说“博主观点统计/多空调查/市场情绪调查”时，分别采集雪球和淘股吧经身份与页面核验的账号样本，目标各 50 人，只保留目标日帖子。样本名单不等同平台排名；披露候选池、失败排除、活跃作者和有效观点人数。淘股吧通过 Cookie 的 HTTP 接口抓取；雪球需要已登录的 Playwright 浏览器提取主页时间线。过滤“昨天/前天”等相对时间和闲聊内容，同一博主多帖合并分析。
 
 雪球采集的实现要点（`scripts/fetch_xueqiu.py`）：**先用 Playwright 打开
 `https://xueqiu.com/` 让浏览器自己过掉 WAF，再用同一个 page 的 `request`
@@ -213,14 +223,14 @@ metadata:
 
 4. **严格遵循模板布局** — HTML输出必须严格遵循 `templates/briefing.html` 的布局结构：
    - `fw` class仅用于全宽独占一行的section：机构研报、抖音博主
-   - 财经新闻、自选股新闻、龙虎榜、板块轮动、淘股吧、博主多空统计、未来大事件**不带**`fw` class，落入正文两栏
+   - 财经新闻、龙虎榜、板块轮动、淘股吧、博主多空统计、未来大事件**不带**`fw` class，落入正文两栏
    - **正文左右两栏**：`.g` 为固定两列网格（1440px 下 675px × 2，中缝 26px 并带一条竖细线），不带 `fw` 的 section 按 DOM 顺序落进左/右栏；带 `fw` 的 section 横跨两栏；≤960px 自动降为单栏
    - **报头**：`<body>` 顶部输出 `.np-mast` 报头（英文刊头 + 报名 + 「日期 / 数据日 / 板块数 / 模型版本」信息行），数值由编译器实时注入，不写死
    - **情绪指标+阶段柱状图**：强制同一行（`flex-wrap:nowrap`），柱状图 `min-width:0` 自适应填满；柱子按当日情绪阶段着色，图例只列当期真实出现过的阶段
    - **指数栏**：只保留4个指数——上证、科创50、纳斯达克、KOSPI，强制一行（`flex-wrap:nowrap`）
    - **策略section**：不带`fw`但独占一行，使用**flex一行布局**（`display:flex`），三个卡片（做多/观察/风险）等宽排列（`flex:1;min-width:0`），移动端≤600px自动换行纵向排列
    
-5. **所有11个板块都必须存在** — 不得擅自删减板块；数据缺失时按下方规则标注原因（Serenity 板块已于 v3.14 按用户要求整块移除，不在此列）
+5. **所有10个简报板块都必须存在** — 不得擅自删减板块；数据缺失时按下方规则标注原因（自选股新闻已按用户要求从完整简报移除；Serenity 板块已于 v3.14 按用户要求整块移除）
 
 6. **⛔ 淘股吧和抖音是必选板块，必须有内容** — 这两个板块是简报核心价值，不允许为空：
    - **自动日期回退**：脚本已内置回退机制——指定日期无数据时，自动向前搜索1天（如周五→周四），确保周末/节假日也能获取到最近内容
@@ -234,17 +244,11 @@ metadata:
    - API失败：标注"数据获取失败"而非编造数值
    - 绝不可凭空捏造指数、新闻、观点等内容
 
-8. **自选股新闻与未来大事件：后台HTTP，禁止打开浏览器** — 这两个板块必须使用专用的后台Python脚本（`fetch_selfstock_news.py`、`fetch_future_events.py`）通过urllib/httpx直接请求API获取数据。**严禁**使用Playwright、`mcp__plugin_playwright`、手动打开浏览器或任何会弹出窗口的方式获取。脚本运行时无可见界面，纯后台执行。
+8. **未来大事件：后台HTTP，禁止打开浏览器** — 该板块必须使用专用的后台Python脚本（`fetch_future_events.py`）通过urllib/httpx直接请求API获取数据。**严禁**使用Playwright、`mcp__plugin_playwright`、手动打开浏览器或任何会弹出窗口的方式获取。脚本运行时无可见界面，纯后台执行。自选股新闻抓取器仅供专项筛选使用，不属于完整简报流程。
 
 9. **抖音转录不强制依赖API Key，且必须防遗漏兜底** — `analyze_douyin.py` 默认 `--provider auto`，未配置 SiliconFlow/Groq/OpenAI API Key 时**自动降级到本地Whisper**（`openai-whisper`）。禁止因缺少 `SILICONFLOW_API_KEY` 就跳过抖音板块，必须尝试本地转录。若单条视频转录仍失败，`fetch_douyin.py` 必须**使用视频标题+话题标签兜底**并写入 warning；成功转录但无 AI 时，必须保留真实 transcript 并在 HTML 以“转录摘录（未使用AI）”标注。
 
-10. **自选股新闻周末处理** — 周末/节假日时，自选股新闻板块不得显示空白或仅提示文字，必须：
-   - 保留完整表格结构（时间/类型/标题/来源）
-   - 显示最近交易日（通常是周五）的自选股新闻/公告
-   - 在表头meta标注数据日期，如"5条 · 7/4数据"
-   - 若完全无数据，表格内显示"暂无相关新闻"行而非删除整个板块
-
-11. **机构研报必须含看多/看空逻辑** — 机构研报板块的核心价值不在于"谁看多谁看空"，而在于**为什么看多、为什么看空**。每条研报观点必须包含：
+10. **机构研报必须含看多/看空逻辑** — 机构研报板块的核心价值不在于"谁看多谁看空"，而在于**为什么看多、为什么看空**。每条研报观点必须包含：
    - **标的/板块**（必须标注具体股票代码或板块名称）
    - **方向**（看多/看空/中性）
    - **核心逻辑**（1-2句话，必须说清楚背后的逻辑链：业绩驱动？政策催化？行业拐点？估值修复？竞争格局变化？）
@@ -356,18 +360,18 @@ metadata:
   ```
 - **抓取策略（v3.13 目标日 + 移动/桌面回退 + 并发转录）**：
   - **只抓取博主今日发布的视频**，按北京时间（UTC+8）过滤 `create_time`，非今日视频直接丢弃
-  - **并发转录**：同一博主的所有今日视频默认最多 3 条同时转录，避免本地 Whisper 资源耗尽；可通过环境变量 `DOUYIN_MAX_CONCURRENT` 调整
+  - **并发转录**：同一博主的目标日视频默认串行转录，避免本地 Whisper 资源耗尽；可通过环境变量 `DOUYIN_MAX_CONCURRENT` 显式配置最多 2 条
   - 抓取博主主页返回的全部今日视频，**不再做 topN 截断**
-  - 转录失败/为空时，**自动使用「视频标题 + 话题标签」兜底提取观点和标的**，不再出现空白 summary
+  - 转录失败/为空时，仅记录标题/话题元数据和失败原因；完整简报必须全部转录成功并取得与全文哈希一致的语义摘要，禁止用标题替代视频观点
   - 转录流程：`--provider auto` 按 Groq → OpenAI → SiliconFlow → `local` 本地 Whisper 尝试；无 API Key 也会进入 `local`
   - 标的/板块关键词库持续扩展，覆盖 A 股/港股/美股常见科技与消费标的
-- **输出字段**：每条视频包含 `title/url/transcript/summary/symbols/direction/warning`；`warning` 标注是否使用了标题兜底
-- **信息遗漏检查**：生成器读取抖音 JSON 后，若某博主所有视频均 `warning != ""`，应在 HTML 中标注"本博主视频转录受限，已使用标题+话题标签提取"
+- **输出字段**：每条视频包含 `title/url/transcript/summary/symbols/direction/warning`；`warning` 标注转录失败；`title_source` 单独标注标题来自原始标题或转录开头
+- **信息遗漏检查**：生成器逐视频核验转录、原始链接和语义摘要；任何目标视频缺失即阻断完整简报，不写出成功页面
 
 ### 每日一句板块规则
 
 - **名言库**：`data/investment_quotes.json`（初始72条），覆盖巴菲特、芒格、格雷厄姆、段永平等经典投资格言
-- **去重机制**：`pick_quote.py` 从名言库随机选取当日未用过的名言，写入 `data/used_quotes.json` 追踪已用ID；全部用完自动重置
+- **去重机制**：`pick_quote.py` 只从带 `verified=true` 和原始出处链接的名言中选择，写入 `data/used_quotes.json` 追踪ID及日期；同日重跑复用已选名言，全部用完自动重置
 - **执行时机**：Step 1 Group A 并行执行（<1秒），由编排器保存HTML片段；失败时保留显式失败卡
 - **模板占位**：`templates/briefing.html` 中 `<!-- QUOTE_PLACEHOLDER -->` 在编译时替换为名言HTML
 - **显示内容**：名言原文 + 作者/头衔 + 原理简述 + 标签
@@ -517,8 +521,8 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 └──────────────────────────────────────────┘
           ↓
 ┌─ Group A (并行, ~30s) ─────────────────────┐
-│ panic_greed  news  selfstock  龙虎榜         │
-│ 研报 事件 名言                               │
+│ panic_greed  news  龙虎榜 轮动 研报          │
+│ 事件 盘面补充 名言                           │
 │ → 结果写入 data/*.json                      │
 └────────────────────────────────────────────┘
           ↓ 等待完成
@@ -549,7 +553,6 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 |------|------|------|--------|
 | 市场温度与情绪周期 | ~10秒 | A | 可缺省 |
 | 财经新闻 | ~15秒 | A | 可缺省 |
-| 自选股新闻 | ~20秒 | A | 可缺省 |
 | 机构研报 | ~30秒 | A | 可缺省 |
 | 未来大事件 | ~20秒 | A | 可缺省 |
 | 每日一句 | <1秒 | A | 可缺省 |
@@ -649,9 +652,9 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 ├──────────────────────────────────────────────────────┤
 │  💬 每日一句（引语横幅，上下粗线）                      │
 ╞══════════════════════╤═══════════════════════════════╡
-│  📰 财经科技新闻      │  📈 自选股新闻                 │
-│  🐉 龙虎榜            │  🔄 板块轮动                   │  ← 不带 fw，左右两栏（中缝竖线）
-│  📊 博主多空统计      │  💬 淘股吧博主                 │
+│  📰 财经科技新闻      │  🐉 龙虎榜                     │
+│  🔄 板块轮动          │  📊 博主多空统计               │  ← 不带 fw，左右两栏（中缝竖线）
+│  💬 淘股吧博主        │  📅 未来大事件                 │
 ╞══════════════════════╧═══════════════════════════════╡
 │  📈 机构研报（fw 横跨两栏）                            │
 │  📱 抖音博主（fw 横跨两栏）                            │
@@ -745,7 +748,7 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 | `scripts/fetch_news.py` | 东方财富新闻抓取 | `python scripts/fetch_news.py --source eastmoney [--date YYYY-MM-DD]` |
 | `scripts/finance_news_pro.py` | 多源财经新闻深度抓取、分析和 JSON/Markdown 输出 | `python scripts/finance_news_pro.py --source all --limit 15` |
 | `scripts/yanbao/run.mjs` | 研报客/IMA/网络搜索三源专项提炼 | `node scripts/yanbao/run.mjs [--date YYYY-MM-DD]` |
-| `scripts/fetch_selfstock_news.py` | 自选股新闻抓取（后台HTTP） | `python scripts/fetch_selfstock_news.py [--date YYYY-MM-DD]` |
+| `scripts/fetch_selfstock_news.py` | 自选股新闻专项抓取（不参与完整简报） | `python scripts/fetch_selfstock_news.py [--date YYYY-MM-DD]` |
 | `scripts/fetch_future_events.py` | 未来大事件抓取（后台HTTP） | `python scripts/fetch_future_events.py [--date YYYY-MM-DD]` |
 | `scripts/_hithink.py` | 同花顺官方数据 CLI 封装（供下列两个脚本共用） | 库文件，不单独执行 |
 | `scripts/fetch_longhubang.py` | 龙虎榜采集：同花顺官方为主，AkShare 降级 | `python scripts/fetch_longhubang.py [--date YYYY-MM-DD]` |
@@ -777,7 +780,7 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 - SiliconFlow / Groq / OpenAI API Key（抖音转录加速，未配置时自动使用本地Whisper）
 - IMA API凭证（知识库搜索）
 - 淘股吧登录Cookie（`data/tgb_cookies.json`）
-- 同花顺自选股JSON（`$THS_SELFSTOCK_PATH`）
+- 同花顺自选股JSON（`$THS_SELFSTOCK_PATH`，仅供专项新闻筛选）
 
 ---
 
@@ -808,7 +811,7 @@ export DOUYIN_MAX_CONCURRENT="3"
 export IMA_OPENAPI_CLIENTID="xxxxxxxx"
 export IMA_OPENAPI_APIKEY="xxxxxxxx"
 
-# 同花顺自选股（可选）
+# 同花顺自选股（可选，仅供专项新闻筛选）
 export THS_SELFSTOCK_PATH="C:/应用/同花顺/mo_xxxxx/SelfStockInfo.json"
 
 # 盘面补充是否启用连板网补充抓取（可选，默认 1）
@@ -841,6 +844,19 @@ playwright install chromium
 ---
 
 ## 更新日志
+
+### v3.23.11 (2026-10-14)
+
+- 完整简报必须完成抖音转录，移除跳过采集和跳过完整性检查的路径。
+- 日报默认指定本机 Whisper（small、中文），串行处理并限制 CPU 线程，Luna/max 继续负责观点语义提炼。
+- 每日23:00任务恢复完整转录；转录失败明确报错，不能交付缺失抖音观点的成功简报。
+
+### v3.23.10 (2026-10-14)
+
+- 语义总结支持已登录 Codex CLI（默认 gpt-6-luna/max），博主调查分批限流并保存日期/原文哈希缓存。
+- 行业轮动更新全部 90 行业及基准，补齐指数采集、逐模块完整性检查和来源核验。
+- 抖音详情按视频 ID 解析，默认串行转录；完整批次转录仍须实际验收。
+- 报刊版保留完整板块、数据行及图标，交付前验收桌面与手机版式。
 
 ### v3.23.7 (2026-09-24)
 - 统一编排器与HTML编译器的交易日算法，凌晨 5 点前对当天目标日一致回退。
@@ -1038,7 +1054,7 @@ playwright install chromium
 - **SKILL.md规则6放宽**：从"不可能没有数据→必须报错"改为"自动回退1天+回退后仍空才报错"
 
 ### v3.8.0 (2026-07-14)
-- **博主多空统计板块**：新增 ⑤½ 板块，自动统计雪球+淘股吧各50个头部博主的当日观点
+- **博主多空统计板块**：新增 ⑤½ 板块，自动统计雪球+淘股吧各50个核验账号样本的当日观点
   - 新增 `scripts/fetch_sentiment_survey.py`：爬取50个TGB博主帖子 + 读取雪球数据 + 关键词规则分析观点方向
   - 输出JSON写入 `data/sentiment_survey_today.json`
   - HTML板块包含：大盘观点表、板块观点表、平台对比表、核心结论
@@ -1209,3 +1225,7 @@ eports\每日简报/每日简报_YYYY-MM-DD.html`
 | **抖音板块跳过或填"处理超时"** | ffmpeg缺失/Whisper未安装/网络问题 | 检查ffmpeg是否可用、openai-whisper是否安装；延长超时到5分钟；**必须报错修复后重试，禁止跳过** |
 | **先输出简报再补数据** | 没等Group B完成就编译 | 必须等淘股吧和抖音都成功获取后，再统一编译输出；获取失败则报错停止，不输出简报 |
 | **链接不可点击** | 用了裸 HTML `<a>` 标签，或把链接写进 ``` 代码块 | 用 `[📄 打开 M 月 D 日简报](D:/.../YYYY-MM-DD简报.html)` 的 Markdown 绝对路径链接，放在代码块外；Codex 桌面端不渲染 HTML |
+
+### 完整简报逐模块门禁
+
+使用 `scripts/briefing_integrity.py` 核验行情、盘面、新闻、龙虎榜、90行业轮动、研报、两平台调查、淘股吧、抖音、事件、节点、四指数和名言出处。实际日期优先于请求日期；partial/error、旧行情、未转录视频、未核验研报或观点均不能报告成功。`run_all.py --resume` 可复用已核验的本次数据继续编译，仍执行完整门禁。新闻关键词不直接决定A股利好/利空；方向判断优先读取日期、来源URL和正文哈希绑定的语义判读。

@@ -26,8 +26,10 @@ def extract_iso_dates(value: object) -> list[date]:
 def top_level_dates(data: Mapping[str, object]) -> list[date]:
     """Read only metadata dates; item dates are validated by their collectors."""
     actual_dates = []
-    for key in ("data_date", "asof", "raw_date", "trade_date"):
-        actual_dates.extend(extract_iso_dates(data.get(key)))
+    for key in ("asof", "data_date", "trade_date", "raw_date"):
+        actual_dates = extract_iso_dates(data.get(key))
+        if actual_dates:
+            break
     if actual_dates:
         return sorted(set(actual_dates))
 
@@ -45,7 +47,7 @@ def data_error_reason(data: object) -> str:
         if value:
             return str(value).splitlines()[0][:180]
     status = str(data.get("status", "")).lower()
-    if status in {"error", "failed", "failure", "数据获取失败"}:
+    if status in {"error", "failed", "failure", "partial", "数据获取失败"}:
         return str(data.get("note") or data.get("message") or "数据获取失败")[:180]
     return ""
 

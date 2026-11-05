@@ -11,6 +11,11 @@ import ssl
 from datetime import datetime
 import sys
 import re
+from pathlib import Path
+from runtime_paths import get_data_dir
+from summary_cache import get_cached_summary, load_summary_cache
+
+DATA_DIR = get_data_dir(Path(__file__).resolve().parents[1])
 
 
 _FETCH_ERROR = ""
@@ -117,45 +122,19 @@ def fetch_eastmoney_news(limit: int = 15, target_date: str | None = None) -> lis
             "type": classify_news(item.get("title", "") + item.get("summary", "")),
             "stocks": _normalise_stock_list(item.get("stockList", []))
         }
+        cached = get_cached_summary(load_summary_cache(DATA_DIR / 'news_ai_summaries.json'), target_date or _item_date(news), 'news', news['url'], news['content'])
+        if cached:
+            review = json.loads(cached)
+            if review.get('type') in {'利好', '利空', '中性'}:
+                news.update(type=review['type'], direction_reason=review.get('reason', ''), direction_verified=True)
         news_list.append(news)
     
     return news_list
 
 
 def classify_news(text: str) -> str:
-    """简单分类新闻"""
-    text = text.lower()
-    
-    # 利好关键词
-    bullish_kw = ["利好", "增长", "上涨", "突破", "盈利", "中标", "回购", "增持", 
-                  "大涨", "翻倍", "新高", "超预期", "订单", "业绩预增"]
-    # 利空关键词
-    bearish_kw = ["利空", "下跌", "亏损", "减持", "暴雷", "调查", "处罚", "风险",
-                  "下调", "违约", "退市", "破产", "诉讼", "暴跌"]
-    # 行业关键词
-    industry_kw = ["半导体", "芯片", "新能源", "光伏", "锂电池", "AI", "人工智能",
-                   "医药", "医疗", "消费", "白酒", "汽车", "地产", "银行", "券商"]
-    
-    is_bullish = any(kw in text for kw in bullish_kw)
-    is_bearish = any(kw in text for kw in bearish_kw)
-    
-    # 提取标的关键词
-    symbols = []
-    if "半导体" in text or "芯片" in text:
-        symbols.append("半导体")
-    if "新能源" in text or "光伏" in text:
-        symbols.append("新能源")
-    if "AI" in text or "人工智能" in text:
-        symbols.append("AI")
-    if "医药" in text or "医疗" in text:
-        symbols.append("医药")
-    
-    if is_bullish:
-        return "利好"
-    elif is_bearish:
-        return "利空"
-    else:
-        return "中性"
+    """Keywords alone do not establish a directional A-share effect."""
+    return '中性'
 
 
 def fetch_global_tech_news(limit: int = 10) -> list:

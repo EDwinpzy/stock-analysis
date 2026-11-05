@@ -10,25 +10,48 @@ v2: 重写为纯HTTP请求，解决Playwright add_cookies失效导致页面跳�
       python tgb_crawl.py --date 2026-07-03 # 爬指定日期
 """
 import json, os, re, sys, urllib.request, ssl
-from datetime import datetime, timedelta
+import html as html_lib
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from runtime_paths import get_data_dir
 DATA_DIR = get_data_dir(SCRIPT_DIR.parent)
+CN_TZ = timezone(timedelta(hours=8))
+
+
+def cookie_candidates() -> list[Path]:
+    """Return supported Cookie locations in precedence order."""
+    candidates = []
+    override = os.environ.get("TGB_COOKIE_PATH", "").strip()
+    if override:
+        candidates.append(Path(override).expanduser())
+    candidates.extend([
+        DATA_DIR / "tgb_cookies.json",
+        Path.home() / ".codex" / "tgb_cookies.json",
+    ])
+    unique = []
+    seen = set()
+    for candidate in candidates:
+        key = str(candidate.resolve(strict=False)).casefold()
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def resolve_cookie_file() -> Path:
+    candidates = cookie_candidates()
+    return next((path for path in candidates if path.is_file()), candidates[0])
 
 if "--date" in sys.argv:
     idx = sys.argv.index("--date")
-    TODAY = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else datetime.now().strftime("%Y-%m-%d")
+    TODAY = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else datetime.now(CN_TZ).strftime("%Y-%m-%d")
 else:
-    TODAY = datetime.now().strftime("%Y-%m-%d")
+    TODAY = datetime.now(CN_TZ).strftime("%Y-%m-%d")
 
-# Cookie路径：优先环境变量，其次data目录，最后用户目录
-COOKIE_FILE = os.environ.get("TGB_COOKIE_PATH",
-    str(DATA_DIR / "tgb_cookies.json"))
-if not os.path.exists(COOKIE_FILE):
-    COOKIE_FILE = os.path.expanduser("~/.codex/tgb_cookies.json")
+COOKIE_FILE = str(resolve_cookie_file())
 
 BLOGGERS = [
     ("8580229", "东北玄"),
@@ -50,31 +73,64 @@ SSL_CTX.verify_mode = ssl.CERT_NONE
 
 def load_cookie_string() -> str:
     """从JSON文件加载Cookie并拼接为HTTP Cookie header值"""
-    if not os.path.exists(COOKIE_FILE):
-        sys.stderr.write(f"[WARN] Cookie file not found: {COOKIE_FILE}\n")
+    cookie_file = resolve_cookie_file()
+    if not cookie_file.is_file():
+        sys.stderr.write(f"[WARN] Cookie file not found: {cookie_file}\n")
         return ""
     try:
-        cookies = json.load(open(COOKIE_FILE, encoding="utf-8"))
-        cookie_str = "; ".join(f'{c["name"]}={c["value"]}' for c in cookies if c.get("name") and c.get("value"))
-        sys.stderr.write(f"[OK] Cookies loaded: {len(cookies)} entries\n")
+        cookies = json.loads(cookie_file.read_text(encoding="utf-8"))
+        if not isinstance(cookies, list):
+            raise ValueError("expected a JSON array")
+        pairs = [
+            (str(cookie.get("name", "")).strip(), str(cookie.get("value", "")))
+            for cookie in cookies if isinstance(cookie, dict)
+        ]
+        cookie_str = "; ".join(f"{name}={value}" for name, value in pairs if name and value)
+        if not cookie_str:
+            sys.stderr.write(f"[WARN] Cookie file has no usable entries: {cookie_file}\n")
+            return ""
+        sys.stderr.write(f"[OK] Cookies loaded: {sum(bool(n and v) for n, v in pairs)} entries\n")
         return cookie_str
-    except Exception as e:
-        sys.stderr.write(f"[WARN] Cookie load error: {e}\n")
+    except Exception as exc:
+        # Do not include parser text: malformed secret files can leak line contents.
+        sys.stderr.write(f"[WARN] Cookie load error ({type(exc).__name__}): {cookie_file}\n")
         return ""
 
 
 def fetch_page(url: str, cookie_str: str) -> str:
     """HTTP GET请求页面，返回HTML文本"""
-    req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36",
-        "Cookie": cookie_str,
-    })
-    try:
-        with urllib.request.urlopen(req, context=SSL_CTX, timeout=20) as resp:
-            return resp.read().decode("utf-8", errors="ignore")
-    except Exception as e:
-        sys.stderr.write(f"[ERROR] fetch {url}: {e}\n")
-        return ""
+    import requests
+    import time
+    session = requests.Session()
+    session.trust_env = False
+    session.headers.update({"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
+    for attempt in range(3):
+        try:
+            response = session.get(url, timeout=20)
+            response.raise_for_status()
+            response.encoding = 'utf-8'
+            return response.text
+        except Exception as exc:
+            if attempt < 2:
+                time.sleep(1 + attempt)
+            else:
+                sys.stderr.write(f"[ERROR] fetch {url}: {type(exc).__name__}\n")
+    return ""
+
+
+def page_is_usable(html: str) -> bool:
+    """Reject transport failures and the login page instead of counting them as empty data."""
+    if not html:
+        return False
+    sample = html[:3000].lower()
+    return not (
+        "bad gateway" in sample or "access denied" in sample or "<title>404" in sample
+        or "<title>403" in sample or "<title>502" in sample
+        or "请先登录" in sample
+        or "请登录后" in sample
+        or re.search(r"<title>[^<]*(?:登录|login)", sample)
+        or re.search(r"(?:window\.location|location\.href)[^;]{0,120}login", sample)
+    )
 
 
 def is_trash(text: str) -> bool:
@@ -86,6 +142,36 @@ def is_trash(text: str) -> bool:
         if kw in txt:
             return True
     return False
+
+
+def fetch_public_posts(uid: str, target_date: str, cookie_str: str) -> list:
+    """Read the dated author feed and verify each selected original body."""
+    from bs4 import BeautifulSoup
+    posts = []
+    for page in range(1, 51):
+        feed = json.loads(fetch_page(f"https://m.tgb.cn/mBlogTopicAjax?userID={uid}&sortFlag=W&pageNo={page}", cookie_str))
+        if feed.get("status") is not True:
+            raise ValueError("作者主帖列表失败")
+        dto = feed.get("dto", {})
+        topics = dto.get("listTopic", [])
+        for topic in topics:
+            if str(topic.get('userID')) != str(uid):
+                raise ValueError("作者ID不一致")
+            if str(topic.get('postDate', ''))[:10] != target_date:
+                continue
+            url = 'https://m.tgb.cn/a/' + topic['newTopicID']
+            soup = BeautifulSoup(fetch_page(url, cookie_str), 'html.parser')
+            marker, body = soup.select_one('#ztgioMsg'), soup.select_one('.tzitem_text')
+            if not marker or marker.get('userid') != str(uid) or not body:
+                raise ValueError(f"主帖原文未核验：{topic['newTopicID']}")
+            for node in body.select('.topic-reward, script, style'):
+                node.decompose()
+            posts.append({'id': topic['newTopicID'], 'title': html_lib.unescape(topic['subject']),
+                          'url': url, 'date': topic['postDate'], 'content': body.get_text('\n', strip=True),
+                          'author_id': uid, 'likes': topic.get('usefulNum', 0)})
+        if page >= int(dto.get('pageNum') or 1) or not topics or all(str(t.get('postDate', ''))[:10] < target_date for t in topics):
+            return posts
+    raise ValueError("主帖列表超过50页仍未覆盖目标日")
 
 
 def extract_replies(html: str, today: str) -> list:
@@ -157,7 +243,7 @@ def extract_replies(html: str, today: str) -> list:
             "user": user,
             "from_title": from_title,
             "from_url": from_url,
-            "content": content[:300],
+            "content": content,
             "likes": likes,
             "is_post": is_post,
         })
@@ -240,28 +326,37 @@ def crawl():
             "bloggers": {},
             "status": "error",
             "source": "淘股吧公开页面 + 登录Cookie",
-            "error": "No cookies",
-            "note": f"缺少淘股吧登录Cookie：{COOKIE_FILE}；未使用旧缓存"
+            "error": "TGB_LOGIN_COOKIE_MISSING_OR_INVALID",
+            "coverage": {"target_date": TODAY, "expected_bloggers": len(BLOGGERS),
+                         "queried_bloggers": 0, "complete_bloggers": 0,
+                         "failed_bloggers": len(BLOGGERS), "active_bloggers": 0},
+            "note": f"缺少或无效的淘股吧登录Cookie：{resolve_cookie_file()}；请设置 TGB_COOKIE_PATH 或放入 ~/.codex/tgb_cookies.json；未使用旧缓存"
         }
 
     result = {"date": TODAY, "data_date": "", "bloggers": {}, "source": "淘股吧公开页面 + 登录Cookie"}
     used_fallback = False  # 是否使用了回退日期
+    source_failures = []
+    complete_bloggers = set()
 
     for uid, name in BLOGGERS:
         sys.stderr.write(f"[INFO] Fetching {name} (uid={uid})...\n")
-        data = {"name": name, "data_date": "", "posts_today": 0, "replies_today": 0, "posts": [], "top_replies": []}
+        data = {"name": name, "data_date": "", "posts_today": 0, "replies_today": 0,
+                "posts": [], "top_replies": [], "source_status": {}}
 
         # 尝试抓取指定日期的数据
         target_date = TODAY
         last_seen = ""
         for attempt in range(2):  # 最多尝试2天（当天 + 前一天）
-            data = {"name": name, "data_date": "", "posts_today": 0, "replies_today": 0, "posts": [], "top_replies": []}
+            data = {"name": name, "data_date": "", "posts_today": 0, "replies_today": 0,
+                    "posts": [], "top_replies": [], "source_status": {}}
+            attempt_failures = []
 
             # 1. 跟帖页（moreReplyMod）— 最可靠的数据源
             reply_url = f"https://www.tgb.cn/user/blog/moreReplyMod?userID={uid}"
             reply_html = fetch_page(reply_url, cookie_str)
 
-            if reply_html and "登录" not in reply_html[:500]:
+            if page_is_usable(reply_html):
+                data["source_status"]["replies"] = "ok"
                 seen = latest_reply_date(reply_html)
                 if seen > last_seen:
                     last_seen = seen
@@ -283,18 +378,24 @@ def crawl():
                 for r in reply_only[:10]:
                     if not is_trash(r["content"]):
                         data["top_replies"].append({
-                            "content": r["content"][:200],
+                            "content": r["content"],
                             "likes": r["likes"],
                             "from_title": r.get("from_title", ""),
+                            "date": r.get("date", ""),
+                            "url": 'https://www.tgb.cn' + r.get("from_url", ""),
                         })
             else:
+                reason = "login_page" if reply_html else "request_failed_or_empty"
+                data["source_status"]["replies"] = reason
+                attempt_failures.append(f"{name}:moreReplyMod:{reason}")
                 sys.stderr.write(f"  [WARN] moreReplyMod returned login page or empty for {name}\n")
 
             # 2. 主帖页（moreTopic）— 补充主帖信息
             topic_url = f"https://www.tgb.cn/user/blog/moreTopic?userID={uid}"
             topic_html = fetch_page(topic_url, cookie_str)
 
-            if topic_html and "登录" not in topic_html[:500]:
+            if page_is_usable(topic_html):
+                data["source_status"]["topics"] = "ok"
                 today_posts = extract_posts(topic_html, target_date)
                 # 合并（去重，以moreReplyMod为主）
                 existing_urls = {p["url"] for p in data["posts"]}
@@ -302,19 +403,39 @@ def crawl():
                     if tp["url"] not in existing_urls:
                         data["posts"].append({"title": tp["title"], "url": tp["url"]})
                         existing_urls.add(tp["url"])
+            else:
+                reason = "login_page" if topic_html else "request_failed_or_empty"
+                data["source_status"]["topics"] = reason
+                attempt_failures.append(f"{name}:moreTopic:{reason}")
 
             # 3. 博客主页（公开可见）— 最后补充
             blog_url = f"https://www.tgb.cn/blog/{uid}"
             blog_html = fetch_page(blog_url, cookie_str)
 
-            if blog_html:
+            if page_is_usable(blog_html):
+                data["source_status"]["blog_home"] = "ok"
                 home_posts = extract_blog_home_posts(blog_html, target_date)
                 existing_urls = {p["url"] for p in data["posts"]}
                 for hp in home_posts:
                     if hp["url"] not in existing_urls:
                         data["posts"].append({"title": hp["title"], "url": hp["url"]})
                         existing_urls.add(hp["url"])
+            else:
+                reason = "login_page" if blog_html else "request_failed_or_empty"
+                data["source_status"]["blog_home"] = reason
+                attempt_failures.append(f"{name}:blog_home:{reason}")
 
+            source_failures.extend(attempt_failures)
+            if attempt == 0 and not attempt_failures:
+                complete_bloggers.add(name)
+
+            try:
+                data["posts"] = fetch_public_posts(uid, target_date, cookie_str)
+                data["source_status"]["public_posts"] = "ok"
+            except Exception as exc:
+                attempt_failures.append(f"{name}:public_posts:{type(exc).__name__}")
+                source_failures.append(attempt_failures[-1])
+                data["source_status"]["public_posts"] = "error"
             data["posts_today"] = len(data["posts"])
             if data["posts_today"] > 0 or data["replies_today"] > 0:
                 data["data_date"] = target_date
@@ -348,11 +469,29 @@ def crawl():
     actual_dates = sorted({d.get("data_date") for d in result["bloggers"].values() if d.get("data_date")})
     result["data_date"] = actual_dates[-1] if len(actual_dates) == 1 else (f"{actual_dates[0]}~{actual_dates[-1]}" if actual_dates else "")
     total_activity = sum(d.get("posts_today", 0) + d.get("replies_today", 0) for d in result["bloggers"].values())
-    result["status"] = "ok" if total_activity > 0 else "error"
+    result["coverage"] = {
+        "target_date": TODAY,
+        "expected_bloggers": len(BLOGGERS),
+        "queried_bloggers": len(BLOGGERS),
+        "complete_bloggers": len(complete_bloggers),
+        "failed_bloggers": len(set(item.split(":", 1)[0] for item in source_failures)),
+        "active_bloggers": sum(1 for d in result["bloggers"].values()
+                               if d.get("posts_today") or d.get("replies_today")),
+    }
+    result["status"] = (
+        ("partial" if total_activity else "error") if source_failures
+        else ("ok" if total_activity > 0 else "empty")
+    )
     result["activity_count"] = total_activity
-    if total_activity == 0:
-        result["error"] = "No posts or replies in target date and one-workday fallback"
-        result["note"] = f"{TODAY}及前一个工作日均无可核验主帖或跟帖；未使用旧缓存"
+    if source_failures:
+        result["source_failures"] = source_failures[:100]
+        result["error"] = "TGB_SOURCE_COVERAGE_INCOMPLETE"
+        result["note"] = (
+            f"淘股吧数据覆盖不完整：{len(complete_bloggers)}/{len(BLOGGERS)}位博主的目标日页面完整；"
+            f"{len(set(item.split(':', 1)[0] for item in source_failures))}位博主存在页面失败；未将缺页当作无动态"
+        )
+    elif total_activity == 0:
+        result["note"] = f"{TODAY}及前一个工作日均无可核验主帖或跟帖；已完成页面核验，未使用旧缓存"
 
     return result
 
