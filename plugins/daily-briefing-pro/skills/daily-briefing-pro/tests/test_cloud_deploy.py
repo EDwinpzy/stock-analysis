@@ -28,9 +28,11 @@ class CloudDeployContractTests(unittest.TestCase):
         self.assertIn("model_runtime=/runtime/models/sw_rotation_model", entrypoint)
         self.assertIn('export ROTATION_MODEL_DIR="${ROTATION_MODEL_DIR:-$model_runtime}"', entrypoint)
 
-    def test_cloud_requirements_include_ffmpeg_python_for_audio_extraction(self):
+    def test_cloud_requirements_include_full_report_runtime_helpers(self):
         requirements = (DEPLOY_ROOT / "requirements-cloud.txt").read_text(encoding="utf-8")
-        self.assertIn("ffmpeg-python==0.2.0", requirements)
+        for requirement in ("ffmpeg-python==0.2.0", "Pillow==12.2.0", "zhconv==1.4.3"):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, requirements)
 
     def test_seed_script_is_available_and_dry_run_by_default(self):
         seed = (PLUGIN_ROOT / "deploy" / "cloud" / "seed-data.ps1").read_text(encoding="utf-8")

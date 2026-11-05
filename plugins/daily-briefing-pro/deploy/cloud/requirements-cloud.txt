@@ -10,5 +10,7 @@ scipy==1.17.1
 openai-whisper==20250625
 ffmpeg-python==0.2.0
 beautifulsoup4==4.14.2
+Pillow==12.2.0
 soupsieve==2.8
 thsdk==1.7.18
+zhconv==1.4.3
