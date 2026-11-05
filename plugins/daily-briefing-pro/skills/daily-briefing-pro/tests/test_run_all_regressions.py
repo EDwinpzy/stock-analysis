@@ -4,7 +4,7 @@ import os
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -25,6 +25,20 @@ from summary_cache import load_summary_cache, save_summary_cache, set_cached_sum
 
 
 class RunAllRegressionTests(unittest.TestCase):
+    @staticmethod
+    def successful_preflight():
+        return SimpleNamespace(
+            ok=True,
+            warnings=[],
+            blockers=[],
+            as_dict=lambda: {
+                "date": "2026-09-24",
+                "trade_date": "2026-09-24",
+                "status": "ok",
+                "checks": [],
+            },
+        )
+
     def test_removed_skip_argument_blocks_collection(self):
         with patch.object(run_all.sys, 'argv', ['run_all.py', '--skip-transcription']), \
              patch.object(run_all, 'run_group_a') as collect:
@@ -86,6 +100,8 @@ class RunAllRegressionTests(unittest.TestCase):
         stderr = io.StringIO()
         with patch.object(run_all, "get_date", return_value="2026-09-24"), \
              patch.object(run_all, "compiler_preflight_error", return_value=""), \
+             patch.object(run_all, "build_preflight", return_value=self.successful_preflight()), \
+             patch.object(run_all, "write_report"), \
              patch.object(run_all, "run_group_a", return_value={}), \
              patch.object(run_all, "run_script", return_value={}), \
              patch.object(run_all, "save_result"), \
@@ -99,6 +115,44 @@ class RunAllRegressionTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 3)
         self.assertIn('"status": "error"', stderr.getvalue())
         self.assertNotIn('"status": "ok"', stderr.getvalue())
+
+    def test_runtime_preflight_blocks_before_any_collection(self):
+        blocked = SimpleNamespace(
+            ok=False,
+            warnings=[],
+            blockers=[SimpleNamespace(label="行业轮动模型", detail="未找到", fix="恢复模型目录")],
+            as_dict=lambda: {"status": "blocked", "checks": []},
+        )
+        stderr = io.StringIO()
+        with patch.object(run_all, "get_date", return_value="2026-09-24"), \
+             patch.object(run_all, "compiler_preflight_error", return_value=""), \
+             patch.object(run_all, "build_preflight", return_value=blocked), \
+             patch.object(run_all, "write_report"), \
+             patch.object(run_all, "run_group_a") as collect, \
+             redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as raised:
+                run_all.main()
+
+        self.assertEqual(raised.exception.code, 2)
+        collect.assert_not_called()
+        self.assertIn('"phase": "preflight"', stderr.getvalue())
+        self.assertIn("行业轮动模型", stderr.getvalue())
+
+    def test_preflight_only_prints_report_without_starting_collection(self):
+        stdout = io.StringIO()
+        with patch.object(run_all.sys, "argv", ["run_all.py", "--preflight-only"]), \
+             patch.object(run_all, "get_date", return_value="2026-09-24"), \
+             patch.object(run_all, "compiler_preflight_error", return_value=""), \
+             patch.object(run_all, "build_preflight", return_value=self.successful_preflight()), \
+             patch.object(run_all, "write_report"), \
+             patch.object(run_all, "run_group_a") as collect, \
+             redirect_stdout(stdout):
+            with self.assertRaises(SystemExit) as raised:
+                run_all.main()
+
+        self.assertEqual(raised.exception.code, 0)
+        collect.assert_not_called()
+        self.assertIn('"status": "ok"', stdout.getvalue())
 
     def test_broadsheet_is_built_and_verified_by_default(self):
         with tempfile.TemporaryDirectory() as temp:

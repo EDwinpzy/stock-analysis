@@ -1,0 +1,89 @@
+name: daily-briefing-pro-cloud
+
+services:
+  briefing:
+    image: daily-briefing-pro:3.23.14-cloud
+    build:
+      context: ../..
+      dockerfile: deploy/cloud/Dockerfile
+    working_dir: /opt/daily-briefing-pro/skills/daily-briefing-pro
+    command: ["python", "scripts/run_all.py"]
+    init: true
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    cpus: 1.5
+    mem_limit: 2g
+    pids_limit: 256
+    shm_size: 256m
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    environment:
+      HOME: /runtime/home
+      XDG_CONFIG_HOME: /runtime/home/.config
+      XDG_CACHE_HOME: /runtime/home/.cache
+      TZ: Asia/Shanghai
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: utf-8
+      PYTHONHASHSEED: "2"
+      DAILY_BRIEFING_DATA_DIR: /runtime/data
+      BRIEFING_OUTPUT_DIR: /runtime/reports
+      ROTATION_MODEL_DIR: /runtime/models/sw_rotation_model
+      DAILY_BRIEFING_CLOUD: "1"
+      DOUYIN_TRANSCRIPT_PROVIDER: auto
+      DOUYIN_MAX_CONCURRENT: "1"
+      DOUYIN_WHISPER_MODEL: small
+      TGB_COOKIE_PATH: /run/secrets/tgb_cookies.json
+      DOUYIN_COOKIE_PATH: /run/secrets/douyin_cookies.json
+      XUEQIU_COOKIE_PATH: /run/secrets/xueqiu_cookies.json
+      THS_SELFSTOCK_PATH: /run/secrets/ths_selfstock.json
+    volumes:
+      - ./runtime/data:/runtime/data
+      - ./runtime/models:/runtime/models
+      - ./runtime/reports:/runtime/reports
+      - briefing_home:/runtime/home
+      - ./verification:/verification:ro
+    secrets:
+      - deepseek_api_key
+      - openai_api_key
+      - siliconflow_api_key
+      - groq_api_key
+      - ima_openapi_clientid
+      - ima_openapi_apikey
+      - hithink_finance_api_key
+      - source: ths_selfstock
+        target: ths_selfstock.json
+      - source: xueqiu_cookies
+        target: xueqiu_cookies.json
+      - source: tgb_cookies
+        target: tgb_cookies.json
+      - source: douyin_cookies
+        target: douyin_cookies.json
+
+volumes:
+  briefing_home:
+
+secrets:
+  deepseek_api_key:
+    file: ./secrets/deepseek_api_key
+  openai_api_key:
+    file: ./secrets/openai_api_key
+  siliconflow_api_key:
+    file: ./secrets/siliconflow_api_key
+  groq_api_key:
+    file: ./secrets/groq_api_key
+  ima_openapi_clientid:
+    file: ./secrets/ima_openapi_clientid
+  ima_openapi_apikey:
+    file: ./secrets/ima_openapi_apikey
+  hithink_finance_api_key:
+    file: ./secrets/hithink_finance_api_key
+  tgb_cookies:
+    file: ./secrets/tgb_cookies.json
+  douyin_cookies:
+    file: ./secrets/douyin_cookies.json
+  ths_selfstock:
+    file: ./secrets/ths_selfstock.json
+  xueqiu_cookies:
+    file: ./secrets/xueqiu_cookies.json

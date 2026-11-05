@@ -1,0 +1,4156 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/a-share/prices/snapshot",
+    "title": "行情快照",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "thscodes",
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/prices/",
+    "sourceLine": 505,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "逗号分隔的 thscode 列表，如 `600519.SH,000001.SZ`。给定时忽略分页参数。",
+        "default": "-"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "分页大小，仅在 `thscodes` 省略时生效。",
+        "default": "100"
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "分页偏移，仅在 `thscodes` 省略时生效。",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/prices/historical",
+    "title": "历史 K 线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "interval",
+      "start",
+      "end"
+    ],
+    "optionalParams": [
+      "adjust"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/prices/",
+    "sourceLine": 595,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "单只标的 thscode，**不接受逗号**。多标的使用本页批量历史 K 线接口。",
+        "default": "-"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "K 线周期，**当前仅支持** `1d`(日线)。",
+        "default": "1d"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "起始时间，毫秒 Unix 时间戳。缺失返回 `code=1001`。",
+        "default": "-"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "结束时间，毫秒 Unix 时间戳。`end - start` 超过 10 年返回 `code=1003`。",
+        "default": "-"
+      },
+      {
+        "name": "adjust",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "复权方式：`none` / `forward`(前复权) / `backward`(后复权)。",
+        "default": "forward"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/prices/historical-batch",
+    "title": "批量历史 K 线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "interval",
+      "start",
+      "end"
+    ],
+    "optionalParams": [
+      "adjust"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/prices/",
+    "sourceLine": 668,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "英文逗号分隔的完整代码，如 `600519.SH,000001.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "K 线周期：`1d`（日线）/ `1w`（周线）/ `1mo`（月线）。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "起始时间，毫秒 Unix 时间戳。缺失返回 `code=1001`；须为非负毫秒时间戳。",
+        "default": "-"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "结束时间，毫秒 Unix 时间戳。`end - start` 超过 10 年返回 `code=1003`；须为非负毫秒时间戳。",
+        "default": "-"
+      },
+      {
+        "name": "adjust",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "复权方式：`none` / `forward`(前复权) / `backward`(后复权)。",
+        "default": "forward"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/meta/tickers/search",
+    "title": "标的检索",
+    "availability": "api-key",
+    "requiredParams": [
+      "q"
+    ],
+    "optionalParams": [
+      "exchange",
+      "asset_type",
+      "limit"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/ticker-search/",
+    "sourceLine": 895,
+    "parameters": [
+      {
+        "name": "q",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "搜索关键词：完整 thscode、ticker 代码或中英文名称（支持子串匹配）。",
+        "default": "-"
+      },
+      {
+        "name": "exchange",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "交易所过滤；支持证券交易所与 `CFFEX`、`SHFE`、`INE`、`DCE`、`CZCE`、`GFEX`、`SSE`、`SZSE`。",
+        "default": "-"
+      },
+      {
+        "name": "asset_type",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "规范化资产类型，支持单值或逗号分隔多值；完整枚举见下方。",
+        "default": "-"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "返回上限，最大 `50`。",
+        "default": "10"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/corporate-actions/adjustment-factors",
+    "title": "除复权数据",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "from",
+      "to"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/corporate-actions/",
+    "sourceLine": 1009,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "单只标的 thscode，**不接受逗号**。",
+        "default": "-"
+      },
+      {
+        "name": "from",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "事件起始日，格式 `YYYY-MM-DD`。",
+        "default": "-"
+      },
+      {
+        "name": "to",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "事件截止日，格式 `YYYY-MM-DD`。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/meta/tickers/list",
+    "title": "标的列表获取",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "asset_type",
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/ticker-list/",
+    "sourceLine": 1105,
+    "parameters": [
+      {
+        "name": "asset_type",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "规范化资产类型，支持单值或逗号分隔多值；省略时返回全部类型。",
+        "default": "全部类型"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "单页条数，最大 `10000`。",
+        "default": "1000"
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "分页偏移。",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/income-statements",
+    "title": "利润表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1259,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只标的 thscode，不接受逗号；含交易所后缀。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "annual"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/balance-sheets",
+    "title": "资产负债表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1351,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只标的 thscode，不接受逗号；含交易所后缀。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "annual"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/cash-flow-statements",
+    "title": "现金流量表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1425,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只标的 thscode，不接受逗号；含交易所后缀。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "annual"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/income-statements-batch",
+    "title": "批量利润表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1499,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "英文逗号分隔的完整代码，如 `600519.SH,000858.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传；须为非负毫秒时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`；须为非负毫秒时间戳。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/balance-sheets-batch",
+    "title": "批量资产负债表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1593,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "英文逗号分隔的完整代码，如 `600519.SH,000858.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传；须为非负毫秒时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`；须为非负毫秒时间戳。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/financials/cash-flow-statements-batch",
+    "title": "批量现金流量表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "period"
+    ],
+    "optionalParams": [
+      "limit",
+      "start",
+      "end"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/financials/",
+    "sourceLine": 1682,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "英文逗号分隔的完整代码，如 `600519.SH,000858.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "period",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "annual`（仅 Q4 报告期）/ `quarterly`（每个季度末）。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "最近 N 期模式，范围 `[1, 20]`；与 `start` / `end` 互斥。",
+        "default": "4"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式起始毫秒戳，需与 `end` 同传；须为非负毫秒时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "时间区间模式结束毫秒戳，需满足 `end >= start`；须为非负毫秒时间戳。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/calendar/trading-days",
+    "title": "交易日历",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "start_date",
+      "end_date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/calendar/",
+    "sourceLine": 1783,
+    "parameters": [
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "开始日期，`yyyyMMdd`，包含当天；与 `end_date` 成对提供。",
+        "default": "两者省略时取今日减一年"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "结束日期，`yyyyMMdd`，包含当天；最多十个自然年。",
+        "default": "两者省略时取今日"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/catalog/ths-index-list",
+    "title": "同花顺指数列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "tag"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 1880,
+    "parameters": [
+      {
+        "name": "tag",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "标签白名单：`cn_concept`(A 股概念) / `region`(区域指数) / `tszs`(特色指数) / `industry`(行业指数)。大小写不敏感。",
+        "default": "cn_concept"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/constituents/ths-stock-list",
+    "title": "同花顺指数成分股",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 1942,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "指数 thscode，形如 `{ticker}.{suffix}`。入参会被 `trim().toUpperCase()` 标准化；**不接受逗号**，单次仅支持一个指数。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/prices/snapshot",
+    "title": "指数行情快照",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes"
+    ],
+    "optionalParams": [
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 2005,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "逗号分隔的指数 thscode 列表，如 `000001.SH,399001.SZ,886042.TI,881101.TI`。",
+        "default": "-"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "与 A 股行情快照签名对齐，对本接口无效。",
+        "default": "-"
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "与 A 股行情快照签名对齐，对本接口无效。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/prices/historical",
+    "title": "指数历史 K 线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "interval",
+      "start",
+      "end"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 2065,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "单只指数 thscode，**不接受逗号**。",
+        "default": "-"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "K 线周期，当前仅支持 `1d`（日线）。",
+        "default": "1d"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "起始时间，毫秒 Unix 时间戳。",
+        "default": "-"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "结束时间，毫秒 Unix 时间戳；必须不早于 `start`，且查询区间需落在近 5 年的数据范围内。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/constituents/ths-index-list-by-stock",
+    "title": "个股反查对应行业/板块",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "type"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 2128,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "1 至 100 个完整个股代码，以英文逗号分隔，如 `000713.SZ,600519.SH`；上限按去重前数量计算。",
+        "default": "—"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "单一分类：`cn_concept` / `industry` / `region` / `tszs`，分别为概念、行业、地域、特色；大小写敏感。",
+        "default": "全部四类"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/prices/historical-batch",
+    "title": "指数批量历史 K 线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "interval",
+      "start",
+      "end"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-index/",
+    "sourceLine": 2209,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "英文逗号分隔的完整代码，如 `000001.SH,399001.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "K 线周期，当前仅支持 `1d`（日线）。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "起始时间，毫秒 Unix 时间戳；须为非负毫秒时间戳。",
+        "default": "-"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "query",
+        "description": "结束时间，毫秒 Unix 时间戳；必须不早于 `start`，且查询区间需落在近 5 年的数据范围内；须为非负毫秒时间戳。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/ipo/calendar-list",
+    "title": "新股发行与申购",
+    "availability": "api-key",
+    "requiredParams": [
+      "market",
+      "status"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/a-share-ipo/",
+    "sourceLine": 2406,
+    "parameters": [
+      {
+        "name": "market",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "适用市场：sh_sz/bj",
+        "default": "—"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "发行阶段：upcoming/subscribable/awaiting_listing",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/abnormal-monitor-list",
+    "title": "异动股票",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "state",
+      "page",
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/abnormal-monitor/",
+    "sourceLine": 2490,
+    "parameters": [
+      {
+        "name": "state",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "current或history",
+        "default": "current"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页1至30条，默认30",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/anomaly-analysis-list",
+    "title": "个股异动原因列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "tag_codes"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/anomaly-analysis/",
+    "sourceLine": 2602,
+    "parameters": [
+      {
+        "name": "tag_codes",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "异动标签，逗号分隔，多个值为 OR 关系；大小写不敏感，重复值自动去重。合法值见下方标签表。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/anomaly-analysis-stock",
+    "title": "按股票查询个股异动原因",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/anomaly-analysis/",
+    "sourceLine": 2685,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "逗号分隔的同花顺代码列表，支持 `SH` / `SZ` / `BJ` 后缀，大小写不敏感；去重前最多 50 个 token。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/auction-stock-opportunities",
+    "title": "集合竞价个股机会筛选",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date",
+      "warn_types",
+      "market",
+      "exclude_st",
+      "thscodes",
+      "sort_by",
+      "sort_order",
+      "page",
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/auction-opportunities/",
+    "sourceLine": 2758,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "查询日期，YYYY-MM-DD；默认日期与有效范围见接口说明；须属于可用日期集合",
+        "default": "—"
+      },
+      {
+        "name": "warn_types",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "逗号分隔的机会类型码；省略查询全部；当前类型为68710/68711/68712/68713/68714/68715/68716/68717/68718/68719/68720/68721/68722/68723/68724/68725/68726/68727",
+        "default": "—"
+      },
+      {
+        "name": "market",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "适用市场：a_share/sh_sz_main/sh_a/sz_a/gem/star",
+        "default": "a_share"
+      },
+      {
+        "name": "exclude_st",
+        "type": "boolean",
+        "required": false,
+        "location": "",
+        "description": "是否排除ST股票，默认false",
+        "default": "false"
+      },
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "逗号分隔A股标准代码，最多50个token",
+        "default": "—"
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "warn_time或warn_type",
+        "default": "warn_time"
+      },
+      {
+        "name": "sort_order",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "desc或asc",
+        "default": "desc"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页1至20条，默认20",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/auction-opportunity-dates",
+    "title": "集合竞价可选交易日期",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/auction-opportunities/",
+    "sourceLine": 2876,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/auction/snapshot",
+    "title": "A股集合竞价快照",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes"
+    ],
+    "optionalParams": [
+      "stage"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/auction/",
+    "sourceLine": 2948,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "一个或多个 A 股 thscode，使用英文逗号分隔；单次请求当前最多 100 个，按分隔后的原始 token 数在去重前校验。服务端按请求顺序去重返回。",
+        "default": "—"
+      },
+      {
+        "name": "stage",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "live`（实时阶段）或 `final`（终态）。",
+        "default": "final"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/auction/short-term-benchmark",
+    "title": "短线风向标竞价基准",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/auction/",
+    "sourceLine": 3035,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "查询日期，格式 `yyyy-MM-dd`；缺失或传入空字符串时使用 `Asia/Shanghai` 当日，显式指定非交易日时不自动回退。",
+        "default": "上海时区当日"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/capital-flow/snapshot",
+    "title": "资金流向实时快照",
+    "availability": "client-only",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/capital-flow/",
+    "sourceLine": 3135,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只 A 股完整代码；不支持批量、纯代码或非 A 股标的。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/capital-flow/historical",
+    "title": "资金流向历史",
+    "availability": "client-only",
+    "requiredParams": [
+      "thscode",
+      "interval",
+      "start",
+      "end"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/capital-flow/",
+    "sourceLine": 3212,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只 A 股完整代码；不支持批量、纯代码或非 A 股标的。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "1m`（1 分钟）或 `1d`（日）。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "起始时间，毫秒级 Unix 时间戳，必须大于等于 `0`。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "结束时间，毫秒级 Unix 时间戳，必须大于等于 `start`。`1m` 窗口最多 7 个自然日；`1d` 的结束日期不得晚于开始日期加 1 年。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/chip-shape-dates",
+    "title": "筹码形态可选日期",
+    "availability": "client-only",
+    "requiredParams": [],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/chip-shape/",
+    "sourceLine": 3329,
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/chip-shape-stocks",
+    "title": "筹码形态股票筛选",
+    "availability": "client-only",
+    "requiredParams": [
+      "shape"
+    ],
+    "optionalParams": [
+      "date",
+      "page",
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/chip-shape/",
+    "sourceLine": 3377,
+    "parameters": [
+      {
+        "name": "shape",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "double_peak/high_position_dense/low_position_dense/low_position_locked",
+        "default": "—"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "查询日期，YYYY-MM-DD；默认日期与有效范围见接口说明；须属于可用日期集合",
+        "default": "—"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页1至20条，默认20",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/dragon-tiger-list",
+    "title": "龙虎榜数据",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "board_type",
+      "date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/dragon-tiger-data/",
+    "sourceLine": 3482,
+    "parameters": [
+      {
+        "name": "board_type",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "榜单类型：`all` 全部 / `org` 机构榜 / `hot_money` 游资榜。",
+        "default": "all"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "query",
+        "description": "目标交易日，格式 `yyyy-MM-dd`；只支持一年内数据。显式传入非交易日返回 `code=1002`。",
+        "default": "最近可用交易日"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/dragon-tiger-department-classic-record",
+    "title": "营业部经典战绩",
+    "availability": "api-key",
+    "requiredParams": [
+      "department_id"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/dragon-tiger-department/",
+    "sourceLine": 3619,
+    "parameters": [
+      {
+        "name": "department_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "营业部业务标识",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/dragon-tiger-department-history",
+    "title": "营业部历史上榜记录",
+    "availability": "api-key",
+    "requiredParams": [
+      "department_id"
+    ],
+    "optionalParams": [
+      "page",
+      "size",
+      "min_net_buy_amount",
+      "sort_field",
+      "sort_dir"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/dragon-tiger-department/",
+    "sourceLine": 3685,
+    "parameters": [
+      {
+        "name": "department_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "营业部业务标识",
+        "default": "—"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页1至30条，默认30",
+        "default": "30"
+      },
+      {
+        "name": "min_net_buy_amount",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "净买入金额档位：5000000/30000000/50000000/100000000，单位元",
+        "default": "—"
+      },
+      {
+        "name": "sort_field",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "排序字段：trade_date/change_ratio/net_buy_amount",
+        "default": "trade_date"
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "asc或desc",
+        "default": "desc"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/dragon-tiger-stock-institution",
+    "title": "个股机构交易详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "date",
+      "range_days"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/dragon-tiger-institution/",
+    "sourceLine": 3787,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单个A股标准代码",
+        "default": "—"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "查询日期，YYYY-MM-DD；默认日期与有效范围见接口说明；省略使用最近已完成交易日，查询范围为一年",
+        "default": "—"
+      },
+      {
+        "name": "range_days",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "上榜区间，1或3；省略返回两类实际记录",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/etf-flow/net-inflow-historical",
+    "title": "宽基ETF申购净流入",
+    "availability": "client-only",
+    "requiredParams": [],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/etf-net-flow/",
+    "sourceLine": 3992,
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/backtest/result",
+    "title": "基金在线回测",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "buy_conditions",
+      "sell_conditions",
+      "buy_frequency_type",
+      "max_buy_times",
+      "per_buy_amount"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-backtest/",
+    "sourceLine": 4226,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "含市场后缀的完整基金代码，例如 `000001.OF`。",
+        "default": "—"
+      },
+      {
+        "name": "buy_conditions",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "买入条件 JSON 字符串，必须是对象或数组。",
+        "default": "—"
+      },
+      {
+        "name": "sell_conditions",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "卖出条件 JSON 字符串，必须是对象或数组。",
+        "default": "—"
+      },
+      {
+        "name": "buy_frequency_type",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "买入频率，具体值由上游判定。",
+        "default": "—"
+      },
+      {
+        "name": "max_buy_times",
+        "type": "number",
+        "required": true,
+        "location": "",
+        "description": "最大买入次数。",
+        "default": "—"
+      },
+      {
+        "name": "per_buy_amount",
+        "type": "number",
+        "required": true,
+        "location": "",
+        "description": "每次买入金额。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/backtest/indicators",
+    "title": "基金回测可用指标",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "-"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-backtest/",
+    "sourceLine": 4323,
+    "parameters": [
+      {
+        "name": "-",
+        "type": "-",
+        "required": false,
+        "location": "-",
+        "description": "无业务参数。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/companies/detail",
+    "title": "基金公司详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "company_id"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-company/",
+    "sourceLine": 4399,
+    "parameters": [
+      {
+        "name": "company_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "基金公司 ID，可从基金基本资料的 `company_id` 获取。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/corporate-actions/dividends",
+    "title": "基金分红记录",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-corporate-actions/",
+    "sourceLine": 4469,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/diagnostics/detail",
+    "title": "基金诊断详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-diagnostics/",
+    "sourceLine": 4557,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/financials/indicators",
+    "title": "基金财务指标",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-financials/",
+    "sourceLine": 4645,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/financials/income-statements",
+    "title": "基金利润表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-financials/",
+    "sourceLine": 4711,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/financials/balance-sheets",
+    "title": "基金资产负债表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-financials/",
+    "sourceLine": 4785,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/holders/detail",
+    "title": "基金持有人结构",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "merge_scope"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-holders/",
+    "sourceLine": 4867,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      },
+      {
+        "name": "merge_scope",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "all`（分别返回合并/独立份额的最新记录）/ `merged`（A/C 等份额合并披露）/ `separate`（当前份额独立披露）。",
+        "default": "all"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/holders/top",
+    "title": "基金前十大持有人",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "limit"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-holders/",
+    "sourceLine": 4938,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "返回条数，最大为 `10`。",
+        "default": "服务端默认"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/holdings",
+    "title": "基金重仓持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-holdings/",
+    "sourceLine": 5023,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀，如 `025480.OF`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/managers/investment-style",
+    "title": "投资风格",
+    "availability": "api-key",
+    "requiredParams": [
+      "manager_id"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-managers/",
+    "sourceLine": 5132,
+    "parameters": [
+      {
+        "name": "manager_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "基金经理 ID。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/managers/performance",
+    "title": "基金经理业绩",
+    "availability": "api-key",
+    "requiredParams": [
+      "manager_id",
+      "range"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-managers/",
+    "sourceLine": 5203,
+    "parameters": [
+      {
+        "name": "manager_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "基金经理 ID。",
+        "default": "—"
+      },
+      {
+        "name": "range",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "month` / `tmonth` / `year` / `nowyear` / `now`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/managers/experience",
+    "title": "从业经历",
+    "availability": "api-key",
+    "requiredParams": [
+      "manager_id"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-managers/",
+    "sourceLine": 5255,
+    "parameters": [
+      {
+        "name": "manager_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "基金经理 ID。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/managers/detail",
+    "title": "基金经理详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "manager_id"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-managers/",
+    "sourceLine": 5322,
+    "parameters": [
+      {
+        "name": "manager_id",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "基金经理 ID。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/market/snapshot",
+    "title": "场内基金行情快照",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-market/",
+    "sourceLine": 5400,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "1 至 100 个完整 ETF/LOF 代码，英文逗号分隔，如 `510300.SH,161725.SZ`；先检查原始项数，再去除首尾空白、转大写并稳定去重。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/market/historical",
+    "title": "场内基金历史日线行情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "start",
+      "end"
+    ],
+    "optionalParams": [
+      "interval"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-market/",
+    "sourceLine": 5477,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只 ETF 的完整 thscode，必须保留市场后缀；不接受逗号分隔的多个值。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "K 线周期，当前仅支持 `1d`（日线）。",
+        "default": "1d"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "起始时间，毫秒级 Unix 时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "结束时间，毫秒级 Unix 时间戳；必须不早于 `start`，且窗口最长 5 个自然年。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/market/historical-batch",
+    "title": "场内基金批量历史日线行情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscodes",
+      "start",
+      "end"
+    ],
+    "optionalParams": [
+      "interval"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-market/",
+    "sourceLine": 5565,
+    "parameters": [
+      {
+        "name": "thscodes",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "英文逗号分隔的完整代码，如 `510300.SH,159915.SZ`；最多 10 个，按去重前数量计数。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "K 线周期，当前仅支持 `1d`（日线）。",
+        "default": "1d"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "起始时间，毫秒级 Unix 时间戳；须为非负毫秒时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "结束时间，毫秒级 Unix 时间戳；必须不早于 `start`，且窗口最长 5 个自然年；须为非负毫秒时间戳。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/news/article-list",
+    "title": "基金资讯列表",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-news/",
+    "sourceLine": 5669,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "返回条数。",
+        "default": "服务端默认"
+      },
+      {
+        "name": "offset",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "不透明翻页游标；下一页应原样回传上一页的 `data.offset`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/offerings/list",
+    "title": "基金募集列表",
+    "availability": "api-key",
+    "requiredParams": [
+      "subscribe"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-offerings/",
+    "sourceLine": 5764,
+    "parameters": [
+      {
+        "name": "subscribe",
+        "type": "enum",
+        "required": true,
+        "location": "",
+        "description": "active`（当前募集）或 `upcoming`（即将募集）。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/performance/nav",
+    "title": "基金净值",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "range",
+      "nav_type"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-performance/",
+    "sourceLine": 5832,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      },
+      {
+        "name": "range",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "week` / `month` / `tmonth` / `hyear` / `year` / `twoyear` / `tyear` / `fyear`。",
+        "default": "最新一条"
+      },
+      {
+        "name": "nav_type",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "unit`（单位净值）/ `adj`（复权净值）/ `unit,adj`（同时返回）。",
+        "default": "unit,adj"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/performance/returns",
+    "title": "基金区间收益",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-performance/",
+    "sourceLine": 5891,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/performance/indicators-historical",
+    "title": "基金历史业绩指标",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "start",
+      "end"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-performance/",
+    "sourceLine": 5978,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "起始时间，毫秒 Unix 时间戳。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "结束时间，毫秒 Unix 时间戳。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/performance/drawdowns",
+    "title": "基金最大回撤",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-performance/",
+    "sourceLine": 6039,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/stock-history",
+    "title": "基金历史股票持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "report_type",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6125,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "report_type",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "报告类型。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "报告截止日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/bond-history",
+    "title": "基金历史债券持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "report_type",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6192,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "report_type",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "报告类型。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "报告截止日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/stock-report-dates",
+    "title": "基金股票持仓报告日期",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "report_type"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6246,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "report_type",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "报告类型。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/bond-report-dates",
+    "title": "基金债券持仓报告日期",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "report_type"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6300,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      },
+      {
+        "name": "report_type",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "报告类型。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/asset-allocation",
+    "title": "基金资产配置",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6347,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/portfolio/industry-allocation",
+    "title": "基金行业配置",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-portfolio/",
+    "sourceLine": 6400,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/profile/detail",
+    "title": "基金基本资料",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-profile/",
+    "sourceLine": 6462,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整基金 thscode，必须保留市场后缀，如 `025480.OF` / `510300.SH`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/quota/summary",
+    "title": "QDII额度汇总",
+    "availability": "api-key",
+    "requiredParams": [
+      "tab"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-quota/",
+    "sourceLine": 6564,
+    "parameters": [
+      {
+        "name": "tab",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "分类数组 JSON 字符串，例如 `[\"nazhi100\"]`；数组元素：`nazhi100`（纳指100）、`meigukeji`（美股科技）、`biaopu`（标普）、`yatai`（亚太）、`ouzhou`（欧洲）。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/fund/quota/list",
+    "title": "QDII额度列表",
+    "availability": "api-key",
+    "requiredParams": [
+      "tab"
+    ],
+    "optionalParams": [
+      "buy"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/fund-quota/",
+    "sourceLine": 6628,
+    "parameters": [
+      {
+        "name": "tab",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "分类数组 JSON 字符串，例如 `[\"remen\"]`；数组元素：`remen`（热门）、`meiguo`（美国）、`yatai`（亚太）、`ouzhou`（欧洲）。",
+        "default": "—"
+      },
+      {
+        "name": "buy",
+        "type": "boolean",
+        "required": false,
+        "location": "",
+        "description": "可购状态过滤；省略时不向上游注入默认值。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/basis/main-continuous-latest",
+    "title": "期货主连最新基差",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-basis/",
+    "sourceLine": 6733,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/basis/historical",
+    "title": "期货历史基差",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "spot_indicator_id"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-basis/",
+    "sourceLine": 6817,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "spot_indicator_id",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "可选现货指标 ID；省略时使用上游默认口径。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/calendar/trading-schedule",
+    "title": "期货交易日",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "start_date",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-calendar/",
+    "sourceLine": 6893,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "开始日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "结束日期，不早于开始日期。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/main-continuous-list",
+    "title": "期货主连资料",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-contracts-extended/",
+    "sourceLine": 6980,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/main-list",
+    "title": "期货主力合约",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-contracts-extended/",
+    "sourceLine": 7045,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/secondary-main-list",
+    "title": "期货次主力合约",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-contracts-extended/",
+    "sourceLine": 7118,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/commodity-index-list",
+    "title": "商品指数合约列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-contracts-extended/",
+    "sourceLine": 7159,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/fundamentals/indicators-historical",
+    "title": "期货F10基本面指标历史数据",
+    "availability": "client-only",
+    "requiredParams": [
+      "indicator_ids",
+      "start_date",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-fundamentals/",
+    "sourceLine": 7246,
+    "parameters": [
+      {
+        "name": "indicator_ids",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "1～5 个逗号分隔的指标 ID。",
+        "default": "—"
+      },
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "开始日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "结束日期，不早于开始日期，区间最长 5 年。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/positions/variety-daily",
+    "title": "期货品种日持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-positions/",
+    "sourceLine": 7349,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "交易日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/positions/company-variety-daily",
+    "title": "期货公司品种日持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "date",
+      "varieties"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-positions/",
+    "sourceLine": 7432,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "交易日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "varieties",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "1～5 个逗号分隔的大写期货品种代码。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/positions/contract-daily",
+    "title": "期货公司合约日持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "variety",
+      "date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-positions/",
+    "sourceLine": 7522,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "variety",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "大写品种代码，须与 `thscode` 所属品种一致。",
+        "default": "—"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "交易日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/positions/contract-historical",
+    "title": "期货公司合约历史持仓",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "variety",
+      "company",
+      "start_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-positions/",
+    "sourceLine": 7585,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "variety",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "大写品种代码，须与合约一致。",
+        "default": "—"
+      },
+      {
+        "name": "company",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货公司名称。",
+        "default": "—"
+      },
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "开始日期；须位于调用日前一年内，结束日固定为调用日。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/positions/company-list",
+    "title": "期货公司列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-positions/",
+    "sourceLine": 7636,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/prices/intraday",
+    "title": "期货分时",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "session",
+      "trade_date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-prices/",
+    "sourceLine": 7702,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约或期货商品指数完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "session",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "行情阶段：`pre_market`-盘前、`intraday`-盘中、`post_market`-盘后；省略时使用 `intraday`。",
+        "default": "—"
+      },
+      {
+        "name": "trade_date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "端外仅允许 `0`；AI 客户端内可传 `0` 或合法历史交易日 `yyyyMMdd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/prices/daily",
+    "title": "期货K线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "start",
+      "end",
+      "time_period"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-prices/",
+    "sourceLine": 7765,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约或期货商品指数完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "与 `end` 成对提供的正毫秒时间戳；两者均省略时查询最近 100 根。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "与 `start` 成对提供，且不早于 `start`。",
+        "default": "—"
+      },
+      {
+        "name": "time_period",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "端外仅允许 `day_1`；AI 客户端内可使用 `min_1`、`min_10`、`hour_1`、`day_1`、`week_1`、`month_1`、`quarter_1`、`year_1`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/detail",
+    "title": "期货合约详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-reference/",
+    "sourceLine": 7850,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/contracts/list",
+    "title": "期货合约基础信息列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-reference/",
+    "sourceLine": 7910,
+    "parameters": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "单页条数，范围 `1-1000`。",
+        "default": "100"
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "分页偏移，最小为 `0`。",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/calendar/session-timeline",
+    "title": "期货交易时间轴",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-session-timeline/",
+    "sourceLine": 7995,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/varieties/list",
+    "title": "期货品种资料",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-varieties/",
+    "sourceLine": 8066,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/variety-plates/list",
+    "title": "期货品种板块",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-variety-plates/",
+    "sourceLine": 8167,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/futures/warehouse-receipts/historical",
+    "title": "期货历史仓单",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "start_date",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/futures-warehouse-receipts/",
+    "sourceLine": 8235,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期货合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "开始日期，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "结束日期，不早于开始日期。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/high-frequency/historical",
+    "title": "高频历史",
+    "availability": "client-only",
+    "requiredParams": [
+      "thscode",
+      "start",
+      "end"
+    ],
+    "optionalParams": [
+      "interval"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/high-frequency/",
+    "sourceLine": 8319,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只 A 股个股或指数的完整代码；不支持批量、纯代码或其他资产类型。",
+        "default": "—"
+      },
+      {
+        "name": "interval",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "1d`（日线）或 `1m`（1 分钟）。",
+        "default": "1d"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "起始时间，正毫秒级 Unix 时间戳。日线必须为东八区交易日零点；分钟线必须与 `end` 处于同一交易日。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": true,
+        "location": "",
+        "description": "结束时间，正毫秒级 Unix 时间戳且不早于 `start`。日期必须位于当前最近 30 个 A 股交易日内。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/high-frequency/intraday",
+    "title": "单日高频分时",
+    "availability": "client-only",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/high-frequency/",
+    "sourceLine": 8387,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "单只 A 股个股或指数的完整代码；不支持批量、纯代码或其他资产类型。",
+        "default": "—"
+      },
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "指定交易日，格式为 `YYYY-MM-DD`，且必须位于当前最近 30 个 A 股交易日内。",
+        "default": "最近交易日"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/hk-share/ipo/application-list",
+    "title": "港股新股递表记录",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "page"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hk-share-ipo/",
+    "sourceLine": 8464,
+    "parameters": [
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/hk-share/ipo/calendar-list",
+    "title": "港股认购与待上市日历",
+    "availability": "api-key",
+    "requiredParams": [
+      "status"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hk-share-ipo/",
+    "sourceLine": 8542,
+    "parameters": [
+      {
+        "name": "status",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "发行阶段：subscribable/awaiting_listing",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/hk-share/ipo/issue-detail",
+    "title": "港股新股发行详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "issue_code"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hk-share-ipo/",
+    "sourceLine": 8616,
+    "parameters": [
+      {
+        "name": "issue_code",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "日历中的发行记录标识，最多32字符",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/skyrocket-list",
+    "title": "飙升榜",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "period",
+      "limit"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hot-list-data/",
+    "sourceLine": 8706,
+    "parameters": [
+      {
+        "name": "period",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "榜单周期：`day` 日榜 / `hour` 小时榜。",
+        "default": "day"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "返回1至100条，不足时按实际条数。",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/hot-stock-list",
+    "title": "A股热股榜单",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "period",
+      "limit"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hot-list-data/",
+    "sourceLine": 8779,
+    "parameters": [
+      {
+        "name": "period",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "榜单周期：`day` 24 小时级别 / `hour` 小时级别。",
+        "default": "day"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "返回1至100条，不足时按实际条数。",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/hot-stock-list-history",
+    "title": "历史热股排行",
+    "availability": "api-key",
+    "requiredParams": [
+      "date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hot-list-data/",
+    "sourceLine": 8835,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "目标自然日，格式 `yyyy-MM-dd`；只支持一年内数据。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/hot-stock-rank-trend",
+    "title": "个股排名走势",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "start_date",
+      "end_date"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/hot-list-data/",
+    "sourceLine": 8904,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "单只 A 股标的，含交易所后缀，例如 `300034.SZ`。",
+        "default": "-"
+      },
+      {
+        "name": "start_date",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "起始自然日，格式 `yyyy-MM-dd`。",
+        "default": "-"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "query",
+        "description": "结束自然日，格式 `yyyy-MM-dd`；需大于等于 `start_date`。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/limit-up-pool",
+    "title": "涨停股票池",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date_ms",
+      "page",
+      "size",
+      "sort_field",
+      "sort_dir"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/limit-up-data/",
+    "sourceLine": 9024,
+    "parameters": [
+      {
+        "name": "date_ms",
+        "type": "long",
+        "required": false,
+        "location": "query",
+        "description": "查询交易日 Unix 毫秒戳（Asia/Shanghai 00:00:00）；省略时回退到服务端当前自然日。",
+        "default": "-"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "页码，必须 `>= 1`。",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "分页大小，取值范围 `1` 到 `200`。",
+        "default": "50"
+      },
+      {
+        "name": "sort_field",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "排序字段：`last_price` / `continue_day_cnt` / `seal_money` / `limit_up_time`。",
+        "default": "last_price"
+      },
+      {
+        "name": "sort_dir",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "排序方向：`asc` / `desc`。",
+        "default": "desc"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/limit-down-pool",
+    "title": "跌停股票池",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date_ms",
+      "page",
+      "size",
+      "sort_field",
+      "sort_dir"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/limit-up-data/",
+    "sourceLine": 9133,
+    "parameters": [
+      {
+        "name": "date_ms",
+        "type": "long",
+        "required": false,
+        "location": "query",
+        "description": "交易日的上海时区零点毫秒时间戳。",
+        "default": "当前自然日"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "页码，从 1 开始。",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "单页条数，范围 `1..200`。",
+        "default": "50"
+      },
+      {
+        "name": "sort_field",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "last_limit_time` / `first_limit_time` / `last_price` / `price_change_ratio_pct` / `turnover_ratio_pct`。",
+        "default": "last_limit_time"
+      },
+      {
+        "name": "sort_dir",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "asc` / `desc`。",
+        "default": "desc"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/limit-break-pool",
+    "title": "炸板股票池",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date_ms",
+      "page",
+      "size",
+      "sort_field",
+      "sort_dir"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/limit-up-data/",
+    "sourceLine": 9212,
+    "parameters": [
+      {
+        "name": "date_ms",
+        "type": "long",
+        "required": false,
+        "location": "query",
+        "description": "交易日的上海时区零点毫秒时间戳。",
+        "default": "当前自然日"
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "页码，从 1 开始。",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "query",
+        "description": "单页条数，范围 `1..200`。",
+        "default": "50"
+      },
+      {
+        "name": "sort_field",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "price_change_ratio_pct` / `open_times` / `last_price` / `turnover_ratio_pct` / `turnover`。",
+        "default": "price_change_ratio_pct"
+      },
+      {
+        "name": "sort_dir",
+        "type": "enum",
+        "required": false,
+        "location": "query",
+        "description": "asc` / `desc`。",
+        "default": "desc"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/limit-up-ladder",
+    "title": "连板天梯",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "-"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/limit-up-data/",
+    "sourceLine": 9295,
+    "parameters": [
+      {
+        "name": "-",
+        "type": "-",
+        "required": false,
+        "location": "-",
+        "description": "无入参。",
+        "default": "-"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/limit-up-statistics",
+    "title": "涨停强度与晋级统计",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/limit-up-statistics/",
+    "sourceLine": 9411,
+    "parameters": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "查询日期，YYYY-MM-DD；默认日期与有效范围见接口说明；省略使用当天或最近交易日，范围为一年",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share-index/baseinfo/new-concepts",
+    "title": "同花顺新增概念",
+    "availability": "client-only",
+    "requiredParams": [],
+    "optionalParams": [
+      "page",
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/new-concepts/",
+    "sourceLine": 9553,
+    "parameters": [
+      {
+        "name": "page",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "从1开始的页码",
+        "default": "1"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页1至15条，默认15",
+        "default": "15"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/anomaly/analysis",
+    "title": "日期范围异动解读",
+    "availability": "api-key",
+    "requiredParams": [
+      "begin_date",
+      "end_date"
+    ],
+    "optionalParams": [
+      "thscode"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-anomaly-analysis/",
+    "sourceLine": 9649,
+    "parameters": [
+      {
+        "name": "begin_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "开始日期，格式yyyy-MM-dd。",
+        "default": "—"
+      },
+      {
+        "name": "end_date",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "结束日期，格式yyyy-MM-dd。",
+        "default": "—"
+      },
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "按上游要求提供的同花顺标的编码，格式待核实；省略查询全量。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/article/detail",
+    "title": "资讯详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "client_type",
+      "encoded_seq"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-article-detail/",
+    "sourceLine": 9742,
+    "parameters": [
+      {
+        "name": "client_type",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "客户端类型：WEB、WEB_ENCRYPTED、PC、PC_LIST，不区分大小写。",
+        "default": "—"
+      },
+      {
+        "name": "encoded_seq",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "密文资讯标识。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/events/search",
+    "title": "资讯事件库",
+    "availability": "client-only",
+    "requiredParams": [],
+    "optionalParams": [
+      "query",
+      "search_param",
+      "standard_start_time",
+      "standard_end_time",
+      "event_grading_score",
+      "related_industry_code",
+      "related_concept_code",
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-events/",
+    "sourceLine": 9832,
+    "parameters": [
+      {
+        "name": "query",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "标题或正文关键词，最多 200 个字符。",
+        "default": "—"
+      },
+      {
+        "name": "search_param",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "检索域：`event_name`（标题）或 `event_summary`（正文摘要）。",
+        "default": "event_name"
+      },
+      {
+        "name": "standard_start_time",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "标准时间下界，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "standard_end_time",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "标准时间上界，格式 `yyyy-MM-dd`。",
+        "default": "—"
+      },
+      {
+        "name": "event_grading_score",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "逗号分隔的评级，如 `A,B`。",
+        "default": "—"
+      },
+      {
+        "name": "related_industry_code",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "逗号分隔的关联行业代码。",
+        "default": "—"
+      },
+      {
+        "name": "related_concept_code",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "逗号分隔的关联概念代码。",
+        "default": "—"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "返回条数，范围 `1-100`。",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/flash/list",
+    "title": "快讯列表",
+    "availability": "api-key",
+    "requiredParams": [
+      "tag_id",
+      "seq"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-flash/",
+    "sourceLine": 10080,
+    "parameters": [
+      {
+        "name": "tag_id",
+        "type": "integer",
+        "required": true,
+        "location": "",
+        "description": "快讯栏目ID。",
+        "default": "—"
+      },
+      {
+        "name": "seq",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "不透明序号；快讯首屏传字符串0。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/flash/refresh",
+    "title": "快讯刷新",
+    "availability": "api-key",
+    "requiredParams": [
+      "tag_id",
+      "seq",
+      "create_time_ms"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-flash/",
+    "sourceLine": 10159,
+    "parameters": [
+      {
+        "name": "tag_id",
+        "type": "integer",
+        "required": true,
+        "location": "",
+        "description": "快讯栏目ID。",
+        "default": "—"
+      },
+      {
+        "name": "seq",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "不透明序号；快讯首屏传字符串0。",
+        "default": "—"
+      },
+      {
+        "name": "create_time_ms",
+        "type": "integer",
+        "required": true,
+        "location": "",
+        "description": "客户端已知快讯创建时间，毫秒值须能整除1000。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/notice/detail",
+    "title": "公告详情与解读",
+    "availability": "api-key",
+    "requiredParams": [
+      "seq"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-notice-detail/",
+    "sourceLine": 10251,
+    "parameters": [
+      {
+        "name": "seq",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "不透明序号；快讯首屏传字符串0。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/stock/timeline-list",
+    "title": "个股分时新闻",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode",
+      "offset"
+    ],
+    "optionalParams": [
+      "size"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-stock-timeline/",
+    "sourceLine": 10356,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "完整同花顺代码，例如300033.SZ。",
+        "default": "—"
+      },
+      {
+        "name": "offset",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "分页偏移量，首屏first；后续原样回传。",
+        "default": "—"
+      },
+      {
+        "name": "size",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页条数，范围1至100；省略使用上游行为。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/news/topic/hot-list",
+    "title": "热门深度专题",
+    "availability": "api-key",
+    "requiredParams": [
+      "tab_id"
+    ],
+    "optionalParams": [
+      "cursor",
+      "limit",
+      "important_only"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/news-topics/",
+    "sourceLine": 10443,
+    "parameters": [
+      {
+        "name": "tab_id",
+        "type": "integer",
+        "required": true,
+        "location": "",
+        "description": "热门专题栏目ID。",
+        "default": "—"
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "分页游标，后续查询原样回传。",
+        "default": "—"
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "每页条数，范围1至10。",
+        "default": "10"
+      },
+      {
+        "name": "important_only",
+        "type": "boolean",
+        "required": false,
+        "location": "",
+        "description": "是否只查询重要内容。",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/prices/intraday",
+    "title": "期权分时",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "session",
+      "trade_date"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-prices/",
+    "sourceLine": 10564,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期权合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "session",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "行情阶段：`pre_market`-盘前、`intraday`-盘中、`post_market`-盘后；省略时使用 `intraday`。",
+        "default": "—"
+      },
+      {
+        "name": "trade_date",
+        "type": "string",
+        "required": false,
+        "location": "",
+        "description": "端外仅允许 `0`；AI 客户端内可传 `0` 或合法历史交易日 `yyyyMMdd`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/prices/daily",
+    "title": "期权K线",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [
+      "start",
+      "end",
+      "time_period"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-prices/",
+    "sourceLine": 10625,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期权合约完整同花顺代码。",
+        "default": "—"
+      },
+      {
+        "name": "start",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "与 `end` 成对提供的正毫秒时间戳；两者均省略时查询最近 100 根。",
+        "default": "—"
+      },
+      {
+        "name": "end",
+        "type": "long",
+        "required": false,
+        "location": "",
+        "description": "与 `start` 成对提供的正毫秒时间戳，且不早于 `start`。",
+        "default": "—"
+      },
+      {
+        "name": "time_period",
+        "type": "enum",
+        "required": false,
+        "location": "",
+        "description": "端外仅允许 `day_1`；AI 客户端内可使用 `min_1`、`min_10`、`hour_1`、`day_1`、`week_1`、`month_1`、`quarter_1`、`year_1`。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/contracts/detail",
+    "title": "期权合约详情",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-reference/",
+    "sourceLine": 10706,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期权合约完整同花顺代码。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/contracts/list",
+    "title": "期权合约基础信息列表",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "limit",
+      "offset"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-reference/",
+    "sourceLine": 10778,
+    "parameters": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "单页条数，范围 `1-1000`。",
+        "default": "100"
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false,
+        "location": "",
+        "description": "分页偏移，最小为 `0`。",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/calendar/session-timeline",
+    "title": "期权交易时间轴",
+    "availability": "api-key",
+    "requiredParams": [
+      "thscode"
+    ],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-session-timeline/",
+    "sourceLine": 10863,
+    "parameters": [
+      {
+        "name": "thscode",
+        "type": "string",
+        "required": true,
+        "location": "",
+        "description": "期权合约完整同花顺代码。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/options/varieties/list",
+    "title": "期权品种资料",
+    "availability": "api-key",
+    "requiredParams": [],
+    "optionalParams": [
+      "—"
+    ],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/options-varieties/",
+    "sourceLine": 10919,
+    "parameters": [
+      {
+        "name": "—",
+        "type": "—",
+        "required": false,
+        "location": "",
+        "description": "无业务参数。",
+        "default": "—"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/a-share/special-data/turnover-prediction-snapshot",
+    "title": "市场成交额预测",
+    "availability": "client-only",
+    "requiredParams": [],
+    "optionalParams": [],
+    "pageUrl": "https://fuyao.aicubes.cn/docs/api-reference/turnover-prediction/",
+    "sourceLine": 11036,
+    "parameters": []
+  }
+]

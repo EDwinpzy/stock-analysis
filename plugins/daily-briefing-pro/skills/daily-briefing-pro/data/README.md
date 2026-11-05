@@ -2,9 +2,12 @@
 
 运行中的读写路径由 `scripts/runtime_paths.py` 统一解析，默认在
 `~/.codex/daily-briefing-pro/data/`，也可用 `DAILY_BRIEFING_DATA_DIR` 指定。
-首次运行按“已有持久数据优先”的规则，从旧 Skill 数据目录和当前安装包补齐缺失文件；
-插件升级后，采集快照、历史面板、Cookie 和缓存继续留在同一持久目录。本文中的 `data/`
-文件名均指这个运行数据目录中的相对路径。
+首次运行按“已有持久数据优先”的规则，从旧 Skill 数据目录和当前安装包补齐**长期文件**；
+白名单只含情绪面板/历史、节点与轮动历史、AI摘要缓存、转录缓存和行情缓存，不会把安装包里的
+`*_today.json`、Cookie、登录态或临时交付文件带进新环境。插件升级后，采集快照、历史面板、
+Cookie 和缓存继续留在同一持久目录。本文中的 `data/` 文件名均指这个运行数据目录中的相对路径。
+云端模式（`DAILY_BRIEFING_CLOUD=1`）不自动迁移安装包内的历史基线，必须先用
+`deploy/cloud/seed-data.ps1` 显式同步长期数据，避免旧面板或旧轮动历史冒充当前云端状态。
 
 ## 采集脚本写出的当日快照
 
@@ -98,8 +101,9 @@ JSON 中备查，渲染层已屏蔽，避免一个页面出现两个“温度”
 
 ## 板块轮动数据（rotation_today.json）
 
-来自用户的**行业轮动模型 v2.0.0**（目录由 `ROTATION_MODEL_DIR` 指定，默认在
-`D:\Codex\2026-09-15\referenced-chatgpt-conversation-this-is-an\outputs\sw_rotation_model`）：
+来自用户的**行业轮动模型 v2.0.0**（优先读取 `ROTATION_MODEL_DIR`，其次读取插件根目录的
+`models/sw_rotation_model`；Windows 开发机才识别历史固定路径）。云端必须挂载可写模型工作目录，
+因为采集会更新模型 `data/`，预测会写 `outputs/`：
 
 | 字段 | 内容 |
 |---|---|
@@ -110,8 +114,8 @@ JSON 中备查，渲染层已屏蔽，避免一个页面出现两个“温度”
 | `train_last` / `train_rows` | 模型的训练截止日与样本数（来自 `predict_manifest`） |
 
 调用方式：`python scripts/fetch_rotation.py [--date YYYY-MM-DD] [--refresh]`。
-脚本只调 `run.py predict` 并读 `outputs/`，**不改模型代码与参数，也不会覆盖模型目录
-里的历史产物**。模型目录缺失时该板块如实显示“数据获取失败”。
+脚本调用 `run.py predict` 并读 `outputs/`，**不改模型代码与参数**；行情刷新和预测产物只写模型
+工作副本。模型目录或原始行情缺失时，运行前预检会阻断，不能拿旧 `rotation_today.json` 冒充实时排行。
 
 口径提醒（与模型 README 一致，已写进简报）：模型只提供**排序**，分数不是上涨
 概率；T+1 换手成本过高不可用，有效周期在 T+3 / T+5。

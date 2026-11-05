@@ -21,8 +21,44 @@ def codex_available() -> bool:
     return bool(shutil.which('codex'))
 
 
+def codex_logged_in() -> bool:
+    """Return whether the installed Codex CLI has a usable login.
+
+    A binary on PATH alone is not enough in a cloud container: an unauthenticated
+    CLI used to pass the availability check and then fail after collection had
+    already run. Only the stable login-status exit code is used; command output
+    is deliberately not returned so local diagnostics cannot leak elsewhere.
+    """
+    executable = shutil.which('codex')
+    if not executable or not codex_available():
+        return False
+    try:
+        result = subprocess.run(
+            [executable, 'login', 'status'],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
+def semantic_summary_status() -> tuple[bool, str]:
+    """Return availability plus a non-secret configuration source."""
+    if os.environ.get('DEEPSEEK_API_KEY') or os.environ.get('OPENAI_API_KEY'):
+        return True, 'api-key'
+    if codex_logged_in():
+        return True, 'codex-login'
+    if codex_available():
+        return False, 'codex-cli-not-logged-in'
+    return False, 'missing-api-key-or-codex-login'
+
+
 def semantic_summary_available() -> bool:
-    return bool(os.environ.get('DEEPSEEK_API_KEY') or os.environ.get('OPENAI_API_KEY')) or codex_available()
+    return semantic_summary_status()[0]
 
 
 def call_codex_json(prompt: str, schema: dict, timeout: int = 180) -> dict:

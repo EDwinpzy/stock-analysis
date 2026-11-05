@@ -20,7 +20,7 @@ metadata:
     - A股个股分析
     - 个股行情
     - K线
-    version: 3.23.11
+    version: 3.23.14
     author: Codex
     dependencies:
       python: '>=3.12'
@@ -86,9 +86,12 @@ metadata:
 | 大小周期节点票 | `scripts/build_node_cycle.py`；模型实现见 `scripts/node_cycle_model.py` | 简报内嵌嵌套时间轴、节点精简表与证据等级 |
 | 报刊风（纸张质感）版式 | `scripts/build_broadsheet.py`；样式资产 `templates/broadsheet.css` | 同数据的报刊版 HTML（纸感 + 双栏长表） |
 
-路径约定：脚本和静态资源从本 Skill 根目录读取；运行数据统一由 `scripts/runtime_paths.py` 管理，默认保存到 `~/.codex/daily-briefing-pro/data/`，可通过 `DAILY_BRIEFING_DATA_DIR` 覆盖。首次运行会把旧 Skill 目录和当前安装包中缺少的文件迁入持久目录，已有持久数据优先保留。不要从用户目录按旧 Skill 名称拼接脚本路径，也不要保留同名脚本副本。
+路径约定：脚本和静态资源从本 Skill 根目录读取；运行数据统一由 `scripts/runtime_paths.py` 管理，默认保存到 `~/.codex/daily-briefing-pro/data/`，可通过 `DAILY_BRIEFING_DATA_DIR` 覆盖。首次运行只把旧 Skill 目录和当前安装包中的长期文件迁入持久目录，已有持久数据优先保留；`*_today.json`、Cookie、登录态和临时交付文件不参与迁移。不要从用户目录按旧 Skill 名称拼接脚本路径，也不要保留同名脚本副本。
+云端模式（`DAILY_BRIEFING_CLOUD=1`）不自动迁移安装包内的历史基线，必须用 `deploy/cloud/seed-data.ps1` 显式同步长期数据；否则预检会因面板或历史缺失而阻断。
 
-插件执行入口为本 Skill 目录内的 `scripts/run_all.py`。在源码项目中维护时，使用 `plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/run_all.py`；不要修改安装缓存。定时运行加 `--scheduled`：先用同花顺交易所日历核验，非交易日跳过；日历缺失或未覆盖目标日则报错，不用星期推断节假日。
+插件执行入口为本 Skill 目录内的 `scripts/run_all.py`。普通运行会先执行 `scripts/runtime_preflight.py`，缺模型、历史面板、AI凭证、抖音转录环境、平台Cookie、同花顺认证或可写目录时在采集前阻断；只检查不采集使用 `--preflight-only`。在源码项目中维护时，使用 `plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/run_all.py`；不要修改安装缓存。定时运行加 `--scheduled`：先用同花顺交易所日历核验，非交易日跳过；日历缺失或未覆盖目标日则报错，不用星期推断节假日。
+
+行业轮动模型优先从 `ROTATION_MODEL_DIR` 读取，其次读取插件根目录 `models/sw_rotation_model`。模型工作目录必须可写，因为行情刷新和预测会更新它的 `data/` 与 `outputs/`；缺少原始 `run.py`、配置或行情文件时不得用旧排行结果代替计算。
 
 安装插件后，在本 Skill 目录执行 `python scripts/run_all.py --scheduled`。源码项目另提供 `tools/run_daily_briefing.py` 启动器，从任意工作目录调用项目源码并固定 UTF-8 编码与项目报告目录；此项目启动器不属于插件安装包。恢复指定日期已采集数据时使用 `--date YYYY-MM-DD --resume`，日期和逐模块完整性校验仍执行，不能把其他日期的数据当成本日结果。
 
@@ -844,6 +847,15 @@ playwright install chromium
 ---
 
 ## 更新日志
+
+### v3.23.14 (2026-11-05)
+
+- 保留已发布的 `market-query` 1.1.0 扶摇云行情与自选分组能力；本版只叠加每日简报的云端一致性修复，不覆盖行情技能更新。
+- 新增运行前预检：模型、历史面板、AI、抖音转录路径（本地 Whisper 或 API Key）、平台 Cookie、同花顺 CLI、行情日期和可写目录一次性检查；普通运行缺必选项时在采集前阻断，`--preflight-only` 可单独查看结构化结果。
+- `--resume` 在编译前复用逐模块完整性校验，缺日期数据、未完成转录或未核验来源时直接阻断，不再等到 HTML 编译阶段才发现。
+- 行业轮动模型改为环境变量和插件内 `models/sw_rotation_model` 的确定性路径，不再扫描整个 `D:\Codex`；云端使用可写模型工作卷，缺少原始模型时明确失败而不是拿旧排行结果重画。
+- 持久数据迁移和云端种子共用同一长期文件白名单，只同步面板、节点/轮动历史、AI缓存、转录缓存和行情缓存；`*_today.json`、Cookie、登录态和临时交付文件不再进入干净云端目录。
+- 修正 Compose Cookie secret 的目标文件名，使 `/run/secrets/*.json` 与实际读取路径一致；新增 `seed-data.ps1`、模型卷和云端预检说明。
 
 ### v3.23.11 (2026-10-14)
 

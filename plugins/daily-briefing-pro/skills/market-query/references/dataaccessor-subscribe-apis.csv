@@ -1,0 +1,7 @@
+"name","description","parameters","fields","pushShape"
+"SubscribeRealtime","实时行情差量推送。","securities, fields","[6,7,8,9,10,13,55,199112,264648]","{ [market+code]: { [changedFieldId:string]: value } }"
+"SubscribeIntradayCandle","单证券日内 K 线增量推送。","securities(单只), fields, period?, adjustType?","[1,7,8,9,11,13,19]","{ [market+code]: Array<row> }"
+"SubscribeIntradayTrend","单证券盘中分时增量推送。","securities(单只), fields","[1,10,13,19]","{ [market+code]: Array<row> }"
+"SubscribeTrend","单证券通用分时增量推送。","securities(单只), fields, tradeClass","[1,10,13,19]","{ [market+code]: Array<row> }"
+"SubscribeIntradayTick","单证券盘中逐笔增量推送。","securities(单只), fields","[1,10,12,18,49]","{ [market+code]: Array<row> }"
+"SubscribeTick","单证券通用逐笔增量推送。","securities(单只), fields, tradeClass","[1,10,12,18,49]","{ [market+code]: Array<row> }"

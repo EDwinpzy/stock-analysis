@@ -24,6 +24,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta, time as datetime_time
 from pathlib import Path
+from typing import Iterable, Mapping
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
@@ -35,23 +36,47 @@ HISTORY_PATH = DATA_DIR / "rotation_history.json"
 ASOF_RE = re.compile(r"\bas of (\d{4}-\d{2}-\d{2})\b", re.IGNORECASE)
 
 CN = timezone(timedelta(hours=8))
-MODEL_DIR_CANDIDATES = [
-    os.environ.get("ROTATION_MODEL_DIR", ""),
-    r"D:\Codex\2026-09-15\referenced-chatgpt-conversation-this-is-an\outputs\sw_rotation_model",
-]
+LEGACY_WINDOWS_MODEL_DIR = Path(
+    r"D:\Codex\2026-09-15\referenced-chatgpt-conversation-this-is-an\outputs\sw_rotation_model"
+)
 
 
-def find_model_dir() -> Path | None:
-    for candidate in MODEL_DIR_CANDIDATES:
+def model_dir_candidates(
+    base_dir: Path | None = None,
+    env: Mapping[str, str] | None = None,
+) -> list[Path]:
+    """Return deterministic model locations, without scanning unrelated drives."""
+    package_root = Path(base_dir or BASE_DIR)
+    values = env if env is not None else os.environ
+    candidates: list[Path] = []
+    seen: set[str] = set()
+
+    def add(value: str | Path | None) -> None:
+        if not value:
+            return
+        path = Path(value).expanduser()
+        key = str(path.resolve(strict=False)).casefold()
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append(path)
+
+    add(values.get("ROTATION_MODEL_DIR"))
+    add(package_root / "models" / "sw_rotation_model")
+    add(package_root.parent / "models" / "sw_rotation_model")
+    if sys.platform.startswith("win"):
+        add(LEGACY_WINDOWS_MODEL_DIR)
+    return candidates
+
+
+def find_model_dir(candidates: Iterable[str | Path] | None = None) -> Path | None:
+    """Find a runnable model directory using explicit, package-relative paths."""
+    for candidate in candidates if candidates is not None else model_dir_candidates():
         if not candidate:
             continue
-        path = Path(candidate)
-        if (path / "run.py").exists() and (path / "config.json").exists():
+        path = Path(candidate).expanduser()
+        if (path / "run.py").is_file() and (path / "config.json").is_file():
             return path
-    root = Path("D:/Codex")
-    if root.exists():
-        for config in root.glob("*/*/outputs/sw_rotation_model/config.json"):
-            return config.parent
     return None
 
 
@@ -337,7 +362,10 @@ def main() -> None:
     if model_dir is None:
         json.dump({
             "date": args.date, "status": "error", "entries": [],
-            "note": "未找到行业轮动模型目录（可用环境变量 ROTATION_MODEL_DIR 指定）",
+            "note": (
+                "未找到行业轮动模型目录；请把 sw_rotation_model 放入插件 models/，"
+                "或用环境变量 ROTATION_MODEL_DIR 指定"
+            ),
         }, sys.stdout, ensure_ascii=False, indent=2)
         return
 

@@ -1,0 +1,3005 @@
+{
+  "generatedAt": "2026-11-05T06:48:15.6736967Z",
+  "application": "同花顺远航版 / Lumi 1.0.69",
+  "transport": "Electron preload -> IPC -> Windows named pipe -> 同花顺客户端 PipeServer",
+  "requestApis": [
+    {
+      "name": "RequestRealtimeDataAsync",
+      "family": "realtime",
+      "description": "通用实时行情；盘中默认入口。",
+      "mcpTool": "realtime_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "{ [market+code]: { [fieldId:string]: number|string|null } }"
+    },
+    {
+      "name": "RequestIntradayRealtimeDataAsync",
+      "family": "realtime",
+      "description": "盘中实时行情。",
+      "mcpTool": "realtime_query（MCP 目录工具未暴露 api 变体参数）",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestRealtimeDataAsync"
+    },
+    {
+      "name": "RequestPreMarketRealtimeDataAsync",
+      "family": "realtime",
+      "description": "盘前实时行情。",
+      "mcpTool": "realtime_query（MCP 目录工具未暴露 api 变体参数）",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestRealtimeDataAsync"
+    },
+    {
+      "name": "RequestPostMarketRealtimeDataAsync",
+      "family": "realtime",
+      "description": "盘后实时行情。",
+      "mcpTool": "realtime_query（MCP 目录工具未暴露 api 变体参数）",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestRealtimeDataAsync"
+    },
+    {
+      "name": "RequestCandleDataAsync",
+      "family": "candle",
+      "description": "K 线查询，支持日/周/月和分钟周期。",
+      "mcpTool": "candle_query",
+      "parameters": [
+        {
+          "type": "Array<{market,code}>",
+          "description": "仅允许一只证券。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "5=日、11=周、12=月、15=1分、16=5分、17=15分、18=30分、19=60分。",
+          "name": "period",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "0=不复权、1=前复权、2=后复权，默认 0。",
+          "name": "adjustType",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "{ [market+code]: Array<{ time:number, [fieldId:string]: value }> }"
+    },
+    {
+      "name": "RequestTrendDataAsync",
+      "family": "trend",
+      "description": "通用分时，可指定交易时段和历史交易日。",
+      "mcpTool": "trend_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "2=盘前、1=盘中、3=盘后。",
+          "name": "tradeClass",
+          "required": true
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "{ [market+code]: Array<{ time:number, [fieldId:string]: number }> }"
+    },
+    {
+      "name": "RequestIntradayTrendDataAsync",
+      "family": "trend",
+      "description": "盘中分时快捷入口。",
+      "mcpTool": "trend_query（api 默认值）",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "{ [market+code]: Array<{ time:number, [fieldId:string]: number }> }"
+    },
+    {
+      "name": "RequestPreMarketTrendDataAsync",
+      "family": "trend",
+      "description": "盘前分时快捷入口。",
+      "mcpTool": "trend_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestIntradayTrendDataAsync"
+    },
+    {
+      "name": "RequestPostMarketTrendDataAsync",
+      "family": "trend",
+      "description": "盘后分时快捷入口。",
+      "mcpTool": "trend_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestIntradayTrendDataAsync"
+    },
+    {
+      "name": "RequestCallAuctionDataAsync",
+      "family": "trend",
+      "description": "集合竞价分时。",
+      "mcpTool": "trend_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        }
+      ],
+      "responseShape": "同 RequestIntradayTrendDataAsync"
+    },
+    {
+      "name": "RequestTickDataAsync",
+      "family": "tick",
+      "description": "通用逐笔，可指定交易时段。",
+      "mcpTool": "tick_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "文档口径：0=盘前、1=盘中、2=盘后。",
+          "name": "tradeClass",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "最新 N 条，默认 100；与 timeRange 二选一。",
+          "name": "count",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "{ [market+code]: Array<{ time:number, [fieldId:string]: number }> }"
+    },
+    {
+      "name": "RequestIntradayTickDataAsync",
+      "family": "tick",
+      "description": "盘中逐笔快捷入口。",
+      "mcpTool": "tick_query（api 默认值）",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "最新 N 条，默认 100；与 timeRange 二选一。",
+          "name": "count",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "{ [market+code]: Array<{ time:number, [fieldId:string]: number }> }"
+    },
+    {
+      "name": "RequestPreMarketTickDataAsync",
+      "family": "tick",
+      "description": "盘前逐笔快捷入口。",
+      "mcpTool": "tick_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "最新 N 条，默认 100；与 timeRange 二选一。",
+          "name": "count",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "同 RequestIntradayTickDataAsync"
+    },
+    {
+      "name": "RequestPostMarketTickDataAsync",
+      "family": "tick",
+      "description": "盘后逐笔快捷入口。",
+      "mcpTool": "tick_query",
+      "parameters": [
+        {
+          "type": "Array<{market:string, code:string}>",
+          "description": "证券列表；market/code 必须来自 SearchSecuritiesAsync 或可信配置。",
+          "name": "securities",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "数字 FieldID 数组；不接受字符串字段名。",
+          "name": "fields",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "最新 N 条，默认 100；与 timeRange 二选一。",
+          "name": "count",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "支持 offset + toLatest、beginTime/endTime、tradeDate。",
+          "name": "timeRange",
+          "required": false
+        }
+      ],
+      "responseShape": "同 RequestIntradayTickDataAsync"
+    },
+    {
+      "name": "RequestSortDataAsync",
+      "family": "sort",
+      "description": "按板块返回排序后的证券代码列表。",
+      "mcpTool": "sort_query",
+      "parameters": [
+        {
+          "type": "number",
+          "description": "板块 ID，如 14=沪深A股、50854=全部A股。",
+          "name": "block",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "排序 FieldID；涨跌幅用 199112。",
+          "name": "sortField",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "0=升序、1=降序。",
+          "name": "sortOrder",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "分页偏移，从 0 开始。",
+          "name": "offset",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "分页大小，最大 200。",
+          "name": "count",
+          "required": true
+        },
+        {
+          "type": "number[]",
+          "description": "排除板块，如 55301=ST。",
+          "name": "excludeBlocks",
+          "required": false
+        }
+      ],
+      "responseShape": "{ total:number, items:Array<{security:string}> }"
+    },
+    {
+      "name": "SearchSecuritiesAsync",
+      "family": "search",
+      "description": "把代码、中文名或拼音解析成 market+code。",
+      "mcpTool": "search_securities",
+      "parameters": [
+        {
+          "type": "string",
+          "description": "搜索关键词。",
+          "name": "keyword",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "最大返回数量，默认 20。",
+          "name": "limit",
+          "required": false
+        }
+      ],
+      "responseShape": "Array<{security,name,code,market}>"
+    },
+    {
+      "name": "SearchBlocksAsync",
+      "family": "search",
+      "description": "按名称模糊搜索客户端市场/行业/概念板块。",
+      "mcpTool": "search_blocks",
+      "parameters": [
+        {
+          "type": "string",
+          "description": "板块名称关键词。",
+          "name": "keyword",
+          "required": true
+        },
+        {
+          "type": "number",
+          "description": "默认 50，范围 1-200。",
+          "name": "limit",
+          "required": false
+        }
+      ],
+      "responseShape": "{ data:Array<{id,idHex,name}>, total:number }"
+    },
+    {
+      "name": "HttpGetAsync",
+      "family": "http",
+      "description": "经客户端管道代理的 GET。DataHub 接口依赖此通道复用登录态。",
+      "mcpTool": "http_get",
+      "parameters": [
+        {
+          "type": "string",
+          "description": "完整 GET URL。",
+          "name": "url",
+          "required": true
+        },
+        {
+          "type": "object",
+          "description": "可选请求头；不要传入或读取 Cookie。",
+          "name": "headers",
+          "required": false
+        }
+      ],
+      "responseShape": "业务方原始响应；MCP 中常为 JSON 字符串。"
+    },
+    {
+      "name": "HttpPostAsync",
+      "family": "http",
+      "description": "经客户端管道代理的 POST。",
+      "mcpTool": "http_post",
+      "parameters": [
+        {
+          "type": "string",
+          "description": "完整 POST URL。",
+          "name": "url",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "原始请求体。",
+          "name": "body",
+          "required": false
+        },
+        {
+          "type": "object",
+          "description": "可选请求头。",
+          "name": "headers",
+          "required": false
+        }
+      ],
+      "responseShape": "业务方原始响应。"
+    },
+    {
+      "name": "GetCookie",
+      "family": "auth",
+      "description": "内部登录态辅助接口；仅出现在接口目录，当前 MCP 不提供，也不应提取或输出 Cookie。",
+      "mcpTool": null,
+      "parameters": [],
+      "responseShape": "敏感登录凭据，不在交付范围内。",
+      "supportedForReuse": false
+    }
+  ],
+  "subscribeApis": [
+    {
+      "parameters": "securities, fields",
+      "description": "实时行情差量推送。",
+      "name": "SubscribeRealtime",
+      "fields": "[6,7,8,9,10,13,55,199112,264648]",
+      "pushShape": "{ [market+code]: { [changedFieldId:string]: value } }"
+    },
+    {
+      "parameters": "securities(单只), fields, period?, adjustType?",
+      "description": "单证券日内 K 线增量推送。",
+      "name": "SubscribeIntradayCandle",
+      "fields": "[1,7,8,9,11,13,19]",
+      "pushShape": "{ [market+code]: Array<row> }"
+    },
+    {
+      "parameters": "securities(单只), fields",
+      "description": "单证券盘中分时增量推送。",
+      "name": "SubscribeIntradayTrend",
+      "fields": "[1,10,13,19]",
+      "pushShape": "{ [market+code]: Array<row> }"
+    },
+    {
+      "parameters": "securities(单只), fields, tradeClass",
+      "description": "单证券通用分时增量推送。",
+      "name": "SubscribeTrend",
+      "fields": "[1,10,13,19]",
+      "pushShape": "{ [market+code]: Array<row> }"
+    },
+    {
+      "parameters": "securities(单只), fields",
+      "description": "单证券盘中逐笔增量推送。",
+      "name": "SubscribeIntradayTick",
+      "fields": "[1,10,12,18,49]",
+      "pushShape": "{ [market+code]: Array<row> }"
+    },
+    {
+      "parameters": "securities(单只), fields, tradeClass",
+      "description": "单证券通用逐笔增量推送。",
+      "name": "SubscribeTick",
+      "fields": "[1,10,12,18,49]",
+      "pushShape": "{ [market+code]: Array<row> }"
+    }
+  ],
+  "mcpTools": [
+    {
+      "name": "candle_query",
+      "summary": "查询单只证券的原始 OHLCV/K 线数据（日/周/月/分钟）；已有标准指标时优先使用 indicator_query",
+      "args": [
+        "securities",
+        "fields",
+        "period",
+        "adjustType",
+        "timeRange"
+      ],
+      "description": "Get raw OHLCV K-line (candlestick) data for one security. Securities market+code MUST come from search_securities.\nReturns: { \"USHA600519\": [{ time: UnixSec, \"11\": close, \"7\": open, \"8\": high, \"9\": low, ... }] }\nFields: 1=时间（Unix秒） 7=开盘 8=最高 9=最低 11=收盘 13=总量（成交量） 19=成交额.\nFor standard technical indicators already supported by indicator_query (MA, EMA, MACD, RSI, BOLL, ATR, KDJ, and similar), use indicator_query first and avoid calculating or manually deriving them from these candles. Fall back to raw-candle calculation only when the standard capability is unavailable or the user explicitly requests a custom calculation.\nDo NOT use for historical TopN/extreme-day ranking (e.g. 历史涨幅最大的几天); use wencai_query hithink-market-query instead to avoid bulk K-line fetch + local sorting.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "securities": {
+            "minItems": 1,
+            "maxItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market": {
+                  "type": "string",
+                  "description": "Market code from search_securities result, e.g. \"USHA\", \"USZA\", \"USBA\". NEVER guess — always from search_securities."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Security code from search_securities result, e.g. \"600519\". NEVER guess."
+                }
+              },
+              "required": [
+                "market",
+                "code"
+              ]
+            },
+            "description": "Exactly one security to query. market+code from search_securities."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "FieldID array. Typical K-line: [1,7,8,9,11,13,19]"
+          },
+          "period": {
+            "type": "number",
+            "description": "K-line period: 5=日K 11=周K 12=月K 15=1分 16=5分 17=15分 18=30分 19=60分"
+          },
+          "adjustType": {
+            "default": 0,
+            "description": "Price adjustment: 0=不复权 1=前复权 2=后复权",
+            "type": "number"
+          },
+          "timeRange": {
+            "type": "object",
+            "properties": {
+              "offset": {
+                "description": "Number of bars from the end (e.g. 60 = last 60 bars)",
+                "type": "number"
+              },
+              "toLatest": {
+                "description": "true = count from latest bar",
+                "type": "boolean"
+              },
+              "beginTime": {
+                "description": "Start Unix seconds",
+                "type": "number"
+              },
+              "endTime": {
+                "description": "End Unix seconds",
+                "type": "number"
+              },
+              "tradeDate": {
+                "description": "Specific trading date YYYYMMDD (e.g. 20240601)",
+                "type": "number"
+              }
+            },
+            "description": "Time range. Use { offset: 60, toLatest: true } for last 60 bars, or { beginTime, endTime } for absolute range"
+          }
+        },
+        "required": [
+          "securities",
+          "fields",
+          "period",
+          "timeRange"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.candle",
+      "source": "native"
+    },
+    {
+      "name": "client_exec_script",
+      "summary": "在受限沙箱里执行客户端编排脚本（多步取数/操作的自定义组合）",
+      "args": [
+        "script",
+        "params",
+        "executionId",
+        "waitMs"
+      ],
+      "description": "执行 JavaScript 客户端操作流程，支持页面就绪检查、分支和循环。基本 helper：clientCall(name,argsObj)、dataCall(name,argsObj)、searchSecurities(args)、realtimeQuery(args)；params 为脚本入参。命名和模式限制见指南。使用本工具前，必须通过 read_doc({\"tools\":[\"client-script-guide\"]}) 完整阅读编写指南，并遵循其中的案例选择和执行规则。当前会话已完整读取且仍适用时，无需重复读取。该标识为文档 ID，不是本地路径；读取失败时先解决文档访问问题，不跳过指南直接执行。提交 script + params；交互式任务最多等待 6 秒，未完成返回 running + executionId。收到 running 后用本工具仅传 executionId 查询原执行，直到终态，不重复提交脚本。提交和查询均可选 waitMs（0–6000 整数，默认 6000）；0 立即返回状态，不取消脚本。completed 仅表示脚本返回，不代表业务成功。",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "script": {
+            "description": "提交时必填：异步函数体；查询时不传",
+            "type": "string",
+            "minLength": 1
+          },
+          "params": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "executionId": {
+            "description": "查询已有执行；不重新提交 script",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "waitMs": {
+            "description": "提交或查询时使用，默认等待 6000ms；0 立即返回状态，不取消脚本",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6000
+          }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "script": {
+                "type": "string",
+                "minLength": 1
+              },
+              "params": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "executionId": {
+                "not": {}
+              },
+              "waitMs": {
+                "description": "提交或查询时使用，默认等待 6000ms；0 立即返回状态，不取消脚本",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6000
+              }
+            },
+            "required": [
+              "script"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "script": {
+                "not": {}
+              },
+              "params": {
+                "not": {}
+              },
+              "executionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "waitMs": {
+                "description": "提交或查询时使用，默认等待 6000ms；0 立即返回状态，不取消脚本",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6000
+              }
+            },
+            "required": [
+              "executionId"
+            ]
+          }
+        ]
+      },
+      "invocation": "direct",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "client.script",
+      "source": "native"
+    },
+    {
+      "name": "data_subscribe",
+      "summary": "订阅实时数据流，收到首帧推送后返回并自动退订",
+      "args": [
+        "api",
+        "parameters",
+        "timeout_ms"
+      ],
+      "description": "Subscribe to real-time data stream, wait for first push, return it, then auto-unsubscribe.\nSecurities market+code MUST come from search_securities.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "api": {
+            "type": "string",
+            "enum": [
+              "SubscribeRealtime",
+              "SubscribeIntradayCandle",
+              "SubscribeIntradayTrend",
+              "SubscribeTrend",
+              "SubscribeIntradayTick",
+              "SubscribeTick"
+            ],
+            "description": "Subscribe API name"
+          },
+          "parameters": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Subscription parameters (securities, fields, etc.)"
+          },
+          "timeout_ms": {
+            "default": 10000,
+            "description": "Max wait for first push in ms (default 10000)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "api",
+          "parameters"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.subscribe",
+      "source": "native"
+    },
+    {
+      "name": "http_get",
+      "summary": "经管道桥接的通用 HTTP GET（DataHub、涨跌分布等场景，须先读对应契约）",
+      "args": [
+        "url",
+        "headers"
+      ],
+      "description": "Generic HTTP GET proxied through the named pipe bridge. Used for documented GET APIs including DataHub and rise/fall distribution statistics (涨跌分布统计、上涨/下跌家数分布、红绿盘结构).\nGuardrail for DataHub: first load the datahub-lumi Skill and read the target snapshot contract. Use only published GET endpoints and do not read or manually set Cookie headers.\nGuardrail for rise/fall distribution: first call read_doc with data-apis/reference/rise-fall-statistics and follow that doc exactly. If you have not read that doc in this turn, do NOT call http_get for this scenario and do NOT guess URL parameters from memory or examples.\nRise/fall URL: https://apigate.10jqka.com.cn/d/platform/marketinfo/overview/distribution/v3?date=YYYYMMDD",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Full URL to GET"
+          },
+          "headers": {
+            "description": "Optional request headers, e.g. { \"Authorization\": \"Bearer <token>\" }",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "client.http-get",
+      "source": "native"
+    },
+    {
+      "name": "http_post",
+      "summary": "经管道桥接的通用 HTTP POST（带请求体，同 http_get 链路）",
+      "args": [
+        "url",
+        "body",
+        "headers"
+      ],
+      "description": "Generic HTTP POST proxied through the named pipe bridge (mirrors http_get but carries a request body).\nForwards to the client-side pipe server (HttpPostAsync) which performs the actual HTTP POST.\nUse for endpoints that require a POST body (JSON-RPC, form submit, upstream APIs that only accept POST).\nSame pipe as http_get: requires the app to be launched with --pipe-name; otherwise pipeGuard blocks it.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Full URL to POST to"
+          },
+          "body": {
+            "description": "Request body as a raw string (JSON / form-encoded / etc.)",
+            "type": "string"
+          },
+          "headers": {
+            "description": "Optional request headers, e.g. { \"Content-Type\": \"application/json\" }",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "client.http-post",
+      "source": "native"
+    },
+    {
+      "name": "indicator_query",
+      "summary": "服务端计算常用标准技术指标并返回结构化结果，不操作当前图表；已有 K 线时也应优先使用本工具，避免 Agent 手工重算",
+      "args": [
+        "securities",
+        "period",
+        "indicators",
+        "adjust",
+        "mode",
+        "bars"
+      ],
+      "description": "Calculate common technical indicators on the server and return structured values. Use this for MA, EMA, MACD, RSI, KDJ, BOLL, ATR, OBV, volume MA, volume ratio, and amplitude. latest returns only the newest value; series returns a bounded sequence. Uses a fixed 750-bar finite replay; history reports warmup coverage before the first output. Insufficient warmup may affect recursive values. OBV is relative to history.startTime, not an all-history total. This tool is read-only and never applies indicators to the chart. Use generateIndicator for chart application.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "securities": {
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32,
+                  "description": "标准市场码；必须先通过 search_securities 确认，禁止猜测或使用简称"
+                },
+                "code": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32,
+                  "description": "证券代码；必须与 search_securities 返回的 market 一起使用，禁止猜测"
+                }
+              },
+              "required": [
+                "market",
+                "code"
+              ]
+            },
+            "description": "证券列表；调用前必须先使用 search_securities 确认每个 market/code，可一次计算多只证券"
+          },
+          "period": {
+            "default": "day",
+            "description": "K 线周期；支持 1min/5min/15min/30min/60min/day/week/month",
+            "type": "string",
+            "enum": [
+              "1min",
+              "5min",
+              "15min",
+              "30min",
+              "60min",
+              "day",
+              "week",
+              "month"
+            ]
+          },
+          "indicators": {
+            "minItems": 1,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "MA5",
+                "MA10",
+                "MA20",
+                "MA30",
+                "MA60",
+                "MA120",
+                "MA200",
+                "EMA12",
+                "EMA26",
+                "MACD",
+                "RSI6",
+                "RSI14",
+                "KDJ",
+                "BOLL",
+                "ATR14",
+                "OBV",
+                "VOL_MA5",
+                "VOL_MA10",
+                "量比",
+                "振幅"
+              ]
+            },
+            "description": "指标列表；服务端直接返回计算结果，不要自行读取 K 线复算"
+          },
+          "adjust": {
+            "default": "forward",
+            "description": "复权方式：none 不复权，forward 前复权，backward 后复权",
+            "type": "string",
+            "enum": [
+              "none",
+              "forward",
+              "backward"
+            ]
+          },
+          "mode": {
+            "default": "latest",
+            "description": "latest 只返回最新一根；series 返回最近 bars 根结果",
+            "type": "string",
+            "enum": [
+              "latest",
+              "series"
+            ]
+          },
+          "bars": {
+            "default": 1,
+            "description": "series 输出根数；latest 模式固定只返回最新值",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 250
+          }
+        },
+        "required": [
+          "securities",
+          "indicators"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.indicator-calculation",
+      "source": "native"
+    },
+    {
+      "name": "read_doc",
+      "summary": "按需加载受信任的 MCP 工具操作文档与调用链规则",
+      "args": [
+        "tools"
+      ],
+      "description": "按需加载受信任的 MCP Tool 操作文档、调用链和边界规则。文档 ID 必须来自 Tool description、client_list 或内置文档索引；禁止传入文件路径。",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Document IDs to load, e.g. [\"addDrawingTool\", \"call-chains\", \"finance-router/composite-query\"]."
+          }
+        },
+        "required": [
+          "tools"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "tool.documentation",
+      "source": "native"
+    },
+    {
+      "name": "realtime_query",
+      "summary": "查询证券实时行情字段（最新价、涨跌幅、成交量等）",
+      "args": [
+        "securities",
+        "fields"
+      ],
+      "description": "Get real-time quotes for securities. Securities market+code MUST come from search_securities.\nReturns: { \"USHA600519\": { \"10\": 1856.00, \"55\": \"贵州茅台\", \"199112\": 2.68, ... } }\nField keys are strings. Common fields:\n5=证券代码 55=名称 6=昨收 7=开盘 8=最高 9=最低 10=最新价 13=成交量 19=成交额 54=均价\n69=涨停板 70=跌停板 199112=涨幅% 264648=涨跌值 1968584=换手% 1771976=量比 526792=振幅% 3541450=总市值 3475914=流通市值",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "securities": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market": {
+                  "type": "string",
+                  "description": "Market code from search_securities result, e.g. \"USHA\", \"USZA\", \"USBA\". NEVER guess — always from search_securities."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Security code from search_securities result, e.g. \"600519\". NEVER guess."
+                }
+              },
+              "required": [
+                "market",
+                "code"
+              ]
+            },
+            "description": "Securities to query. market+code from search_securities."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "FieldID array. Common: [6,7,8,9,10,13,19,55,199112,264648]"
+          }
+        },
+        "required": [
+          "securities",
+          "fields"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.quote",
+      "source": "native"
+    },
+    {
+      "name": "search_blocks",
+      "summary": "按名称模糊搜索板块树，返回板块 ID",
+      "args": [
+        "keyword",
+        "limit"
+      ],
+      "description": "Fuzzy-search the client's current block tree by block name and return block IDs.\nUse this before APIs that require a block ID when the ID is not already known. This searches market/industry/concept block definitions, not user-defined sectors.\nReturns: { success, data: [{ id, idHex, name }], total }. id is decimal; idHex is hexadecimal.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Block name keyword, e.g. \"黄金\" or \"人工智能\""
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum matches (default 50, max 200)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [
+          "keyword"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.block-search",
+      "source": "native"
+    },
+    {
+      "name": "search_fields",
+      "summary": "按数据类型搜索 DataAccessor 字段目录，返回查询工具使用的数字 FieldID",
+      "args": [
+        "data_type",
+        "query",
+        "limit"
+      ],
+      "description": "Search the local field catalog for one DataAccessor query type and return numeric FieldIDs.\nUse before realtime_query, candle_query, trend_query, or tick_query when the required FieldID is unknown.\nThe catalog is local and does not require the client pipe. Results contain id, label, value_type, and data_type; existing query tools continue to accept numeric FieldIDs only.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "data_type": {
+            "type": "string",
+            "enum": [
+              "realtime",
+              "candle",
+              "trend",
+              "tick"
+            ],
+            "description": "Field catalog to search: realtime, candle, trend, or tick."
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "FieldID, field label, or field meaning to search for."
+          },
+          "limit": {
+            "default": 10,
+            "description": "Maximum matches to return (default 10, max 50).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "data_type",
+          "query"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.field-search",
+      "source": "native"
+    },
+    {
+      "name": "search_securities",
+      "summary": "把代码/中文名/拼音解析为 {market, code}，所有行情工具的前置",
+      "args": [
+        "keyword",
+        "keywords",
+        "limit"
+      ],
+      "description": "Resolve security identifiers (code / Chinese name / pinyin) to {market, code} pairs. MUST be called before any other data tool when you don't already have market+code.\n\nWhen you need to resolve N identifiers (N indices / stocks / ETFs in one query), pass them ALL in ONE call via 'keywords' array — N parallel resolves, 1 Anthropic round trip. NEVER emit N separate search_securities calls. Legacy single 'keyword' remains supported for compatibility.\n\nReturns: { success, data: { results: [{ keyword: \"贵州茅台\", hits: [{ security, name, code, market }], error? }, ...] } }.\nLegacy keyword without a non-empty keywords array returns data as a hit array. Empty hits are successful; any failed keyword sets success:false while preserving other hits.\nUse returned market+code for subsequent queries. NEVER construct market+code manually.\n\nExamples:\n- Legacy single: { keyword: \"贵州茅台\" }\n- Single batch form: { keywords: [\"贵州茅台\"] }\n- Batch:  { keywords: [\"上证指数\",\"深证成指\",\"创业板指\",\"沪深300\",\"科创50\"] }",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "description": "Legacy single search keyword. Supported for backward compatibility.",
+            "type": "string"
+          },
+          "keywords": {
+            "description": "Array of search keywords. Each: stock code / Chinese name / pinyin.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit": {
+            "default": 3,
+            "description": "Max hits per keyword (default 3)",
+            "type": "number"
+          }
+        }
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.security-search",
+      "source": "native"
+    },
+    {
+      "name": "sort_query",
+      "summary": "按板块范围取排行榜（涨幅榜/跌幅榜等）证券列表",
+      "args": [
+        "block",
+        "sortField",
+        "sortOrder",
+        "offset",
+        "count",
+        "excludeBlocks"
+      ],
+      "description": "Get ranked security code list (涨幅榜, 跌幅榜, etc). No need for search_securities — uses block ID to define scope.\nParse security: market = first 4 chars, code = rest (e.g. \"USHA600519\" → market:\"USHA\", code:\"600519\").",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "number",
+            "description": "Block ID: 14=沪深A股 21=沪市 27=深市 50854=全部含北交所 210=A股指数"
+          },
+          "sortField": {
+            "type": "number",
+            "description": "FieldID to sort by. 199112=涨跌幅 13=成交量 19=成交额 10=最新价"
+          },
+          "sortOrder": {
+            "type": "number",
+            "description": "0=升序(跌幅榜) 1=降序(涨幅榜)"
+          },
+          "offset": {
+            "type": "number",
+            "description": "Pagination offset, starting from 0"
+          },
+          "count": {
+            "type": "number",
+            "maximum": 200,
+            "description": "Page size, max 200"
+          },
+          "excludeBlocks": {
+            "description": "Block IDs to exclude. [55301]=排除ST [52197]=排除科创",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "block",
+          "sortField",
+          "sortOrder",
+          "offset",
+          "count"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.ranking",
+      "source": "native"
+    },
+    {
+      "name": "tick_query",
+      "summary": "查询逐笔成交数据（价格、量、买卖方向）",
+      "args": [
+        "securities",
+        "fields",
+        "count",
+        "api"
+      ],
+      "description": "Get tick-by-tick transaction data (逐笔成交). Securities market+code MUST come from search_securities.\nReturns: { \"USHA600519\": [{ time: UnixSec, \"1\": unixTimestamp, \"10\": price, \"49\": volume, \"12\": direction, \"18\": tradeCount }] }\nField keys are strings. Fields: 1=date_time(秒级时间戳) 10=最新价 12=volclass买卖方向(1=卖盘,5=买盘,16=大单买,17=大单卖,21=特大单买) 18=成交次数(累计) 49=成交量(现量). Recommended: [1,10,12,18,49].\nNote: return 'time' and field \"1\" are Unix SECONDS. Active stocks can have tens of thousands of ticks per day — default count:100 is safe for most use cases.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "securities": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market": {
+                  "type": "string",
+                  "description": "Market code from search_securities result, e.g. \"USHA\", \"USZA\", \"USBA\". NEVER guess — always from search_securities."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Security code from search_securities result, e.g. \"600519\". NEVER guess."
+                }
+              },
+              "required": [
+                "market",
+                "code"
+              ]
+            },
+            "description": "Securities to query. market+code from search_securities."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "FieldID array. Recommended: [1,10,12,18,49]. 1=date_time(sec) 10=最新价 12=volclass 18=成交次数 49=成交量(现量)"
+          },
+          "count": {
+            "default": 100,
+            "description": "Number of latest ticks to return (default 100)",
+            "type": "number"
+          },
+          "api": {
+            "default": "RequestIntradayTickDataAsync",
+            "description": "Tick API variant. Default is intraday.",
+            "type": "string",
+            "enum": [
+              "RequestIntradayTickDataAsync",
+              "RequestTickDataAsync",
+              "RequestPreMarketTickDataAsync",
+              "RequestPostMarketTickDataAsync"
+            ]
+          }
+        },
+        "required": [
+          "securities",
+          "fields"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.tick",
+      "source": "native"
+    },
+    {
+      "name": "trend_query",
+      "summary": "查询分时走势数据（当日或多日分时）",
+      "args": [
+        "securities",
+        "fields",
+        "api",
+        "tradeClass",
+        "tradeDate"
+      ],
+      "description": "Get intraday trend (分时) data. Securities market+code MUST come from search_securities.\nReturns: { \"USHA600519\": [{ time: UnixSec, \"10\": price, \"13\": volume, \"19\": amount }] }\nFields: 1=时间（Unix秒） 10=最新价 13=成交量 19=成交额. Data points are at 60-second intervals.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "securities": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market": {
+                  "type": "string",
+                  "description": "Market code from search_securities result, e.g. \"USHA\", \"USZA\", \"USBA\". NEVER guess — always from search_securities."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Security code from search_securities result, e.g. \"600519\". NEVER guess."
+                }
+              },
+              "required": [
+                "market",
+                "code"
+              ]
+            },
+            "description": "Securities to query. market+code from search_securities."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "FieldID array. Typical: [1,10,13,19]"
+          },
+          "api": {
+            "default": "RequestIntradayTrendDataAsync",
+            "description": "Trend API variant. Default is intraday.",
+            "type": "string",
+            "enum": [
+              "RequestIntradayTrendDataAsync",
+              "RequestTrendDataAsync",
+              "RequestPreMarketTrendDataAsync",
+              "RequestPostMarketTrendDataAsync",
+              "RequestCallAuctionDataAsync"
+            ]
+          },
+          "tradeClass": {
+            "description": "For RequestTrendDataAsync only: 1=intraday 2=pre-market 3=post-market",
+            "type": "number"
+          },
+          "tradeDate": {
+            "description": "For historical trend: YYYYMMDD (e.g. 20240601)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "securities",
+          "fields"
+        ]
+      },
+      "invocation": "tool_execute",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.intraday",
+      "source": "native"
+    },
+    {
+      "name": "wencai_query",
+      "summary": "问财结构化查询（21 个 skill：财务、行情筛选、宏观、基金、选股等）",
+      "args": [
+        "skillId",
+        "query",
+        "page",
+        "limit"
+      ],
+      "description": "Query 同花顺问财 OpenAPI /v1/query2data (21 skills, structured tabular data).\nReturns { datas: [...], columns: [...], row_count, status_code }. Use datas[] only — query/chunks_info are GBK garbage.\nUse for market-wide screening/count queries (有多少股票满足X、筛出X、涨幅大于昨天跌幅、放量突破、连涨等); do not emulate these by fetching realtime/candle data for the whole market.\nUse for single-security historical TopN/extreme-day queries (历史涨幅最大的几天、跌幅最大、成交量/振幅/换手率最高日期); prefer this over bulk candle_query + local sorting.\nPick skillId by topic:\n  finance / business / event / management / market / industry / zhishu(指数) / macro / fund / futures / basicinfo / insresearch(研报评级 + ESG)\n  + selector类: sector / cb(可转债) / etf / fund / fundcompany / fundmanager / hkstock / usstock / futures\nQuery language: standardized Chinese financial terms (\"600519.SH 2025三季度ROE\")，not colloquial (\"茅台赚了多少\").\nFor single-stock/company questions, pass the stock/company name directly with the metric/event when known (e.g. \"浦发银行 2025三季度ROE\"), without first resolving or inventing a security code.\nAuth + headers + trace-id auto-handled. UTF-8 throughout.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "enum": [
+              "hithink-basicinfo-query",
+              "hithink-finance-query",
+              "hithink-industry-query",
+              "hithink-business-query",
+              "hithink-event-query",
+              "hithink-management-query",
+              "hithink-market-query",
+              "hithink-zhishu-query",
+              "hithink-insresearch-query",
+              "hithink-macro-query",
+              "hithink-fund-query",
+              "hithink-futures-query",
+              "hithink-sector-selector",
+              "hithink-cb-selector",
+              "hithink-etf-selector",
+              "hithink-fund-selector",
+              "hithink-fundcompany-selector",
+              "hithink-fundmanager-selector",
+              "hithink-hkstock-selector",
+              "hithink-usstock-selector",
+              "hithink-futures-selector"
+            ],
+            "description": "问财 skill_id (21 enum values)"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Standardized query in Chinese financial terms"
+          },
+          "page": {
+            "default": 1,
+            "description": "Page number, default 1",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "default": 10,
+            "description": "Page size, default 10, max 100",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "skillId",
+          "query"
+        ]
+      },
+      "invocation": "direct",
+      "readiness": {
+        "status": "unknown"
+      },
+      "capability": "finance.structured-query",
+      "source": "native"
+    }
+  ],
+  "fieldCatalogs": {
+    "realtime": [
+      {
+        "字段ID": "5",
+        "类型": "string",
+        "说明": "证券代码"
+      },
+      {
+        "字段ID": "55",
+        "类型": "string",
+        "说明": "证券名称"
+      },
+      {
+        "字段ID": "6",
+        "类型": "double",
+        "说明": "昨日收盘"
+      },
+      {
+        "字段ID": "7",
+        "类型": "double",
+        "说明": "开盘价"
+      },
+      {
+        "字段ID": "8",
+        "类型": "double",
+        "说明": "最高价"
+      },
+      {
+        "字段ID": "9",
+        "类型": "double",
+        "说明": "最低价"
+      },
+      {
+        "字段ID": "10",
+        "类型": "double",
+        "说明": "最新价"
+      },
+      {
+        "字段ID": "17",
+        "类型": "double",
+        "说明": "开盘成交量"
+      },
+      {
+        "字段ID": "13",
+        "类型": "double",
+        "说明": "成交量"
+      },
+      {
+        "字段ID": "19",
+        "类型": "double",
+        "说明": "成交金额"
+      },
+      {
+        "字段ID": "18",
+        "类型": "int",
+        "说明": "成交次数"
+      },
+      {
+        "字段ID": "12",
+        "类型": "int",
+        "说明": "成交量分类"
+      },
+      {
+        "字段ID": "14",
+        "类型": "double",
+        "说明": "外盘成交量"
+      },
+      {
+        "字段ID": "15",
+        "类型": "double",
+        "说明": "内盘成交量"
+      },
+      {
+        "字段ID": "24",
+        "类型": "double",
+        "说明": "委托买入价格一"
+      },
+      {
+        "字段ID": "25",
+        "类型": "double",
+        "说明": "委托买入数量一"
+      },
+      {
+        "字段ID": "26",
+        "类型": "double",
+        "说明": "委托买入价格二"
+      },
+      {
+        "字段ID": "27",
+        "类型": "double",
+        "说明": "委托买入数量二"
+      },
+      {
+        "字段ID": "28",
+        "类型": "double",
+        "说明": "委托买入价格三"
+      },
+      {
+        "字段ID": "29",
+        "类型": "double",
+        "说明": "委托买入数量三"
+      },
+      {
+        "字段ID": "30",
+        "类型": "double",
+        "说明": "委托卖出价格一"
+      },
+      {
+        "字段ID": "31",
+        "类型": "double",
+        "说明": "委托卖出数量一"
+      },
+      {
+        "字段ID": "32",
+        "类型": "double",
+        "说明": "委托卖出价格二"
+      },
+      {
+        "字段ID": "33",
+        "类型": "double",
+        "说明": "委托卖出数量二"
+      },
+      {
+        "字段ID": "34",
+        "类型": "double",
+        "说明": "委托卖出价格三"
+      },
+      {
+        "字段ID": "35",
+        "类型": "double",
+        "说明": "委托卖出数量三"
+      },
+      {
+        "字段ID": "49",
+        "类型": "double",
+        "说明": "最近一笔成交量（现手）"
+      },
+      {
+        "字段ID": "45",
+        "类型": "double",
+        "说明": "五日成交总量"
+      },
+      {
+        "字段ID": "80",
+        "类型": "double",
+        "说明": "应计利息"
+      },
+      {
+        "字段ID": "150",
+        "类型": "double",
+        "说明": "委托买入价格四"
+      },
+      {
+        "字段ID": "151",
+        "类型": "double",
+        "说明": "委托买入数量四"
+      },
+      {
+        "字段ID": "152",
+        "类型": "double",
+        "说明": "委托卖出价格四"
+      },
+      {
+        "字段ID": "153",
+        "类型": "double",
+        "说明": "委托卖出数量四"
+      },
+      {
+        "字段ID": "154",
+        "类型": "double",
+        "说明": "委托买入价格五"
+      },
+      {
+        "字段ID": "155",
+        "类型": "double",
+        "说明": "委托买入数量五"
+      },
+      {
+        "字段ID": "156",
+        "类型": "double",
+        "说明": "委托卖出价格五"
+      },
+      {
+        "字段ID": "157",
+        "类型": "double",
+        "说明": "委托卖出数量五"
+      },
+      {
+        "字段ID": "91",
+        "类型": "double",
+        "说明": "市盈率"
+      },
+      {
+        "字段ID": "81",
+        "类型": "double",
+        "说明": "LOF动态净值"
+      },
+      {
+        "字段ID": "48",
+        "类型": "double",
+        "说明": "五分钟涨跌幅"
+      },
+      {
+        "字段ID": "69",
+        "类型": "double",
+        "说明": "涨停板"
+      },
+      {
+        "字段ID": "70",
+        "类型": "double",
+        "说明": "跌停板"
+      },
+      {
+        "字段ID": "233",
+        "类型": "double",
+        "说明": "资金流入"
+      },
+      {
+        "字段ID": "234",
+        "类型": "double",
+        "说明": "资金流出"
+      },
+      {
+        "字段ID": "130",
+        "类型": "double",
+        "说明": "质押式回购实际占款天数"
+      },
+      {
+        "字段ID": "127",
+        "类型": "string",
+        "说明": "业务状态"
+      },
+      {
+        "字段ID": "54",
+        "类型": "double",
+        "说明": "均价"
+      },
+      {
+        "字段ID": "85",
+        "类型": "string",
+        "说明": "产品状态标志"
+      },
+      {
+        "字段ID": "287",
+        "类型": "double",
+        "说明": "未撮合成交量/早盘未匹配量"
+      },
+      {
+        "字段ID": "294",
+        "类型": "double",
+        "说明": "流通变化"
+      },
+      {
+        "字段ID": "295",
+        "类型": "double",
+        "说明": "CDR证券转换基数"
+      },
+      {
+        "字段ID": "296",
+        "类型": "double",
+        "说明": "基础证券转换基数"
+      },
+      {
+        "字段ID": "74",
+        "类型": "double",
+        "说明": "盘后成交量"
+      },
+      {
+        "字段ID": "75",
+        "类型": "double",
+        "说明": "盘后成交次数"
+      },
+      {
+        "字段ID": "141",
+        "类型": "double",
+        "说明": "匹配成交价"
+      },
+      {
+        "字段ID": "102",
+        "类型": "double",
+        "说明": "委托买入价格六"
+      },
+      {
+        "字段ID": "103",
+        "类型": "double",
+        "说明": "委托买入数量六"
+      },
+      {
+        "字段ID": "104",
+        "类型": "double",
+        "说明": "委托卖出价格六"
+      },
+      {
+        "字段ID": "105",
+        "类型": "double",
+        "说明": "委托卖出数量六"
+      },
+      {
+        "字段ID": "106",
+        "类型": "double",
+        "说明": "委托买入价格七"
+      },
+      {
+        "字段ID": "107",
+        "类型": "double",
+        "说明": "委托买入数量七"
+      },
+      {
+        "字段ID": "108",
+        "类型": "double",
+        "说明": "委托卖出价格七"
+      },
+      {
+        "字段ID": "109",
+        "类型": "double",
+        "说明": "委托卖出数量七"
+      },
+      {
+        "字段ID": "110",
+        "类型": "double",
+        "说明": "委托买入价格八"
+      },
+      {
+        "字段ID": "111",
+        "类型": "double",
+        "说明": "委托买入数量八"
+      },
+      {
+        "字段ID": "112",
+        "类型": "double",
+        "说明": "委托卖出价格八"
+      },
+      {
+        "字段ID": "113",
+        "类型": "double",
+        "说明": "委托卖出数量八"
+      },
+      {
+        "字段ID": "114",
+        "类型": "double",
+        "说明": "委托买入价格九"
+      },
+      {
+        "字段ID": "115",
+        "类型": "double",
+        "说明": "委托买入数量九"
+      },
+      {
+        "字段ID": "116",
+        "类型": "double",
+        "说明": "委托卖出价格九"
+      },
+      {
+        "字段ID": "117",
+        "类型": "double",
+        "说明": "委托卖出数量九"
+      },
+      {
+        "字段ID": "118",
+        "类型": "double",
+        "说明": "委托买入价格十"
+      },
+      {
+        "字段ID": "119",
+        "类型": "double",
+        "说明": "委托买入数量十"
+      },
+      {
+        "字段ID": "120",
+        "类型": "double",
+        "说明": "委托卖出价格十"
+      },
+      {
+        "字段ID": "121",
+        "类型": "double",
+        "说明": "委托卖出数量十"
+      },
+      {
+        "字段ID": "122",
+        "类型": "double",
+        "说明": "平均委买价"
+      },
+      {
+        "字段ID": "123",
+        "类型": "double",
+        "说明": "总委买量"
+      },
+      {
+        "字段ID": "124",
+        "类型": "double",
+        "说明": "平均委卖价"
+      },
+      {
+        "字段ID": "125",
+        "类型": "double",
+        "说明": "总委卖量"
+      },
+      {
+        "字段ID": "201",
+        "类型": "double",
+        "说明": "主动买入特大单量"
+      },
+      {
+        "字段ID": "202",
+        "类型": "double",
+        "说明": "主动卖出特大单量"
+      },
+      {
+        "字段ID": "203",
+        "类型": "double",
+        "说明": "主动买入大单量"
+      },
+      {
+        "字段ID": "204",
+        "类型": "double",
+        "说明": "主动卖出大单量"
+      },
+      {
+        "字段ID": "205",
+        "类型": "double",
+        "说明": "主动买入中单量"
+      },
+      {
+        "字段ID": "206",
+        "类型": "double",
+        "说明": "主动卖出中单量"
+      },
+      {
+        "字段ID": "207",
+        "类型": "double",
+        "说明": "被动买入特大单量"
+      },
+      {
+        "字段ID": "208",
+        "类型": "double",
+        "说明": "被动卖出特大单量"
+      },
+      {
+        "字段ID": "209",
+        "类型": "double",
+        "说明": "被动买入大单量"
+      },
+      {
+        "字段ID": "210",
+        "类型": "double",
+        "说明": "被动卖出大单量"
+      },
+      {
+        "字段ID": "211",
+        "类型": "double",
+        "说明": "被动买入中单量"
+      },
+      {
+        "字段ID": "212",
+        "类型": "double",
+        "说明": "被动卖出中单量"
+      },
+      {
+        "字段ID": "213",
+        "类型": "double",
+        "说明": "主动买入小单量"
+      },
+      {
+        "字段ID": "214",
+        "类型": "double",
+        "说明": "主动卖出小单量"
+      },
+      {
+        "字段ID": "215",
+        "类型": "double",
+        "说明": "主动买入特大单笔数"
+      },
+      {
+        "字段ID": "216",
+        "类型": "double",
+        "说明": "主动卖出特大单笔数"
+      },
+      {
+        "字段ID": "217",
+        "类型": "double",
+        "说明": "主动买入大单笔数"
+      },
+      {
+        "字段ID": "218",
+        "类型": "double",
+        "说明": "主动卖出大单笔数"
+      },
+      {
+        "字段ID": "219",
+        "类型": "double",
+        "说明": "被动买入特大单笔数"
+      },
+      {
+        "字段ID": "220",
+        "类型": "double",
+        "说明": "被动卖出特大单笔数"
+      },
+      {
+        "字段ID": "221",
+        "类型": "double",
+        "说明": "被动买入大单笔数"
+      },
+      {
+        "字段ID": "222",
+        "类型": "double",
+        "说明": "被动卖出大单笔数"
+      },
+      {
+        "字段ID": "223",
+        "类型": "double",
+        "说明": "主动买入特大单金额"
+      },
+      {
+        "字段ID": "224",
+        "类型": "double",
+        "说明": "主动卖出特大单金额"
+      },
+      {
+        "字段ID": "225",
+        "类型": "double",
+        "说明": "主动买入大单金额"
+      },
+      {
+        "字段ID": "226",
+        "类型": "double",
+        "说明": "主动卖出大单金额"
+      },
+      {
+        "字段ID": "227",
+        "类型": "double",
+        "说明": "被动买入特大单金额"
+      },
+      {
+        "字段ID": "228",
+        "类型": "double",
+        "说明": "被动卖出特大单金额"
+      },
+      {
+        "字段ID": "229",
+        "类型": "double",
+        "说明": "被动买入大单金额"
+      },
+      {
+        "字段ID": "230",
+        "类型": "double",
+        "说明": "被动卖出大单金额"
+      },
+      {
+        "字段ID": "231",
+        "类型": "double",
+        "说明": "买入单数量"
+      },
+      {
+        "字段ID": "232",
+        "类型": "double",
+        "说明": "卖出单数量"
+      },
+      {
+        "字段ID": "259",
+        "类型": "double",
+        "说明": "主动买入中单金额"
+      },
+      {
+        "字段ID": "260",
+        "类型": "double",
+        "说明": "主动卖出中单金额"
+      },
+      {
+        "字段ID": "261",
+        "类型": "double",
+        "说明": "被动买入中单金额"
+      },
+      {
+        "字段ID": "262",
+        "类型": "double",
+        "说明": "被动卖出中单金额"
+      },
+      {
+        "字段ID": "250",
+        "类型": "double",
+        "说明": "买五量"
+      },
+      {
+        "字段ID": "251",
+        "类型": "double",
+        "说明": "卖五量"
+      },
+      {
+        "字段ID": "252",
+        "类型": "double",
+        "说明": "买十量"
+      },
+      {
+        "字段ID": "253",
+        "类型": "double",
+        "说明": "卖十量"
+      },
+      {
+        "字段ID": "83",
+        "类型": "string",
+        "说明": "证券简称前缀"
+      },
+      {
+        "字段ID": "237",
+        "类型": "double",
+        "说明": "主动买入小单金额"
+      },
+      {
+        "字段ID": "238",
+        "类型": "double",
+        "说明": "主动卖出小单金额"
+      },
+      {
+        "字段ID": "131",
+        "类型": "double",
+        "说明": "买一笔数"
+      },
+      {
+        "字段ID": "181",
+        "类型": "double",
+        "说明": "卖一笔数"
+      },
+      {
+        "字段ID": "132",
+        "类型": "double",
+        "说明": "买二笔数"
+      },
+      {
+        "字段ID": "182",
+        "类型": "double",
+        "说明": "卖二笔数"
+      },
+      {
+        "字段ID": "133",
+        "类型": "double",
+        "说明": "买三笔数"
+      },
+      {
+        "字段ID": "183",
+        "类型": "double",
+        "说明": "卖三笔数"
+      },
+      {
+        "字段ID": "134",
+        "类型": "double",
+        "说明": "买四笔数"
+      },
+      {
+        "字段ID": "184",
+        "类型": "double",
+        "说明": "卖四笔数"
+      },
+      {
+        "字段ID": "135",
+        "类型": "double",
+        "说明": "买五笔数"
+      },
+      {
+        "字段ID": "185",
+        "类型": "double",
+        "说明": "卖五笔数"
+      },
+      {
+        "字段ID": "136",
+        "类型": "double",
+        "说明": "买六笔数"
+      },
+      {
+        "字段ID": "186",
+        "类型": "double",
+        "说明": "卖六笔数"
+      },
+      {
+        "字段ID": "137",
+        "类型": "double",
+        "说明": "买七笔数"
+      },
+      {
+        "字段ID": "187",
+        "类型": "double",
+        "说明": "卖七笔数"
+      },
+      {
+        "字段ID": "138",
+        "类型": "double",
+        "说明": "买八笔数"
+      },
+      {
+        "字段ID": "188",
+        "类型": "double",
+        "说明": "卖八笔数"
+      },
+      {
+        "字段ID": "139",
+        "类型": "double",
+        "说明": "买九笔数"
+      },
+      {
+        "字段ID": "189",
+        "类型": "double",
+        "说明": "卖九笔数"
+      },
+      {
+        "字段ID": "140",
+        "类型": "double",
+        "说明": "买十笔数"
+      },
+      {
+        "字段ID": "190",
+        "类型": "double",
+        "说明": "卖十笔数"
+      },
+      {
+        "字段ID": "264",
+        "类型": "double",
+        "说明": "买入撤单笔数"
+      },
+      {
+        "字段ID": "265",
+        "类型": "double",
+        "说明": "买入撤单量"
+      },
+      {
+        "字段ID": "266",
+        "类型": "double",
+        "说明": "买入撤单金额"
+      },
+      {
+        "字段ID": "268",
+        "类型": "double",
+        "说明": "卖出撤单笔数"
+      },
+      {
+        "字段ID": "269",
+        "类型": "double",
+        "说明": "卖出撤单量"
+      },
+      {
+        "字段ID": "270",
+        "类型": "double",
+        "说明": "卖出撤单金额"
+      },
+      {
+        "字段ID": "195",
+        "类型": "double",
+        "说明": "买入总笔数"
+      },
+      {
+        "字段ID": "196",
+        "类型": "double",
+        "说明": "卖出总笔数"
+      },
+      {
+        "字段ID": "197",
+        "类型": "double",
+        "说明": "买方委托价位数"
+      },
+      {
+        "字段ID": "198",
+        "类型": "double",
+        "说明": "卖方委托价位数"
+      },
+      {
+        "字段ID": "191",
+        "类型": "double",
+        "说明": "买入委托成交最大等待时间"
+      },
+      {
+        "字段ID": "192",
+        "类型": "double",
+        "说明": "卖出委托成交最大等待时间"
+      },
+      {
+        "字段ID": "193",
+        "类型": "double",
+        "说明": "委买前五档量"
+      },
+      {
+        "字段ID": "194",
+        "类型": "double",
+        "说明": "委卖前五档量"
+      },
+      {
+        "字段ID": "288",
+        "类型": "double",
+        "说明": "ETF申购笔数"
+      },
+      {
+        "字段ID": "290",
+        "类型": "double",
+        "说明": "ETF申购数量"
+      },
+      {
+        "字段ID": "291",
+        "类型": "double",
+        "说明": "ETF申购金额"
+      },
+      {
+        "字段ID": "292",
+        "类型": "double",
+        "说明": "ETF赎回笔数"
+      },
+      {
+        "字段ID": "297",
+        "类型": "double",
+        "说明": "ETF赎回数量"
+      },
+      {
+        "字段ID": "298",
+        "类型": "double",
+        "说明": "ETF赎回金额"
+      },
+      {
+        "字段ID": "84",
+        "类型": "string",
+        "说明": "所属行业"
+      },
+      {
+        "字段ID": "941948930",
+        "类型": "string",
+        "说明": "最相关概念"
+      },
+      {
+        "字段ID": "461256",
+        "类型": "double",
+        "说明": "委比%"
+      },
+      {
+        "字段ID": "68762",
+        "类型": "double",
+        "说明": "竞价涨幅%"
+      },
+      {
+        "字段ID": "68759",
+        "类型": "double",
+        "说明": "匹配价"
+      },
+      {
+        "字段ID": "199714",
+        "类型": "double",
+        "说明": "今昨早盘竞价量比值"
+      },
+      {
+        "字段ID": "68763",
+        "类型": "double",
+        "说明": "早盘竞价量"
+      },
+      {
+        "字段ID": "68758",
+        "类型": "double",
+        "说明": "早盘竞价金额"
+      },
+      {
+        "字段ID": "134075",
+        "类型": "double",
+        "说明": "早盘未匹配金额"
+      },
+      {
+        "字段ID": "199711",
+        "类型": "double",
+        "说明": "尾盘竞价量"
+      },
+      {
+        "字段ID": "199710",
+        "类型": "double",
+        "说明": "尾盘竞价金额"
+      },
+      {
+        "字段ID": "199713",
+        "类型": "double",
+        "说明": "尾盘未匹配量"
+      },
+      {
+        "字段ID": "199712",
+        "类型": "double",
+        "说明": "尾盘未匹配金额"
+      },
+      {
+        "字段ID": "2427336",
+        "类型": "double",
+        "说明": "均笔额"
+      },
+      {
+        "字段ID": "1640904",
+        "类型": "double",
+        "说明": "手/笔"
+      },
+      {
+        "字段ID": "330329",
+        "类型": "string",
+        "说明": "涨停状态"
+      },
+      {
+        "字段ID": "330325",
+        "类型": "string",
+        "说明": "涨停类型"
+      },
+      {
+        "字段ID": "134299",
+        "类型": "double",
+        "说明": "盘后额"
+      },
+      {
+        "字段ID": "592544",
+        "类型": "double",
+        "说明": "贡献度"
+      },
+      {
+        "字段ID": "592946",
+        "类型": "double",
+        "说明": "多空比"
+      },
+      {
+        "字段ID": "461346",
+        "类型": "double",
+        "说明": "年初至今"
+      },
+      {
+        "字段ID": "134193",
+        "类型": "double",
+        "说明": "现均差%"
+      },
+      {
+        "字段ID": "134198",
+        "类型": "double",
+        "说明": "内外比"
+      },
+      {
+        "字段ID": "527527",
+        "类型": "double",
+        "说明": "1分钟涨速"
+      },
+      {
+        "字段ID": "527526",
+        "类型": "double",
+        "说明": "3分钟涨速"
+      },
+      {
+        "字段ID": "3934664",
+        "类型": "double",
+        "说明": "5分钟涨速"
+      },
+      {
+        "字段ID": "461438",
+        "类型": "double",
+        "说明": "10分钟涨速"
+      },
+      {
+        "字段ID": "199123",
+        "类型": "double",
+        "说明": "委买"
+      },
+      {
+        "字段ID": "199124",
+        "类型": "double",
+        "说明": "委卖"
+      },
+      {
+        "字段ID": "402",
+        "类型": "double",
+        "说明": "总股本"
+      },
+      {
+        "字段ID": "407",
+        "类型": "double",
+        "说明": "流通股本"
+      },
+      {
+        "字段ID": "1670",
+        "类型": "double",
+        "说明": "股东人数"
+      },
+      {
+        "字段ID": "1509847",
+        "类型": "double",
+        "说明": "人均持股数"
+      },
+      {
+        "字段ID": "2946",
+        "类型": "double",
+        "说明": "市盈(静)"
+      },
+      {
+        "字段ID": "3153",
+        "类型": "double",
+        "说明": "TTM市盈率"
+      },
+      {
+        "字段ID": "2947",
+        "类型": "double",
+        "说明": "市净率"
+      },
+      {
+        "字段ID": "723604",
+        "类型": "double",
+        "说明": "净利润"
+      },
+      {
+        "字段ID": "134141",
+        "类型": "double",
+        "说明": "净利润同比"
+      },
+      {
+        "字段ID": "1015",
+        "类型": "double",
+        "说明": "净资产收益率"
+      },
+      {
+        "字段ID": "2034121",
+        "类型": "double",
+        "说明": "资产负债率"
+      },
+      {
+        "字段ID": "1002",
+        "类型": "double",
+        "说明": "每股收益"
+      },
+      {
+        "字段ID": "1005",
+        "类型": "double",
+        "说明": "每股净资产"
+      },
+      {
+        "字段ID": "2740",
+        "类型": "double",
+        "说明": "每股未分配利润"
+      },
+      {
+        "字段ID": "625362",
+        "类型": "double",
+        "说明": "每股公积金"
+      },
+      {
+        "字段ID": "410",
+        "类型": "double",
+        "说明": "流通B股"
+      },
+      {
+        "字段ID": "2718",
+        "类型": "double",
+        "说明": "流通比例"
+      },
+      {
+        "字段ID": "543",
+        "类型": "double",
+        "说明": "资产总计"
+      },
+      {
+        "字段ID": "520",
+        "类型": "double",
+        "说明": "流动资产"
+      },
+      {
+        "字段ID": "602",
+        "类型": "double",
+        "说明": "主营收入"
+      },
+      {
+        "字段ID": "593",
+        "类型": "double",
+        "说明": "公积金"
+      },
+      {
+        "字段ID": "609",
+        "类型": "double",
+        "说明": "财务费用"
+      },
+      {
+        "字段ID": "507",
+        "类型": "double",
+        "说明": "应收账款"
+      },
+      {
+        "字段ID": "514",
+        "类型": "double",
+        "说明": "存货"
+      },
+      {
+        "字段ID": "611",
+        "类型": "double",
+        "说明": "投资收益"
+      },
+      {
+        "字段ID": "664",
+        "类型": "double",
+        "说明": "扣非净利润"
+      },
+      {
+        "字段ID": "574",
+        "类型": "double",
+        "说明": "未分配利润"
+      },
+      {
+        "字段ID": "603",
+        "类型": "double",
+        "说明": "主营业务成本"
+      },
+      {
+        "字段ID": "592889",
+        "类型": "double",
+        "说明": "散户数量"
+      },
+      {
+        "字段ID": "331070",
+        "类型": "double",
+        "说明": "今日增仓占比%"
+      },
+      {
+        "字段ID": "331078",
+        "类型": "double",
+        "说明": "3日增仓占比%"
+      },
+      {
+        "字段ID": "331068",
+        "类型": "double",
+        "说明": "净流入"
+      },
+      {
+        "字段ID": "68552",
+        "类型": "double",
+        "说明": "大单净额占比%"
+      },
+      {
+        "字段ID": "68553",
+        "类型": "double",
+        "说明": "中单净额占比%"
+      },
+      {
+        "字段ID": "68554",
+        "类型": "double",
+        "说明": "小单净额占比%"
+      },
+      {
+        "字段ID": "1603",
+        "类型": "string",
+        "说明": "上市日期"
+      },
+      {
+        "字段ID": "133673",
+        "类型": "double",
+        "说明": "特大单买入金额"
+      },
+      {
+        "字段ID": "133674",
+        "类型": "double",
+        "说明": "特大单卖出金额"
+      },
+      {
+        "字段ID": "133675",
+        "类型": "double",
+        "说明": "大单买入金额"
+      },
+      {
+        "字段ID": "133676",
+        "类型": "double",
+        "说明": "大单卖出金额"
+      },
+      {
+        "字段ID": "133677",
+        "类型": "double",
+        "说明": "中单买入金额"
+      },
+      {
+        "字段ID": "133678",
+        "类型": "double",
+        "说明": "中单卖出金额"
+      },
+      {
+        "字段ID": "133679",
+        "类型": "double",
+        "说明": "小单买入金额"
+      },
+      {
+        "字段ID": "133680",
+        "类型": "double",
+        "说明": "小单卖出金额"
+      },
+      {
+        "字段ID": "3204",
+        "类型": "double",
+        "说明": "大单净额"
+      },
+      {
+        "字段ID": "3211",
+        "类型": "double",
+        "说明": "中单净额"
+      },
+      {
+        "字段ID": "133681",
+        "类型": "double",
+        "说明": "特大单买入量"
+      },
+      {
+        "字段ID": "133660",
+        "类型": "double",
+        "说明": "特大单卖出量"
+      },
+      {
+        "字段ID": "133661",
+        "类型": "double",
+        "说明": "大单买入量"
+      },
+      {
+        "字段ID": "133662",
+        "类型": "double",
+        "说明": "大单卖出量"
+      },
+      {
+        "字段ID": "133669",
+        "类型": "double",
+        "说明": "中单买入量"
+      },
+      {
+        "字段ID": "133670",
+        "类型": "double",
+        "说明": "中单卖出量"
+      },
+      {
+        "字段ID": "133671",
+        "类型": "double",
+        "说明": "小单买入量"
+      },
+      {
+        "字段ID": "133672",
+        "类型": "double",
+        "说明": "小单卖出量"
+      },
+      {
+        "字段ID": "615",
+        "类型": "double",
+        "说明": "利润总额"
+      },
+      {
+        "字段ID": "199112",
+        "类型": "double",
+        "说明": "涨幅%"
+      },
+      {
+        "字段ID": "264648",
+        "类型": "double",
+        "说明": "涨跌"
+      },
+      {
+        "字段ID": "592890",
+        "类型": "double",
+        "说明": "主力净额"
+      },
+      {
+        "字段ID": "592888",
+        "类型": "double",
+        "说明": "主力净量"
+      },
+      {
+        "字段ID": "1771976",
+        "类型": "double",
+        "说明": "量比"
+      },
+      {
+        "字段ID": "3541450",
+        "类型": "double",
+        "说明": "总市值"
+      },
+      {
+        "字段ID": "3475914",
+        "类型": "double",
+        "说明": "流通市值"
+      },
+      {
+        "字段ID": "1968584",
+        "类型": "double",
+        "说明": "换手%"
+      },
+      {
+        "字段ID": "526792",
+        "类型": "double",
+        "说明": "振幅%"
+      },
+      {
+        "字段ID": "2942",
+        "类型": "double",
+        "说明": "市盈(动)"
+      },
+      {
+        "字段ID": "2820564",
+        "类型": "double",
+        "说明": "内盘"
+      },
+      {
+        "字段ID": "3250",
+        "类型": "double",
+        "说明": "5日涨幅%"
+      },
+      {
+        "字段ID": "3251",
+        "类型": "double",
+        "说明": "10日涨幅%"
+      },
+      {
+        "字段ID": "3252",
+        "类型": "double",
+        "说明": "20日涨幅%"
+      }
+    ],
+    "candle": [
+      {
+        "字段ID": "1",
+        "类型": "date_time",
+        "说明": "时间（秒级 Unix 时间戳）"
+      },
+      {
+        "字段ID": "7",
+        "类型": "double",
+        "说明": "开盘价"
+      },
+      {
+        "字段ID": "8",
+        "类型": "double",
+        "说明": "最高价"
+      },
+      {
+        "字段ID": "9",
+        "类型": "double",
+        "说明": "最低价"
+      },
+      {
+        "字段ID": "11",
+        "类型": "double",
+        "说明": "收盘价"
+      },
+      {
+        "字段ID": "13",
+        "类型": "double",
+        "说明": "总量（成交量）"
+      },
+      {
+        "字段ID": "19",
+        "类型": "double",
+        "说明": "成交额"
+      }
+    ],
+    "trend": [
+      {
+        "字段ID": "1",
+        "类型": "date_time",
+        "说明": "时间（秒级 Unix 时间戳）"
+      },
+      {
+        "字段ID": "10",
+        "类型": "double",
+        "说明": "最新价"
+      },
+      {
+        "字段ID": "13",
+        "类型": "double",
+        "说明": "成交量"
+      },
+      {
+        "字段ID": "19",
+        "类型": "double",
+        "说明": "成交额"
+      }
+    ],
+    "tick": [
+      {
+        "字段ID": "1",
+        "类型": "date_time",
+        "说明": "时间（秒级 Unix 时间戳）"
+      },
+      {
+        "字段ID": "10",
+        "类型": "double",
+        "说明": "最新价"
+      },
+      {
+        "字段ID": "12",
+        "类型": "int",
+        "说明": "成交量分类（volclass）"
+      },
+      {
+        "字段ID": "18",
+        "类型": "int",
+        "说明": "成交次数（累计）"
+      },
+      {
+        "字段ID": "49",
+        "类型": "double",
+        "说明": "成交量（现量）"
+      }
+    ]
+  },
+  "marketCodes": [
+    {
+      "example": "600519",
+      "code": "USHA",
+      "meaning": "沪市 A 股"
+    },
+    {
+      "example": "000001",
+      "code": "USZA",
+      "meaning": "深市 A 股"
+    },
+    {
+      "example": "430047",
+      "code": "USBA",
+      "meaning": "北交所 A 股"
+    },
+    {
+      "example": "1A0001 / 1B0300",
+      "code": "USHI",
+      "meaning": "沪市指数"
+    },
+    {
+      "example": "399001 / 399006",
+      "code": "USZI",
+      "meaning": "深市指数"
+    },
+    {
+      "example": "881279 / 885517",
+      "code": "URFI",
+      "meaning": "同花顺行业/概念指数"
+    },
+    {
+      "example": "884168",
+      "code": "URFA",
+      "meaning": "同花顺三级行业"
+    },
+    {
+      "example": "510300",
+      "code": "USHJ",
+      "meaning": "沪市基金"
+    },
+    {
+      "example": "159919",
+      "code": "USZJ",
+      "meaning": "深市基金"
+    },
+    {
+      "example": "按搜索结果",
+      "code": "UHK",
+      "meaning": "港股"
+    },
+    {
+      "example": "按搜索结果",
+      "code": "UCF",
+      "meaning": "国内商品期货"
+    },
+    {
+      "example": "按搜索结果",
+      "code": "UFI",
+      "meaning": "全球指数"
+    }
+  ],
+  "enums": {
+    "candlePeriods": {
+      "5": "日K",
+      "11": "周K",
+      "12": "月K",
+      "15": "1分钟",
+      "16": "5分钟",
+      "17": "15分钟",
+      "18": "30分钟",
+      "19": "60分钟"
+    },
+    "trendTradeClass": {
+      "1": "盘中",
+      "2": "盘前",
+      "3": "盘后"
+    },
+    "tickTradeClass": {
+      "0": "盘前",
+      "1": "盘中",
+      "2": "盘后"
+    },
+    "subscribeTradeClass": {
+      "0": "全部",
+      "1": "盘中",
+      "2": "盘前",
+      "3": "盘后"
+    },
+    "sortOrder": {
+      "0": "升序",
+      "1": "降序"
+    }
+  }
+}

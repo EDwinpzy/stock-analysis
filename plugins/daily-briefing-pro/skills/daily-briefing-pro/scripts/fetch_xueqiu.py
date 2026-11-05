@@ -34,10 +34,13 @@ CN = timezone(timedelta(hours=8))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
-COOKIE_CANDIDATES = [
+COOKIE_CANDIDATES = []
+if os.environ.get("XUEQIU_COOKIE_PATH"):
+    COOKIE_CANDIDATES.append(Path(os.environ["XUEQIU_COOKIE_PATH"]).expanduser())
+COOKIE_CANDIDATES.extend([
     DATA_DIR / "xueqiu_cookies.json",
     Path(os.path.expanduser("~/.codex/xueqiu_cookies.json")),
-]
+])
 
 
 def load_cookies() -> list:

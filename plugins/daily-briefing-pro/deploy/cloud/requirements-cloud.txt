@@ -1,0 +1,11 @@
+# Exact direct dependency versions from the local 2026-10-10 baseline runtime.
+playwright==1.58.0
+httpx==0.27.2
+requests==2.33.0
+akshare==1.18.46
+pandas==3.0.1
+numpy==2.4.3
+openai-whisper==20250625
+beautifulsoup4==4.14.2
+soupsieve==2.8
+thsdk==1.7.18

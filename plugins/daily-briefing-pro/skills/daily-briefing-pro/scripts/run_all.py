@@ -25,6 +25,7 @@ from trading_date import get_recent_trade_date
 from data_quality import data_error_reason
 from codex_summary_cli import semantic_summary_available
 from _hithink import trade_dates
+from runtime_preflight import build_preflight, write_report
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
@@ -227,8 +228,9 @@ def run_group_a(raw_date: str, trade_date: str) -> dict:
         ("fetch_future_events.py", raw_args, 60),
         # 盘面补充：同花顺官方给盘面事实（可回填历史），连板网补新高新低/融资/次日观察
         ("fetch_lianban.py", raw_args, 240),
-        # 行业轮动模型打分（离线调用，约 15s；模型目录可用 ROTATION_MODEL_DIR 指定）
-        ("fetch_rotation.py", raw_args, 900),
+        # 云端首次运行最多要补齐 90 个行业和沪深300，再调用内部 900s 预测；
+        # 外层时限必须覆盖行情刷新与预测之和，避免刷新完成前被提前杀掉。
+        ("fetch_rotation.py", raw_args, 1800),
         ("fetch_indices.py", raw_args, 90),
         ("pick_quote.py", ["--html"] + raw_args, 30),
     ]
@@ -436,6 +438,7 @@ def main():
 
     # 确定日期
     raw_date = get_date()
+    resume = '--resume' in sys.argv
     if '--scheduled' in sys.argv:
         try:
             sessions = trade_dates()
@@ -459,8 +462,54 @@ def main():
         print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
         raise SystemExit(2)
 
+    try:
+        runtime_report = build_preflight(
+            raw_date,
+            trade_date,
+            data_dir=DATA_DIR,
+            package_dir=BASE_DIR,
+            output_dir=default_output_dir(),
+            collecting=not resume,
+        )
+        write_report(runtime_report, DATA_DIR / "preflight.json")
+    except Exception as exc:
+        summary = {
+            "date": raw_date,
+            "trade_date": trade_date,
+            "status": "blocked",
+            "phase": "preflight",
+            "reason": f"运行预检失败：{type(exc).__name__}: {exc}",
+        }
+        print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
+        raise SystemExit(2)
+
+    for warning in runtime_report.warnings:
+        print(f"  [PREFLIGHT][WARN] {warning.label}: {warning.detail}", file=sys.stderr)
+    if '--preflight-only' in sys.argv:
+        print(json.dumps(runtime_report.as_dict(), ensure_ascii=False, indent=2))
+        raise SystemExit(0 if runtime_report.ok else 2)
+    if not runtime_report.ok:
+        elapsed = time.time() - t0
+        failures = [
+            f"{item.label}：{item.detail}" + (f"（修复：{item.fix}）" if item.fix else "")
+            for item in runtime_report.blockers
+        ]
+        print("\n═══ 运行前检查已阻断 ═══", file=sys.stderr)
+        for failure in failures:
+            print(f"  [BLOCK] {failure}", file=sys.stderr)
+        summary = {
+            "date": raw_date,
+            "trade_date": trade_date,
+            "status": "blocked",
+            "phase": "preflight",
+            "reason": "；".join(failures),
+            "elapsed_seconds": round(elapsed, 1),
+            "preflight": runtime_report.as_dict(),
+        }
+        print(json.dumps(summary, ensure_ascii=False, indent=2), file=sys.stderr)
+        raise SystemExit(2)
+
     # Step 1: Group A 并行
-    resume = '--resume' in sys.argv
     def persisted(filename):
         try:
             return json.loads((DATA_DIR / filename).read_text(encoding='utf-8-sig'))

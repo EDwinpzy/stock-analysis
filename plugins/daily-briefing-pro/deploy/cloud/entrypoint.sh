@@ -1,0 +1,46 @@
+#!/bin/sh
+set -eu
+
+load_secret() {
+    variable_name="$1"
+    secret_path="$2"
+    if [ -s "$secret_path" ]; then
+        secret_value=$(cat "$secret_path")
+        export "$variable_name=$secret_value"
+        unset secret_value
+    fi
+}
+
+load_secret DEEPSEEK_API_KEY /run/secrets/deepseek_api_key
+load_secret OPENAI_API_KEY /run/secrets/openai_api_key
+load_secret SILICONFLOW_API_KEY /run/secrets/siliconflow_api_key
+load_secret GROQ_API_KEY /run/secrets/groq_api_key
+load_secret IMA_OPENAPI_CLIENTID /run/secrets/ima_openapi_clientid
+load_secret IMA_OPENAPI_APIKEY /run/secrets/ima_openapi_apikey
+load_secret HITHINK_FINANCE_API_KEY /run/secrets/hithink_finance_api_key
+
+model_template=/opt/daily-briefing-pro/models/sw_rotation_model
+model_runtime=/runtime/models/sw_rotation_model
+mkdir -p /runtime/models
+if [ -f "$model_template/run.py" ] && [ -f "$model_template/config.json" ]; then
+    if [ ! -f "$model_runtime/run.py" ] || [ ! -f "$model_runtime/config.json" ]; then
+        mkdir -p "$model_runtime"
+        cp -a "$model_template/." "$model_runtime/"
+    fi
+fi
+export ROTATION_MODEL_DIR="${ROTATION_MODEL_DIR:-$model_runtime}"
+
+if [ -s /run/secrets/tgb_cookies.json ]; then
+    export TGB_COOKIE_PATH="${TGB_COOKIE_PATH:-/run/secrets/tgb_cookies.json}"
+fi
+if [ -s /run/secrets/douyin_cookies.json ]; then
+    export DOUYIN_COOKIE_PATH="${DOUYIN_COOKIE_PATH:-/run/secrets/douyin_cookies.json}"
+fi
+if [ -s /run/secrets/xueqiu_cookies.json ]; then
+    export XUEQIU_COOKIE_PATH="${XUEQIU_COOKIE_PATH:-/run/secrets/xueqiu_cookies.json}"
+fi
+if [ -s /run/secrets/ths_selfstock.json ]; then
+    export THS_SELFSTOCK_PATH="${THS_SELFSTOCK_PATH:-/run/secrets/ths_selfstock.json}"
+fi
+
+exec "$@"

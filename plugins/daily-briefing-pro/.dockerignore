@@ -1,0 +1,10 @@
+.git
+**/.git
+**/__pycache__/
+**/*.py[cod]
+**/.env
+**/.env.*
+**/*cookies*.json
+deploy/cloud/secrets/
+deploy/cloud/runtime/
+deploy/cloud/verification/

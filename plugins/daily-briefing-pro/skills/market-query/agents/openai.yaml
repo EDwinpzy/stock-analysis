@@ -1,0 +1,3 @@
+interface:
+  display_name: "行情查询"
+  short_description: "本地MCP与扶摇云API双通道查询行情、K线、排行与自选分组"

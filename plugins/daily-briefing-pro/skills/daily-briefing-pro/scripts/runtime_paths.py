@@ -8,9 +8,11 @@ import tempfile
 from pathlib import Path
 from typing import Mapping
 
+from durable_data import is_durable_data_file
+
 
 def _copy_missing_files(source: Path, destination: Path) -> None:
-    """Copy a tree without replacing existing files, publishing each file atomically."""
+    """Copy allowlisted durable files without replacing existing files."""
     if not source.is_dir():
         return
 
@@ -23,8 +25,11 @@ def _copy_missing_files(source: Path, destination: Path) -> None:
     for source_file in sorted(source.rglob("*")):
         if source_file.is_symlink() or not source_file.is_file():
             continue
+        relative = source_file.relative_to(source)
+        if not is_durable_data_file(relative):
+            continue
 
-        target = destination / source_file.relative_to(source)
+        target = destination / relative
         if target.exists():
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -60,6 +65,9 @@ def get_data_dir(
 
     Existing files in the durable directory always win. Migration checks the former
     stable skill location first, then fills remaining gaps from this package version.
+    Only long-lived model/cache inputs are migrated; snapshots, cookies, and temporary
+    quote HTML never enter a clean runtime through package migration. Cloud runs must
+    seed their history explicitly so stale package baselines cannot masquerade as data.
     """
     package_dir = Path(package_dir)
     env = os.environ if env is None else env
@@ -73,5 +81,6 @@ def get_data_dir(
 
     legacy_data_dir = home / ".agents" / "skills" / "daily-briefing-pro" / "data"
     _copy_missing_files(legacy_data_dir, data_dir)
-    _copy_missing_files(package_dir / "data", data_dir)
+    if str(env.get("DAILY_BRIEFING_CLOUD") or "") != "1":
+        _copy_missing_files(package_dir / "data", data_dir)
     return data_dir
