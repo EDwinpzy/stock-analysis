@@ -29,8 +29,8 @@ import time
 from dataclasses import dataclass, field, asdict
 from html import unescape
 from pathlib import Path
-from typing import Optional, List
-from urllib.parse import urljoin
+from typing import Optional, List, Sequence
+from urllib.parse import urljoin, urlsplit
 
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from network_config import (
@@ -132,6 +132,7 @@ class ImgInfo:
 @dataclass
 class VideoInfo:
     video_url: str
+    video_urls: List[str] = field(default_factory=list)
     cover_url: str = ""
     title: str = ""
     music_url: str = ""
@@ -174,6 +175,67 @@ def _first_url(value) -> str:
             if isinstance(item, str) and item.strip():
                 return item.strip()
     return value.strip() if isinstance(value, str) and value.strip() else ""
+
+
+def _is_direct_media_url(url: str) -> bool:
+    """Reject browser-only and known placeholder URLs that curl cannot use."""
+    value = unescape(str(url or "")).strip()
+    if not value:
+        return False
+    parts = urlsplit(value)
+    if parts.scheme.lower() not in {"http", "https"} or not parts.netloc:
+        return False
+    lowered = value.lower()
+    return not any(marker in lowered for marker in (
+        "douyin_pc_client",
+        "/download/douyin_pc_client",
+    ))
+
+
+def _all_urls(value) -> list[str]:
+    """Collect all usable HTTP media URLs without inventing an order."""
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key in ("url_list", "urlList", "urls"):
+            found.extend(_all_urls(value.get(key)))
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            found.extend(_all_urls(item))
+    elif isinstance(value, str) and _is_direct_media_url(value):
+        found.append(unescape(value.strip()))
+
+    result = []
+    seen = set()
+    for item in found:
+        cleaned = _remove_watermark(item)
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            result.append(cleaned)
+    return result
+
+
+def _video_media_urls(video: dict) -> list[str]:
+    """Return every CDN alternative exposed by the current aweme item."""
+    if not isinstance(video, dict):
+        return []
+    sources = [
+        video.get("play_addr"),
+        video.get("play_addr_h264"),
+        video.get("play_addr_265"),
+        video.get("download_addr"),
+    ]
+    for bit_rate in video.get("bit_rate") or []:
+        if isinstance(bit_rate, dict):
+            sources.append(bit_rate.get("play_addr"))
+
+    result = []
+    seen = set()
+    for source in sources:
+        for url in _all_urls(source):
+            if url not in seen:
+                seen.add(url)
+                result.append(url)
+    return result
 
 
 def _remove_watermark(url: str) -> str:
@@ -270,9 +332,15 @@ def _video_info_from_item(
         if image_url:
             images.append(ImgInfo(url=image_url))
 
-    video_url = _remove_watermark(_first_url(video.get("play_addr")) or fallback_video_url)
+    video_urls = _video_media_urls(video)
+    fallback_video_url = _remove_watermark(fallback_video_url or "")
+    if _is_direct_media_url(fallback_video_url) and fallback_video_url not in video_urls:
+        video_urls.append(fallback_video_url)
+
+    video_url = video_urls[0] if video_urls else ""
     if images:
         video_url = ""
+        video_urls = []
 
     author = data.get("author") if isinstance(data.get("author"), dict) else {}
     avatar = _first_url(author.get("avatar_thumb"))
@@ -280,6 +348,7 @@ def _video_info_from_item(
     title = str(data.get("desc") or "").strip() or fallback_title or f"douyin_{video_id}"
     return VideoInfo(
         video_url=video_url,
+        video_urls=video_urls,
         cover_url=cover_url,
         title=title,
         images=images,
@@ -306,11 +375,13 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
             errors = []
             # The current mobile page often returns an empty shell. Desktop renders
             # the detail endpoint and its aweme JSON reliably, so try it first.
+            desktop_url = f"https://www.douyin.com/video/{video_id}" if video_id else share_url
+            mobile_url = f"https://m.douyin.com/share/video/{video_id}" if video_id else share_url
             browser_attempts = [
-                ("desktop", DESKTOP_USER_AGENT, {"width": 1280, "height": 900}),
-                ("mobile", MOBILE_HEADERS["User-Agent"], {"width": 390, "height": 844}),
+                ("desktop", desktop_url, DESKTOP_USER_AGENT, {"width": 1280, "height": 900}),
+                ("mobile", mobile_url, MOBILE_HEADERS["User-Agent"], {"width": 390, "height": 844}),
             ]
-            for label, user_agent, viewport in browser_attempts:
+            for label, target_url, user_agent, viewport in browser_attempts:
                 context = await new_douyin_context(
                     browser, user_agent=user_agent, viewport=viewport
                 )
@@ -320,7 +391,11 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
                 detail_tasks = []
 
                 async def capture_detail(response):
-                    if "/aweme/v1/web/aweme/detail/" not in response.url:
+                    if not any(marker in response.url for marker in (
+                        "/aweme/v1/web/aweme/detail/",
+                        "/aweme/v1/web/aweme/post/",
+                        "/web/api/v2/aweme/post",
+                    )):
                         return
                     try:
                         payload = await response.json()
@@ -332,14 +407,18 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
                         pass
 
                 def on_response(response):
-                    if "/aweme/v1/web/aweme/detail/" in response.url:
+                    if any(marker in response.url for marker in (
+                        "/aweme/v1/web/aweme/detail/",
+                        "/aweme/v1/web/aweme/post/",
+                        "/web/api/v2/aweme/post",
+                    )):
                         detail_tasks.append(asyncio.create_task(capture_detail(response)))
 
                 page.on("response", on_response)
                 navigation_error = ""
                 try:
                     try:
-                        await page.goto(share_url, wait_until="domcontentloaded", timeout=30000)
+                        await page.goto(target_url, wait_until="domcontentloaded", timeout=30000)
                     except Exception as exc:
                         navigation_error = str(exc)
                     # The media API may arrive after DOMContentLoaded; wait for its
@@ -356,7 +435,7 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
 
                     for item in detail_items:
                         parsed = _video_info_from_item(item, video_id, fallback_title=title)
-                        if parsed.video_url or parsed.images:
+                        if parsed.video_urls or parsed.images:
                             return parsed
 
                     video_url = ""
@@ -366,6 +445,8 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
                             "el => el.currentSrc || el.src || el.getAttribute('src') || ''"
                         )
                         video_url = _remove_watermark(urljoin(page.url, video_url or ""))
+                        if not _is_direct_media_url(video_url):
+                            video_url = ""
 
                     data = _find_video_item(_extract_router_data(page_html))
                     if data:
@@ -397,24 +478,50 @@ async def parse_douyin_share_url(share_text: str) -> VideoInfo:
 
     share_url = urls[0]
     video_id = _extract_video_id(share_url)
-    http_error = ""
+    http_errors = []
 
-    # 先尝试轻量 HTTP 路径；抖音页面结构变化时再交给浏览器渲染。
-    try:
-        async with httpx.AsyncClient(
-            **httpx_client_kwargs(follow_redirects=True, timeout=30.0)
-        ) as client:
-            share_response = await client.get(share_url, headers=MOBILE_HEADERS)
-            video_id = _extract_video_id(str(share_response.url)) or video_id
-            detail_url = f"https://www.iesdouyin.com/share/video/{video_id}" if video_id else share_url
-            response = await client.get(detail_url, headers=MOBILE_HEADERS)
-            response.raise_for_status()
-        data = _find_video_item(_extract_router_data(response.text))
-        if data:
-            return _video_info_from_item(data, video_id)
-        http_error = "旧版 HTTP 页面未包含 videoInfoRes"
-    except Exception as exc:
-        http_error = str(exc)
+    # The same video is exposed through several entry points. During upstream
+    # incidents one host can return 503 while another still serves the SSR item.
+    endpoint_candidates = [share_url]
+    if video_id:
+        endpoint_candidates.extend([
+            f"https://www.douyin.com/video/{video_id}",
+            f"https://www.iesdouyin.com/share/video/{video_id}",
+            f"https://m.douyin.com/share/video/{video_id}",
+        ])
+    endpoints = []
+    seen_endpoints = set()
+    for endpoint in endpoint_candidates:
+        if endpoint and endpoint not in seen_endpoints:
+            seen_endpoints.add(endpoint)
+            endpoints.append(endpoint)
+
+    # Two bounded rounds give transient 503s a chance to recover without
+    # multiplying every request into an unbounded retry loop.
+    async with httpx.AsyncClient(
+        **httpx_client_kwargs(follow_redirects=True, timeout=20.0)
+    ) as client:
+        for round_index in range(2):
+            for endpoint in endpoints:
+                try:
+                    response = await client.get(endpoint, headers=MOBILE_HEADERS)
+                    if response.status_code >= 500 or response.status_code == 429:
+                        http_errors.append(f"{endpoint}: HTTP {response.status_code}")
+                        continue
+                    response.raise_for_status()
+                    resolved_id = _extract_video_id(str(response.url)) or video_id
+                    data = _find_video_item(_extract_router_data(response.text))
+                    if data:
+                        parsed = _video_info_from_item(data, resolved_id)
+                        if parsed.video_urls or parsed.images:
+                            return parsed
+                    http_errors.append(f"{endpoint}: 页面未包含可下载媒体")
+                except Exception as exc:
+                    http_errors.append(f"{endpoint}: {type(exc).__name__}: {exc}")
+            if round_index == 0:
+                await asyncio.sleep(1)
+
+    http_error = "；".join(http_errors[-4:])
 
     # 当前抖音常将页面重定向到 m.douyin.com，媒体地址和 SSR 数据只在浏览器页可见。
     try:
@@ -424,7 +531,11 @@ async def parse_douyin_share_url(share_text: str) -> VideoInfo:
         raise ValueError(detail) from browser_exc
 
 
-async def download_video(video_url: str, output_dir: Path, filename: str = "") -> Path:
+async def download_video(
+    video_url: str | Sequence[str],
+    output_dir: Path,
+    filename: str = "",
+) -> Path:
     """下载视频到本地（使用 curl，解决 httpx DNS 解析问题）"""
     import subprocess
     
@@ -442,13 +553,23 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
     }
     
+    if isinstance(video_url, str):
+        candidates = [video_url]
+    else:
+        candidates = list(video_url)
+    candidates = list(dict.fromkeys(
+        url for url in (_remove_watermark(str(item or "").strip()) for item in candidates)
+        if _is_direct_media_url(url)
+    ))
+    if not candidates:
+        raise ValueError("没有可下载的抖音媒体地址（已拒绝 blob/data/占位地址）")
+
     curl_cmd = [
         'curl', *curl_proxy_args(), '-f', '-sS', '-L',
         '--connect-timeout', '20', '--max-time', '90',
         '-H', f'Referer: {headers["Referer"]}',
         '-H', f'User-Agent: {headers["User-Agent"]}',
         '-o', str(filepath),
-        video_url
     ]
     # Windows Schannel 可能因证书吊销列表不可达而拒绝抖音 CDN；
     # 此时关闭吊销检查，仍保留 HTTPS 证书和主机名校验。
@@ -458,12 +579,27 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
     # 抖音 CDN 偶发 TLS 握手失败（curl 退出码 35），保留一次有限重试。
     # 三次 120 秒下载会与 fetch_douyin 的 300 秒子进程截止时间冲突，
     # 让完整分析在 Whisper 开始前就被父进程杀掉。
+    # Keep the total media-download window below the 600 second analyzer
+    # deadline so Whisper still has time to run after a CDN incident.
+    deadline = time.monotonic() + 300
+    max_attempts = max(2, min(6, len(candidates) * 2))
     last_detail = ""
-    for attempt in range(2):
+    for attempt in range(max_attempts):
         if attempt:
-            time.sleep(2 * attempt)
+            time.sleep(1.5 * min(attempt, 3))
+        remaining = deadline - time.monotonic()
+        if remaining <= 1:
+            last_detail = "多 CDN 下载总时限已到"
+            break
+        candidate = candidates[attempt % len(candidates)]
+        filepath.unlink(missing_ok=True)
         try:
-            result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=100)
+            result = subprocess.run(
+                [*curl_cmd, candidate],
+                capture_output=True,
+                text=True,
+                timeout=min(100, max(2, int(remaining))),
+            )
         except subprocess.TimeoutExpired:
             last_detail = "curl 单次下载超过 100 秒"
             print(f"  [下载] 第{attempt + 1}次超过时限，重试…", file=sys.stderr)
@@ -473,7 +609,11 @@ async def download_video(video_url: str, output_dir: Path, filename: str = "") -
         last_detail = (result.stderr or result.stdout or '').strip()
         if result.returncode == 0:
             last_detail = "下载文件为空"
-        print(f"  [下载] 第{attempt + 1}次失败（退出码 {result.returncode}），重试…", file=sys.stderr)
+        print(
+            f"  [下载] 第{attempt + 1}次失败（退出码 {result.returncode}，"
+            f"CDN {attempt % len(candidates) + 1}/{len(candidates)}），重试…",
+            file=sys.stderr,
+        )
 
     raise Exception(f"curl下载失败: {last_detail or '无错误输出'}")
 
@@ -658,6 +798,7 @@ def format_video_info_dict(video_info: VideoInfo) -> dict:
     return {
         "title": video_info.title,
         "video_url": video_info.video_url,
+        "video_urls": video_info.video_urls,
         "cover_url": video_info.cover_url,
         "music_url": video_info.music_url,
         "author": {
@@ -678,6 +819,9 @@ async def analyze_douyin_video(
     api_key: Optional[str] = None,
     keep_files: bool = False,
     output_dir: Optional[str] = None,
+    known_media_urls: Optional[Sequence[str]] = None,
+    known_title: str = "",
+    known_author_name: str = "",
 ) -> dict:
     """
     全链路分析抖音视频：
@@ -696,15 +840,38 @@ async def analyze_douyin_video(
 
     # Step 1: 解析视频链接
     print(f"[1/4] 正在解析视频链接...", file=sys.stderr)
-    try:
-        video_info = await parse_douyin_share_url(share_url)
+    known_media_urls = [
+        url for url in (
+            _remove_watermark(str(item or "").strip())
+            for item in (known_media_urls or [])
+        )
+        if _is_direct_media_url(url)
+    ]
+    if known_media_urls:
+        # The homepage response already contains the canonical title and signed
+        # CDN URLs. Do not make transcription depend on a detail-page request
+        # that can be rate-limited or return a JavaScript-only shell.
+        video_info = VideoInfo(
+            video_url=known_media_urls[0],
+            video_urls=known_media_urls,
+            title=known_title or f"douyin_{_extract_video_id(share_url) or 'video'}",
+            author=VideoAuthor(name=known_author_name),
+        )
         result["metadata"] = format_video_info_dict(video_info)
+        result["metadata"]["media_source"] = "homepage_list"
         print(f"  → 标题: {video_info.title}", file=sys.stderr)
         print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
-    except Exception as e:
-        result["status"] = "error"
-        result["error"] = f"解析链接失败: {str(e)}"
-        return result
+        print(f"  → 使用主页列表中的 {len(known_media_urls)} 个媒体地址", file=sys.stderr)
+    else:
+        try:
+            video_info = await parse_douyin_share_url(share_url)
+            result["metadata"] = format_video_info_dict(video_info)
+            print(f"  → 标题: {video_info.title}", file=sys.stderr)
+            print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
+        except Exception as e:
+            result["status"] = "error"
+            result["error"] = f"解析链接失败: {str(e)}"
+            return result
 
     # 判断是否为图集（无视频）
     if not video_info.video_url:
@@ -720,10 +887,14 @@ async def analyze_douyin_video(
             out_dir.mkdir(parents=True, exist_ok=True)
             safe_title = re.sub(r'[\\/:*?"<>|]', '_', video_info.title or "douyin_video")
             safe_title = safe_title[:100]
-            video_path = await download_video(video_info.video_url, out_dir, safe_title)
+            video_path = await download_video(video_info.video_urls or video_info.video_url, out_dir, safe_title)
         else:
             tmp_dir = Path(tempfile.mkdtemp())
-            video_path = await download_video(video_info.video_url, tmp_dir, f"douyin_{int(time.time())}")
+            video_path = await download_video(
+                video_info.video_urls or video_info.video_url,
+                tmp_dir,
+                f"douyin_{int(time.time())}",
+            )
         
         result["video_path"] = str(video_path)
         file_size = os.path.getsize(video_path)
@@ -787,6 +958,14 @@ async def main():
     parser.add_argument("--api-key", default="", help="API Key (可选，自动从环境变量读取)")
     parser.add_argument("--keep-files", action="store_true", help="保留下载的视频和音频文件")
     parser.add_argument("--output-dir", default="", help="输出目录 (保留文件到此目录)")
+    parser.add_argument(
+        "--media-url",
+        action="append",
+        default=[],
+        help="主页列表已取得的媒体 CDN 地址（可重复）",
+    )
+    parser.add_argument("--title", default="", help="主页列表中的视频标题")
+    parser.add_argument("--author-name", default="", help="主页列表中的作者名")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出结果")
 
     args = parser.parse_args()
@@ -797,6 +976,9 @@ async def main():
         api_key=args.api_key,
         keep_files=args.keep_files,
         output_dir=args.output_dir or None,
+        known_media_urls=args.media_url,
+        known_title=args.title,
+        known_author_name=args.author_name,
     )
 
     if args.json:

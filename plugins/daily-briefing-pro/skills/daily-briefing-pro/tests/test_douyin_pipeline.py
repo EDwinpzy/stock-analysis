@@ -102,6 +102,31 @@ class DouyinSubprocessTests(unittest.TestCase):
         self.assertIn(f"超过{fetch_douyin.TRANSCRIBE_TIMEOUT_SECONDS}秒", result["error"])
         self.assertIn("local whisper", result["error"])
 
+    def test_transcription_forwards_homepage_media_urls_to_analyzer(self):
+        completed = types.SimpleNamespace(
+            returncode=0,
+            stdout='{"status":"success","transcript":"已转录"}',
+            stderr="",
+        )
+        video = {
+            "url": "https://www.douyin.com/video/123456789012",
+            "title": "财经视频",
+            "media_urls": [
+                "https://v1.example/video.mp4",
+                "https://v2.example/video.mp4",
+            ],
+        }
+        with patch.object(fetch_douyin.subprocess, "run", return_value=completed) as run:
+            fetch_douyin.transcribe_video(video)
+
+        command = run.call_args.args[0]
+        offsets = [index for index, value in enumerate(command) if value == "--media-url"]
+        self.assertEqual(
+            [command[index + 1] for index in offsets],
+            video["media_urls"],
+        )
+        self.assertIn("--title", command)
+
 
 class DouyinConcurrencyTests(unittest.TestCase):
     def test_transcription_defaults_to_one_analyzer(self):
@@ -149,6 +174,34 @@ class DouyinDownloadTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertEqual(calls[0][0][calls[0][0].index("--max-time") + 1], "90")
         self.assertEqual(calls[0][1]["timeout"], 100)
+
+    def test_download_rotates_across_cdn_alternatives(self):
+        with tempfile.TemporaryDirectory() as temp:
+            calls = []
+
+            def curl(command, **kwargs):
+                calls.append(command[-1])
+                if len(calls) == 1:
+                    return types.SimpleNamespace(returncode=35, stdout="", stderr="TLS failure")
+                if len(calls) == 2:
+                    return types.SimpleNamespace(returncode=22, stdout="", stderr="HTTP 503")
+                output = Path(command[command.index("-o") + 1])
+                output.write_bytes(b"video")
+                return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+            urls = [
+                "https://v1.example/video.mp4",
+                "https://v2.example/video.mp4",
+                "https://v3.example/video.mp4",
+            ]
+            with patch.object(analyze_douyin.subprocess, "run", side_effect=curl):
+                with patch.object(analyze_douyin.time, "sleep"):
+                    path = asyncio.run(analyze_douyin.download_video(
+                        urls, Path(temp), "rotated_video"
+                    ))
+
+        self.assertTrue(path.name.endswith(".mp4"))
+        self.assertEqual(calls, urls)
 
 
 class WhisperThreadTests(unittest.TestCase):
@@ -265,6 +318,95 @@ class DouyinDetailApiTests(unittest.TestCase):
 
         self.assertEqual(info.title, "目标视频")
         self.assertEqual(info.video_url, "https://cdn.example/video.mp4")
+
+    def test_detail_api_item_preserves_all_cdn_urls_and_rejects_blob(self):
+        item = {
+            "aweme_id": "123456789012",
+            "desc": "目标视频",
+            "video": {
+                "play_addr": {
+                    "url_list": [
+                        "blob:https://www.douyin.com/not-downloadable",
+                        "https://cdn1.example/video.mp4",
+                        "https://cdn2.example/video.mp4",
+                    ],
+                },
+                "bit_rate": [
+                    {"play_addr": {"url_list": ["https://cdn3.example/video.mp4"]}}
+                ],
+            },
+        }
+
+        info = analyze_douyin._video_info_from_item(item, "123456789012")
+
+        self.assertEqual(info.video_url, "https://cdn1.example/video.mp4")
+        self.assertEqual(info.video_urls, [
+            "https://cdn1.example/video.mp4",
+            "https://cdn2.example/video.mp4",
+            "https://cdn3.example/video.mp4",
+        ])
+
+    def test_homepage_item_keeps_media_urls_for_analyzer(self):
+        item = {
+            "aweme_id": "123456789012",
+            "desc": "目标视频",
+            "video": {
+                "play_addr": {
+                    "url_list": [
+                        "https://cdn1.example/video.mp4",
+                        "https://cdn2.example/video.mp4",
+                    ]
+                }
+            },
+        }
+
+        parsed = fetch_douyin.parse_video_item(item)
+
+        self.assertEqual(parsed["media_urls"], [
+            "https://cdn1.example/video.mp4",
+            "https://cdn2.example/video.mp4",
+        ])
+
+    def test_analyzer_uses_homepage_urls_without_detail_page_dependency(self):
+        downloaded = []
+
+        async def unexpected_parse(*args, **kwargs):
+            raise AssertionError("known homepage media must bypass detail parsing")
+
+        async def fake_download(urls, output_dir, filename):
+            downloaded.extend(urls)
+            path = Path(output_dir) / f"{filename}.mp4"
+            path.write_bytes(b"video")
+            return path
+
+        def fake_audio(video_path, output_dir=None):
+            path = Path(video_path).with_suffix(".mp3")
+            path.write_bytes(b"audio")
+            return path
+
+        with tempfile.TemporaryDirectory() as temp:
+            with patch.object(analyze_douyin, "parse_douyin_share_url", unexpected_parse):
+                with patch.object(analyze_douyin, "download_video", fake_download):
+                    with patch.object(analyze_douyin, "extract_audio", fake_audio):
+                        with patch.object(analyze_douyin, "extract_text_from_audio", return_value="完整转录"):
+                            result = asyncio.run(analyze_douyin.analyze_douyin_video(
+                                "https://www.douyin.com/video/123456789012",
+                                output_dir=temp,
+                                known_media_urls=[
+                                    "https://cdn1.example/video.mp4",
+                                    "https://cdn2.example/video.mp4",
+                                ],
+                                known_title="财经视频",
+                                known_author_name="测试作者",
+                            ))
+
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["transcript"], "完整转录")
+        self.assertEqual(downloaded, [
+            "https://cdn1.example/video.mp4",
+            "https://cdn2.example/video.mp4",
+        ])
+        self.assertEqual(result["metadata"]["media_source"], "homepage_list")
 
 
 if __name__ == "__main__":

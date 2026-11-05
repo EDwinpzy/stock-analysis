@@ -200,12 +200,40 @@ def parse_video_item(item: dict) -> dict | None:
     if not vid:
         return None
     statistics = item.get('statistics', {}) or {}
+    author = item.get('author', {}) if isinstance(item.get('author'), dict) else {}
+    video = item.get('video', {}) if isinstance(item.get('video'), dict) else {}
+    media_urls = []
+    media_sources = [
+        video.get('play_addr'),
+        video.get('play_addr_h264'),
+        video.get('play_addr_265'),
+        video.get('download_addr'),
+    ]
+    for bit_rate in video.get('bit_rate') or []:
+        if isinstance(bit_rate, dict):
+            media_sources.append(bit_rate.get('play_addr'))
+    for source in media_sources:
+        if not isinstance(source, dict):
+            continue
+        for value in source.get('url_list') or source.get('urlList') or source.get('urls') or []:
+            if not isinstance(value, str):
+                continue
+            value = value.strip()
+            if not value.lower().startswith(('http://', 'https://')):
+                continue
+            value = value.replace('playwm', 'play')
+            if value not in media_urls:
+                media_urls.append(value)
     return {
         'aweme_id': vid,
         'title': item.get('desc', '').strip() or f"视频 {vid}",
         'url': f'https://www.douyin.com/video/{vid}',
+        'author_name': str(author.get('nickname') or '').strip(),
         'digg_count': statistics.get('digg_count', 0),
         'create_time': item.get('create_time') or item.get('createTime') or 0,  # 详情页继续核验
+        # Keep the signed CDN alternatives from the homepage response. Detail
+        # pages can be temporarily unavailable while these URLs are still valid.
+        'media_urls': media_urls,
     }
 
 
@@ -448,9 +476,23 @@ def summarize_with_deepseek(text: str) -> str:
     return ""
 
 
-def transcribe_video(video_url: str, provider: str = "local") -> dict:
+def transcribe_video(video: str | dict, provider: str = "local") -> dict:
     """调用 analyze_douyin.py 转录单个视频"""
     try:
+        if isinstance(video, dict):
+            video_url = str(video.get("url") or "").strip()
+            media_urls = [
+                str(value).strip()
+                for value in (video.get("media_urls") or [])
+                if str(value).strip().lower().startswith(("http://", "https://"))
+            ]
+            title = str(video.get("title") or "").strip()
+            author_name = str(video.get("author_name") or "").strip()
+        else:
+            video_url = str(video or "").strip()
+            media_urls = []
+            title = ""
+            author_name = ""
         child_env = {
             **os.environ,
             "PYTHONIOENCODING": "utf-8",
@@ -465,6 +507,12 @@ def transcribe_video(video_url: str, provider: str = "local") -> dict:
                 sys.executable, str(SCRIPT_DIR / "analyze_douyin.py"),
                 "--provider", provider, "--json", "--output-dir", output_dir, video_url,
             ]
+            for media_url in dict.fromkeys(media_urls[:6]):
+                command.extend(["--media-url", media_url])
+            if title:
+                command.extend(["--title", title])
+            if author_name:
+                command.extend(["--author-name", author_name])
             result = subprocess.run(
                 command,
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
@@ -511,11 +559,10 @@ def transcribe_video(video_url: str, provider: str = "local") -> dict:
 
 def get_video_transcript_with_fallback(video: dict) -> dict:
     """获取视频转录，失败/为空时返回 warning 和兜底摘要"""
-    url = video.get("url", "")
     title = video.get("title", "")
 
     cached = load_video_transcript(video)
-    data = cached or transcribe_video(url, os.environ.get("DOUYIN_TRANSCRIPT_PROVIDER", "local"))
+    data = cached or transcribe_video(video, os.environ.get("DOUYIN_TRANSCRIPT_PROVIDER", "local"))
     title = _resolve_video_title(title, data)
     transcript = data.get("transcript", "") if isinstance(data, dict) else ""
 

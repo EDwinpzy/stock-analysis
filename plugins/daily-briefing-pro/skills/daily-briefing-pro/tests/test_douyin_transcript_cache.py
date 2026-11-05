@@ -32,7 +32,7 @@ class TranscriptCacheTests(unittest.TestCase):
         with patch.dict(fetch.os.environ, {'GROQ_API_KEY': 'unused-test-key'}, clear=True), \
              patch.object(fetch, 'transcribe_video', return_value={'transcript': '真实转录'}) as transcribe:
             fetch.get_video_transcript_with_fallback(self.video)
-        transcribe.assert_called_once_with(self.video['url'], 'local')
+        transcribe.assert_called_once_with(self.video, 'local')
 
     def test_different_publication_timestamp_cannot_reuse_cache(self):
         fetch.save_video_transcript(self.video, {'transcript': '真实转录文本'})
