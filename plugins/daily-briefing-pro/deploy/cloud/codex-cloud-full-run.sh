@@ -22,7 +22,7 @@ printf '{"state":"running","date":"%s","started_at":"%s"}\n' \
   "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$STATUS"
 
 source "$BASE/activate.sh"
-"$SCRIPT_DIR/codex-cloud-runtime-env.sh"
+source "$SCRIPT_DIR/codex-cloud-runtime-env.sh"
 
 if [ -n "${DAILY_BRIEFING_EXPECTED_SHA:-}" ]; then
   test "$(git rev-parse HEAD)" = "$DAILY_BRIEFING_EXPECTED_SHA"

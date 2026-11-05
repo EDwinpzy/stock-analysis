@@ -7,7 +7,7 @@ OUT="$BASE/tests"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$BASE/activate.sh"
-"$SCRIPT_DIR/codex-cloud-runtime-env.sh"
+source "$SCRIPT_DIR/codex-cloud-runtime-env.sh"
 
 if [ -n "${DAILY_BRIEFING_EXPECTED_SHA:-}" ]; then
   test "$(git rev-parse HEAD)" = "$DAILY_BRIEFING_EXPECTED_SHA"
