@@ -1018,13 +1018,26 @@ def ai_summarize_yanbao_parallel(reports: list) -> list:
     """并发为研报生成核心逻辑；返回与输入等长的字符串列表（失败为空串）。"""
     if not reports:
         return []
-    if not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")):
-        return summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑") for report in reports])
-
     results = [""] * len(reports)
+    pending = []
+    for index, report in enumerate(reports):
+        stored = str(report.get("logic") or "").strip()
+        title = str(report.get("title") or "").strip()
+        if stored and stored != title:
+            results[index] = stored
+        else:
+            pending.append((index, report))
+    if not pending:
+        return results
+    if not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")):
+        generated = summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑") for _, report in pending])
+        for (index, _), summary in zip(pending, generated):
+            results[index] = summary
+        return results
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(ai_summarize_yanbao, report): index
-                   for index, report in enumerate(reports)}
+                   for index, report in pending}
         for future in concurrent.futures.as_completed(futures):
             index = futures[future]
             try:

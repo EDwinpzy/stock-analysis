@@ -4,7 +4,7 @@ This Compose runtime carries the complete `daily-briefing-pro` plugin tree, incl
 
 The image pins Python 3.12.8, Node 24.18.0, the direct Python dependencies observed in the local baseline environment, Chromium, FFmpeg, and the `hithink-finance` CLI. `PYTHONHASHSEED=2` and CRLF HTML output preserve both the 2026-10-10 source report and its final broadsheet edition byte-for-byte. `scripts/run_all.py` always builds and visually verifies the broadsheet edition, and delivers that artifact as the report.
 
-Version 3.23.16 adds the official Hithink index fallback for industry and CSI 300 bars when AKShare trails the target session. Version 3.23.15 added the missing-only cloud baseline and the bundled rotation-model archive. Version 3.23.14 added the fail-fast runtime preflight, durable-data seed path, explicit writable rotation-model volume, and correct Compose secret targets. No version invents missing model data or downgrades source/cookie completeness gates.
+Version 3.23.17 bounds Codex semantic-summary batches, runs up to four batches concurrently, reuses cached report logic during compilation, uses the faster default reasoning level, and terminates the complete CLI process tree on timeout so a stuck child cannot consume the collector's whole time budget. Version 3.23.16 adds the official Hithink index fallback for industry and CSI 300 bars when AKShare trails the target session. Version 3.23.15 added the missing-only cloud baseline and the bundled rotation-model archive. Version 3.23.14 added the fail-fast runtime preflight, durable-data seed path, explicit writable rotation-model volume, and correct Compose secret targets. No version invents missing model data or downgrades source/cookie completeness gates.
 
 ## Prepare the cloud host
 
@@ -15,7 +15,7 @@ sh ./init-secrets.sh
 docker build \
   --memory=1800m --memory-swap=1800m \
   --cpu-period=100000 --cpu-quota=100000 \
-  -f Dockerfile -t daily-briefing-pro:3.23.16-cloud ../..
+  -f Dockerfile -t daily-briefing-pro:3.23.17-cloud ../..
 ```
 
 The secret files are created empty and are ignored by Git and Docker build context. Copy or enter the user's own API keys and platform cookie JSON files directly on the cloud host. The setup command assigns them to container UID 10001 with mode `0600`. Do not put secrets in the image, repository, command-line arguments, or logs. After copying a data snapshot into `runtime/data/`, or restoring model files under `runtime/models/`, rerun `sh ./init-secrets.sh` so container UID 10001 can update those persistent files.

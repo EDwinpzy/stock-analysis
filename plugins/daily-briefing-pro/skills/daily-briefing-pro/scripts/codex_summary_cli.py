@@ -10,9 +10,12 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from types import SimpleNamespace
 
 
 def codex_available() -> bool:
@@ -61,7 +64,65 @@ def semantic_summary_available() -> bool:
     return semantic_summary_status()[0]
 
 
-def call_codex_json(prompt: str, schema: dict, timeout: int = 180) -> dict:
+def _terminate_process_tree(process: subprocess.Popen) -> None:
+    """Terminate the CLI and descendants so inherited pipes cannot keep hanging."""
+    if os.name == 'nt':
+        try:
+            subprocess.run(
+                ['taskkill', '/PID', str(process.pid), '/T', '/F'],
+                capture_output=True,
+                timeout=15,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except (OSError, ProcessLookupError):
+            pass
+    try:
+        process.kill()
+    except OSError:
+        pass
+
+
+def _run_process(command: list[str], input_text: str, *, cwd: Path, env: dict, timeout: int):
+    kwargs = {}
+    if os.name == 'nt':
+        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        kwargs['start_new_session'] = True
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=cwd,
+        env=env,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        **kwargs,
+    )
+    try:
+        stdout, stderr = process.communicate(input_text, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _terminate_process_tree(process)
+        try:
+            process.communicate(timeout=10)
+        except (subprocess.TimeoutExpired, ValueError):
+            pass
+        raise
+    return SimpleNamespace(returncode=process.returncode, stdout=stdout, stderr=stderr)
+
+
+def _reasoning_effort() -> str:
+    value = str(os.environ.get('DAILY_BRIEFING_CODEX_REASONING') or 'low').strip().lower()
+    allowed = {'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'}
+    return value if value in allowed else 'low'
+
+
+def call_codex_json(prompt: str, schema: dict, timeout: int = 120) -> dict:
     if type(timeout) is not int or timeout <= 0:
         raise ValueError('Codex semantic summary timeout must be a positive integer')
     executable = shutil.which('codex')
@@ -82,17 +143,19 @@ def call_codex_json(prompt: str, schema: dict, timeout: int = 180) -> dict:
             '--ignore-user-config',
             '--sandbox', 'read-only', '--color', 'never', '--json',
             '--model', os.environ.get('DAILY_BRIEFING_CODEX_MODEL', 'gpt-6-luna'),
-            '--config', 'model_reasoning_effort="max"',
+            '--config', f'model_reasoning_effort="{_reasoning_effort()}"',
             '--config', 'developer_instructions=' + json.dumps(instructions, ensure_ascii=False),
             '--output-schema', str(schema_path), '--output-last-message', str(answer_path), '-',
         ]
         env = os.environ.copy()
         env['PYTHONIOENCODING'] = 'utf-8'
         try:
-            result = subprocess.run(
-                command, input=instructions + '\n\n' + prompt, cwd=root,
-                capture_output=True, text=True, encoding='utf-8', errors='replace',
-                timeout=timeout, env=env,
+            result = _run_process(
+                command,
+                instructions + '\n\n' + prompt,
+                cwd=root,
+                env=env,
+                timeout=timeout,
             )
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(f'Codex semantic summary timed out after {timeout}s') from exc
@@ -120,10 +183,46 @@ def call_codex_json(prompt: str, schema: dict, timeout: int = 180) -> dict:
         return answer
 
 
+def _semantic_workers() -> int:
+    try:
+        value = int(os.environ.get('DAILY_BRIEFING_SEMANTIC_WORKERS', '4'))
+    except ValueError:
+        value = 4
+    return max(1, min(value, 6))
+
+
+def _summarize_batch(
+    batch: list[tuple[int, str, str]],
+    schema: dict,
+) -> dict[int, str]:
+    sources = [{'index': index, 'context': context, 'source_text': text} for index, text, context in batch]
+    prompt = (
+        '逐项归纳成1至3句中文书面语，每项不超过180字。投资观点包含方向、理由和原文明确的'
+        '板块或标的（用【】标注）；没有明确观点写“无明确观点”。研报只使用提供的正文，'
+        '保留驱动到影响的逻辑与评级；无法核验因果时明确资料未提供。严禁拼接摘抄和臆测。\n'
+        + json.dumps(sources, ensure_ascii=False)
+    )
+    answer = call_codex_json(prompt, schema)
+    rows = answer.get('summaries')
+    expected = {index for index, _, _ in batch}
+    if not isinstance(rows, list) or len(rows) != len(batch):
+        raise RuntimeError('Incomplete summary batch')
+    validated = {}
+    for row in rows:
+        index = row.get('index') if isinstance(row, dict) else None
+        summary = row.get('summary') if isinstance(row, dict) else None
+        if type(index) is not int or index not in expected or index in validated or not isinstance(summary, str) or not summary.strip():
+            raise RuntimeError('Invalid or duplicate summary index')
+        validated[index] = summary.strip()
+    return validated
+
+
 def summarize_tasks(tasks: list[tuple[str, str]]) -> list[str]:
-    """Return one summary per source; incomplete or malformed batches fail closed."""
+    """Return one summary per source; batches are bounded and run in parallel."""
     results = [''] * len(tasks)
     pending = [(index, text, context) for index, (text, context) in enumerate(tasks) if text.strip()]
+    if not pending:
+        return results
     schema = {
         'type': 'object', 'additionalProperties': False,
         'properties': {'summaries': {'type': 'array', 'items': {
@@ -132,31 +231,29 @@ def summarize_tasks(tasks: list[tuple[str, str]]) -> list[str]:
             'required': ['index', 'summary'],
         }}}, 'required': ['summaries'],
     }
-    for start in range(0, len(pending), 12):
-        batch = pending[start:start + 12]
-        sources = [{'index': index, 'context': context, 'source_text': text} for index, text, context in batch]
-        prompt = (
-            '逐项归纳成1至3句中文书面语，每项不超过180字。投资观点包含方向、理由和原文明确的'
-            '板块或标的（用【】标注）；没有明确观点写“无明确观点”。研报只使用提供的正文，'
-            '保留驱动到影响的逻辑与评级；无法核验因果时明确资料未提供。严禁拼接摘抄和臆测。\n'
-            + json.dumps(sources, ensure_ascii=False)
-        )
-        try:
-            answer = call_codex_json(prompt, schema)
-            rows = answer.get('summaries')
-            expected = {index for index, _, _ in batch}
-            if not isinstance(rows, list) or len(rows) != len(batch):
-                raise RuntimeError('Incomplete summary batch')
-            validated = {}
-            for row in rows:
-                index = row.get('index') if isinstance(row, dict) else None
-                summary = row.get('summary') if isinstance(row, dict) else None
-                if type(index) is not int or index not in expected or index in validated or not isinstance(summary, str) or not summary.strip():
-                    raise RuntimeError('Invalid or duplicate summary index')
-                validated[index] = summary.strip()
-            for index, summary in validated.items():
-                results[index] = summary
-        except Exception as exc:
+    batches = [pending[start:start + 12] for start in range(0, len(pending), 12)]
+    workers = _semantic_workers()
+    if workers == 1:
+        completed = []
+        for batch in batches:
+            try:
+                completed.append((None, _summarize_batch(batch, schema)))
+            except Exception as exc:
+                completed.append((exc, {}))
+    else:
+        completed = []
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {executor.submit(_summarize_batch, batch, schema): batch for batch in batches}
+            for future in as_completed(futures):
+                try:
+                    completed.append((None, future.result()))
+                except Exception as exc:
+                    completed.append((exc, {}))
+    for error, validated in completed:
+        if error is not None:
             # Only emit a stable error class; CLI diagnostics can contain source text.
-            print(f'  [WARN] Codex semantic summary failed ({type(exc).__name__})', file=sys.stderr)
+            print(f'  [WARN] Codex semantic summary failed ({type(error).__name__})', file=sys.stderr)
+            continue
+        for index, summary in validated.items():
+            results[index] = summary
     return results

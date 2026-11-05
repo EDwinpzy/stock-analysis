@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import codex_summary_cli as cli
@@ -24,25 +24,26 @@ class CodexSummaryTests(unittest.TestCase):
             self.assertEqual(cli.summarize_tasks([('原文甲', ''), ('原文乙', '')]), ['', ''])
 
     def test_cli_is_ephemeral_schema_bound_and_does_not_log_source(self):
-        def fake_run(command, **kwargs):
+        def fake_run(command, input_text, **kwargs):
             self.assertIn('--ephemeral', command)
             self.assertEqual(command[command.index('--model') + 1], 'gpt-6-luna')
-            self.assertIn('model_reasoning_effort="max"', command)
+            self.assertIn('model_reasoning_effort="low"', command)
             self.assertIn('--sandbox', command)
             self.assertEqual(command[command.index('--sandbox') + 1], 'read-only')
-            self.assertEqual(kwargs['timeout'], 180)
+            self.assertEqual(kwargs['timeout'], 120)
+            self.assertIn('source', input_text)
             path = Path(command[command.index('--output-last-message') + 1])
             path.write_text(json.dumps({'answer': 'ok'}), encoding='utf-8')
             return SimpleNamespace(returncode=0, stdout='', stderr='private source')
-        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli.subprocess, 'run', side_effect=fake_run):
+        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli, '_run_process', side_effect=fake_run):
             self.assertEqual(cli.call_codex_json('source', {'type': 'object'}), {'answer': 'ok'})
 
     def test_custom_timeout_is_enforced_without_echoing_input(self):
-        def fake_run(command, **kwargs):
+        def fake_run(command, input_text, **kwargs):
             self.assertEqual(kwargs['timeout'], 60)
             raise cli.subprocess.TimeoutExpired(command, 60, output='private source')
 
-        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli.subprocess, 'run', side_effect=fake_run):
+        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli, '_run_process', side_effect=fake_run):
             with self.assertRaisesRegex(RuntimeError, 'timed out after 60s') as result:
                 cli.call_codex_json('private source', {'type': 'object'}, timeout=60)
         self.assertNotIn('private source', str(result.exception))
@@ -52,27 +53,54 @@ class CodexSummaryTests(unittest.TestCase):
             cli.call_codex_json('source', {'type': 'object'}, timeout=0)
 
     def test_non_object_jsonl_events_are_ignored(self):
-        def fake_run(command, **kwargs):
+        def fake_run(command, input_text, **kwargs):
             path = Path(command[command.index('--output-last-message') + 1])
             path.write_text('{}', encoding='utf-8')
             return SimpleNamespace(returncode=0, stdout='[]\n"text"\n', stderr='')
 
-        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli.subprocess, 'run', side_effect=fake_run):
+        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli, '_run_process', side_effect=fake_run):
             self.assertEqual(cli.call_codex_json('source', {'type': 'object'}), {})
 
     def test_tool_use_rejects_even_valid_json(self):
-        def fake_run(command, **kwargs):
+        def fake_run(command, input_text, **kwargs):
             Path(command[command.index('--output-last-message') + 1]).write_text('{}', encoding='utf-8')
             return SimpleNamespace(returncode=0, stdout=json.dumps({'item': {'type': 'command_execution'}}), stderr='')
-        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli.subprocess, 'run', side_effect=fake_run):
+        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli, '_run_process', side_effect=fake_run):
             with self.assertRaisesRegex(RuntimeError, 'tool use'):
                 cli.call_codex_json('source', {'type': 'object'})
 
     def test_failed_cli_does_not_expose_stderr(self):
-        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli.subprocess, 'run', return_value=SimpleNamespace(returncode=1, stdout='', stderr='secret')):
+        with patch.object(cli.shutil, 'which', return_value='codex'), patch.object(cli, '_run_process', return_value=SimpleNamespace(returncode=1, stdout='', stderr='secret')):
             with self.assertRaises(RuntimeError) as result:
                 cli.call_codex_json('source', {'type': 'object'})
             self.assertNotIn('secret', str(result.exception))
+
+    def test_reasoning_effort_can_be_overridden_and_is_validated(self):
+        with patch.dict(os.environ, {'DAILY_BRIEFING_CODEX_REASONING': 'medium'}):
+            self.assertEqual(cli._reasoning_effort(), 'medium')
+        with patch.dict(os.environ, {'DAILY_BRIEFING_CODEX_REASONING': 'not-a-level'}):
+            self.assertEqual(cli._reasoning_effort(), 'low')
+
+    def test_process_timeout_terminates_the_full_process_tree(self):
+        process = SimpleNamespace(
+            pid=123,
+            communicate=Mock(side_effect=[
+                cli.subprocess.TimeoutExpired(['codex'], 1),
+                ('', ''),
+            ]),
+        )
+        with patch.object(cli.subprocess, 'Popen', return_value=process), patch.object(cli, '_terminate_process_tree') as terminate:
+            with self.assertRaises(cli.subprocess.TimeoutExpired):
+                cli._run_process(['codex'], 'source', cwd=Path('.'), env={}, timeout=1)
+        terminate.assert_called_once_with(process)
+
+    def test_semantic_worker_count_is_bounded(self):
+        with patch.dict(os.environ, {'DAILY_BRIEFING_SEMANTIC_WORKERS': '99'}):
+            self.assertEqual(cli._semantic_workers(), 6)
+        with patch.dict(os.environ, {'DAILY_BRIEFING_SEMANTIC_WORKERS': '0'}):
+            self.assertEqual(cli._semantic_workers(), 1)
+        with patch.dict(os.environ, {'DAILY_BRIEFING_SEMANTIC_WORKERS': 'not-a-number'}):
+            self.assertEqual(cli._semantic_workers(), 4)
 
 
 if __name__ == '__main__':

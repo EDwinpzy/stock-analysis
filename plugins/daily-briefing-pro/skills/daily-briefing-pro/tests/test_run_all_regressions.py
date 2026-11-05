@@ -20,6 +20,7 @@ runtime_paths.get_data_dir = lambda package_dir: Path(_test_data.name)
 
 import run_all
 import build_broadsheet
+import build_briefing
 runtime_paths.get_data_dir = _original_get_data_dir
 from summary_cache import load_summary_cache, save_summary_cache, set_cached_summary
 
@@ -51,6 +52,17 @@ class RunAllRegressionTests(unittest.TestCase):
         with patch.dict(os.environ, {'BRIEFING_SKIP_TRANSCRIPTION': '1'}):
             with self.assertRaisesRegex(RuntimeError, '抖音'):
                 run_all.required_modules_ready({'fetch_douyin.py': {}}, '2026-10-13')
+
+    def test_yanbao_summary_reuses_stored_logic_and_only_summarizes_missing_rows(self):
+        reports = [
+            {"title": "研报甲", "logic": "已缓存的核验逻辑"},
+            {"title": "研报乙", "logic": ""},
+        ]
+        with patch.dict(os.environ, {'DEEPSEEK_API_KEY': '', 'OPENAI_API_KEY': ''}), \
+             patch.object(build_briefing, 'summarize_tasks', return_value=['新生成逻辑']) as summarize:
+            results = build_briefing.ai_summarize_yanbao_parallel(reports)
+        self.assertEqual(results, ['已缓存的核验逻辑', '新生成逻辑'])
+        self.assertEqual(len(summarize.call_args.args[0]), 1)
 
     def test_scheduled_closed_day_skips_collection(self):
         with patch.object(run_all.sys, 'argv', ['run_all.py', '--scheduled']), \
