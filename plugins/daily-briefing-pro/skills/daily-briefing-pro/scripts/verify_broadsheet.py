@@ -7,12 +7,14 @@
   3. 每个板块图标（svg.ico）都有实际绘制尺寸
   4. 无横向溢出（图表等横向滚动容器内部不计）
 并在桌面 1440 / 手机 390 两个视口截图，另切 4 段长图便于逐段查看。
+超长页面使用滚动截图拼接，避免 Chromium full_page 截图的 16K 上限截断正文。
 
 用法:
     python verify_broadsheet.py --out <报刊版.html> [--src <源简报.html>] [--shots <截图目录>]
 """
 import argparse
 import json
+from io import BytesIO
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -81,6 +83,65 @@ def crop(src_png: Path, prefix: str, chunks: int = 4) -> None:
     print("切片:", prefix + f"1..{chunks}")
 
 
+def capture_long_page(page, destination: Path, chunk_height: int = 4096) -> dict:
+    """Capture a long page in viewport-sized slices and stitch them.
+
+    Chromium can return a correctly-sized but mostly blank image when a single
+    full-page screenshot exceeds its texture limit. Capturing and stitching
+    smaller viewport slices keeps every report section painted.
+    """
+    from PIL import Image
+
+    width = int(page.evaluate("document.documentElement.clientWidth"))
+    page.set_viewport_size({"width": width, "height": chunk_height})
+    page.add_style_tag(
+        content="html,body{scrollbar-width:none}body::-webkit-scrollbar{display:none}"
+    )
+    height = int(page.evaluate("document.documentElement.scrollHeight"))
+    if width <= 0 or height <= 0:
+        raise RuntimeError(f"invalid page size: {width}x{height}")
+
+    canvas = Image.new("RGB", (width, height), "white")
+    segments = 0
+    top = 0
+    max_scroll = max(0, height - chunk_height)
+    while top < height:
+        target = min(top, max_scroll)
+        page.evaluate("(y) => window.scrollTo(0, y)", target)
+        page.wait_for_timeout(80)
+        actual_top = int(page.evaluate("window.scrollY"))
+        segment = Image.open(BytesIO(page.screenshot(full_page=False))).convert("RGB")
+        canvas.paste(segment, (0, actual_top))
+        segments += 1
+        if actual_top >= max_scroll:
+            break
+        top += chunk_height
+
+    canvas.save(destination, format="PNG", optimize=True)
+    return {"width": width, "height": height, "segments": segments}
+
+
+def tail_ink_ratio(src_png: Path, fraction: float = 0.05) -> float:
+    """Return the sampled non-background pixel ratio near the bottom edge."""
+    from PIL import Image
+
+    image = Image.open(src_png).convert("RGB")
+    width, height = image.size
+    pixels = image.load()
+    start = max(0, int(height * (1.0 - fraction)))
+    ink = 0
+    total = 0
+    for y in range(start, height, 10):
+        for x in range(10, width - 10, 10):
+            red, green, blue = pixels[x, y]
+            total += 1
+            if max(red, green, blue) < 215 or (
+                max(red, green, blue) - min(red, green, blue) > 30
+            ):
+                ink += 1
+    return ink / total if total else 0.0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="报刊风简报验收")
     ap.add_argument("--out", required=True, help="报刊版 HTML")
@@ -111,9 +172,20 @@ def main(argv=None):
             report = view.evaluate(CHECK_JS)
             print(f"--- {label} ---")
             print(json.dumps(report, ensure_ascii=False, indent=1))
-            view.screenshot(path=str(shots / f"{label}.png"), full_page=True)
-            print("截图:", f"{label}.png")
-            crop(shots / f"{label}.png", label[0])
+            screenshot_path = shots / f"{label}.png"
+            capture = capture_long_page(view, screenshot_path)
+            ink_ratio = tail_ink_ratio(screenshot_path)
+            print(
+                "截图:",
+                f"{label}.png",
+                f"{capture['width']}x{capture['height']}",
+                f"segments={capture['segments']}",
+                f"tail_ink={ink_ratio:.5f}",
+            )
+            if ink_ratio < 0.0005:
+                ok = False
+                print("[FAIL] 长图尾部为空白，疑似截图截断")
+            crop(screenshot_path, label[0])
             if expect:
                 if len(report["boards"]) != expect["boards"]:
                     ok = False
