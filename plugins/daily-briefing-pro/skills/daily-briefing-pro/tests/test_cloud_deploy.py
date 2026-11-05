@@ -4,13 +4,15 @@ from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = SKILL_ROOT.parents[1]
+DEPLOY_ROOT = PLUGIN_ROOT / "deploy" / "cloud"
 
 
+@unittest.skipUnless(DEPLOY_ROOT.is_dir(), "deploy tree is source-only")
 class CloudDeployContractTests(unittest.TestCase):
     def test_compose_uses_json_cookie_targets_and_writable_model_volume(self):
         compose = (PLUGIN_ROOT / "deploy" / "cloud" / "compose.yaml").read_text(encoding="utf-8")
 
-        self.assertIn("daily-briefing-pro:3.23.14-cloud", compose)
+        self.assertIn("daily-briefing-pro:3.23.15-cloud", compose)
         self.assertIn("ROTATION_MODEL_DIR: /runtime/models/sw_rotation_model", compose)
         self.assertIn("./runtime/models:/runtime/models", compose)
         self.assertIn("target: tgb_cookies.json", compose)
