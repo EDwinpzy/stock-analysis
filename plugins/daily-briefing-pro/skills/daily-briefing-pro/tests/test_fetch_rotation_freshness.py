@@ -124,6 +124,9 @@ class RotationFreshnessTests(unittest.TestCase):
 
             with patch("akshare.stock_zh_index_daily", return_value=response), patch(
                 "akshare.stock_zh_index_daily_tx", return_value=response
+            ), patch(
+                "fetch_rotation.fetch_benchmark_from_hithink",
+                side_effect=ValueError("hithink unavailable"),
             ):
                 with self.assertRaisesRegex(ValueError, "未补齐到 2026-10-13"):
                     fetch_rotation.refresh_benchmark_data(model_dir, self.target_date)
@@ -166,6 +169,89 @@ class RotationFreshnessTests(unittest.TestCase):
                 pd.read_csv(data_dir / "benchmark_csi300.csv")["date"].max(),
                 self.target_date,
             )
+
+    def test_benchmark_refresh_uses_hithink_when_akshare_is_stale(self):
+        with tempfile.TemporaryDirectory() as temp:
+            model_dir = Path(temp)
+            data_dir = model_dir / "data"
+            data_dir.mkdir()
+            path = data_dir / "benchmark_csi300.csv"
+            path.write_text("date,close\n2026-10-09,4500\n", encoding="utf-8")
+            stale = pd.DataFrame({"date": ["2026-10-09"], "close": [4500]})
+            fallback = pd.DataFrame(
+                {"date": ["2026-10-09", self.target_date], "close": [4500, 4520]}
+            )
+
+            with patch("akshare.stock_zh_index_daily", return_value=stale), patch(
+                "akshare.stock_zh_index_daily_tx", return_value=stale
+            ), patch("fetch_rotation.fetch_benchmark_from_hithink", return_value=fallback):
+                asof = fetch_rotation.refresh_benchmark_data(model_dir, self.target_date)
+
+            refreshed = pd.read_csv(path, dtype={"date": str})
+            self.assertEqual(asof, self.target_date)
+            self.assertEqual(refreshed["date"].tolist(), ["2026-10-09", self.target_date])
+            self.assertEqual(refreshed.iloc[-1]["close"], 4520)
+
+    def test_industry_refresh_uses_hithink_when_akshare_is_stale(self):
+        with tempfile.TemporaryDirectory() as temp:
+            model_dir = Path(temp)
+            data_dir = model_dir / "data"
+            data_dir.mkdir()
+            (data_dir / "ths_industry_info.csv").write_text(
+                "code,name\n881001,测试行业\n", encoding="utf-8"
+            )
+            (data_dir / "ths_industry_daily.csv").write_text(
+                "code,name,date,close,open,high,low,volume,amount\n"
+                "881001,测试行业,2026-10-09,100,99,101,98,1000,2000\n",
+                encoding="utf-8",
+            )
+            (data_dir / "benchmark_csi300.csv").write_text(
+                "date,close\n2026-10-09,4500\n2026-10-13,4520\n", encoding="utf-8"
+            )
+            stale = pd.DataFrame(
+                {"日期": ["2026-10-09"], "收盘价": [100], "开盘价": [99],
+                 "最高价": [101], "最低价": [98], "成交量": [1000], "成交额": [2000]}
+            )
+            fallback = pd.DataFrame(
+                {"date": [self.target_date], "close": [101], "open": [100],
+                 "high": [102], "low": [99], "volume": [1100], "amount": [2100],
+                 "code": ["881001"], "name": ["测试行业"]}
+            )
+
+            with patch("akshare.stock_board_industry_index_ths", return_value=stale), patch(
+                "fetch_rotation.fetch_industry_from_hithink", return_value=fallback
+            ) as hithink, patch("fetch_rotation.refresh_benchmark_data", return_value=self.target_date), patch(
+                "fetch_rotation.time.sleep"
+            ):
+                coverage = fetch_rotation.refresh_industry_data(model_dir, self.target_date)
+
+            hithink.assert_called_once_with(
+                "881001", "测试行业", self.target_date,
+                ["code", "name", "date", "close", "open", "high", "low", "volume", "amount"],
+            )
+            self.assertEqual(coverage["complete_industries"], 1)
+            refreshed = pd.read_csv(data_dir / "ths_industry_daily.csv", dtype={"code": str})
+            self.assertEqual(refreshed["date"].max(), self.target_date)
+            self.assertEqual(refreshed.iloc[-1]["close"], 101)
+
+    def test_hithink_industry_payload_maps_to_model_columns(self):
+        payload = {
+            "item": [
+                {"date_ms": 1791734400000, "close_price": 100, "open_price": 99,
+                 "high_price": 101, "low_price": 98, "volume": 1000, "turnover": 2000},
+                {"date_ms": 1791820800000, "close_price": 101, "open_price": 100,
+                 "high_price": 102, "low_price": 99, "volume": 1100, "turnover": 2100},
+            ]
+        }
+        columns = ["code", "name", "date", "close", "open", "high", "low", "volume", "amount"]
+        with patch("fetch_rotation.hithink_call", return_value=payload):
+            frame = fetch_rotation.fetch_industry_from_hithink(
+                "881001", "测试行业", self.target_date, columns
+            )
+
+        self.assertEqual(frame.columns.tolist(), columns)
+        self.assertEqual(frame.iloc[-1]["date"], self.target_date)
+        self.assertEqual(frame.iloc[-1]["amount"], 2100)
 
 
 if __name__ == "__main__":

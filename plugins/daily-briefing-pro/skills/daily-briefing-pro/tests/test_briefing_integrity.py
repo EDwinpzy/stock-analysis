@@ -104,7 +104,9 @@ class RotationFreshnessTests(unittest.TestCase):
             path = root / 'data/ths_industry_daily.csv'
             original = 'date,code,name,close\n2026-09-15,881001,测试行业,100\n'
             path.write_text(original, encoding='utf-8')
-            with patch('akshare.stock_board_industry_index_ths', side_effect=ValueError('fetch failed')), patch('fetch_rotation.time.sleep'):
+            with patch('akshare.stock_board_industry_index_ths', side_effect=ValueError('fetch failed')), patch(
+                'fetch_rotation.fetch_industry_from_hithink', side_effect=ValueError('hithink unavailable')
+            ), patch('fetch_rotation.time.sleep'):
                 with self.assertRaises(ValueError):
                     refresh_industry_data(root, TRADE)
             self.assertEqual(path.read_text(encoding='utf-8'), original)

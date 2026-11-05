@@ -79,6 +79,7 @@ def call_codex_json(prompt: str, schema: dict, timeout: int = 180) -> dict:
         )
         command = [
             executable, 'exec', '--ephemeral', '--skip-git-repo-check',
+            '--ignore-user-config',
             '--sandbox', 'read-only', '--color', 'never', '--json',
             '--model', os.environ.get('DAILY_BRIEFING_CODEX_MODEL', 'gpt-6-luna'),
             '--config', 'model_reasoning_effort="max"',

@@ -2,7 +2,7 @@ name: daily-briefing-pro-cloud
 
 services:
   briefing:
-    image: daily-briefing-pro:3.23.15-cloud
+    image: daily-briefing-pro:3.23.16-cloud
     build:
       context: ../..
       dockerfile: deploy/cloud/Dockerfile

@@ -29,7 +29,12 @@ from typing import Iterable, Mapping
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
 from runtime_paths import get_data_dir
-from _hithink import trade_dates
+from _hithink import (
+    call as hithink_call,
+    date_ms as hithink_date_ms,
+    end_of_day_ms as hithink_end_of_day_ms,
+    trade_dates,
+)
 
 DATA_DIR = get_data_dir(BASE_DIR)
 HISTORY_PATH = DATA_DIR / "rotation_history.json"
@@ -209,7 +214,101 @@ def refresh_benchmark_data(model_dir: Path, expected: str, force: bool = False) 
         except Exception as exc:
             failures.append(f'{source}: {exc}')
 
+    try:
+        fresh = fetch_benchmark_from_hithink(expected)
+        merged = pd.concat([old, fresh], ignore_index=True)
+        merged = merged.drop_duplicates('date', keep='last').sort_values('date')
+        if path.exists():
+            backup = path.with_name(f'benchmark_csi300.before-{expected}.csv')
+            if not backup.exists():
+                backup.write_bytes(path.read_bytes())
+        temp = path.with_suffix('.refresh.tmp')
+        merged.to_csv(temp, index=False, encoding='utf-8-sig')
+        temp.replace(path)
+        return expected
+    except Exception as exc:
+        failures.append(f'hithink: {exc}')
+
     raise ValueError(f'沪深300基准行情未补齐到 {expected}：' + ' / '.join(failures))
+
+
+def fetch_benchmark_from_hithink(expected: str):
+    """Return the CSI 300 daily close from the official Hithink index API."""
+    import pandas as pd
+
+    data = hithink_call(
+        'index', 'history',
+        '--thscode', '000300.SH',
+        '--start-ms', str(hithink_date_ms(expected[:4] + '-01-01')),
+        '--end-ms', str(hithink_end_of_day_ms(expected)),
+    )
+    rows = []
+    for item in data.get('item') or []:
+        raw = item.get('date_ms')
+        if raw is None:
+            continue
+        day = datetime.fromtimestamp(int(raw) / 1000, CN).strftime('%Y-%m-%d')
+        if day <= expected:
+            rows.append({'date': day, 'close': item.get('close_price')})
+    frame = pd.DataFrame(rows)
+    if frame.empty:
+        raise ValueError('同花顺未返回沪深300行情')
+    frame['close'] = pd.to_numeric(frame['close'], errors='coerce')
+    frame = frame.dropna(subset=['close'])
+    if frame.empty or frame['date'].max() != expected or not (frame['close'] > 0).all():
+        latest = frame['date'].max() if not frame.empty else '未知'
+        raise ValueError(f'同花顺最新有效日期为 {latest}')
+    return frame[['date', 'close']]
+
+
+def fetch_industry_from_hithink(code: str, name: str, expected: str, columns: list[str]):
+    """Return one industry's daily bars from the official Hithink index API.
+
+    AKShare's ``stock_board_industry_index_ths`` occasionally trails the
+    exchange by a session. The official index endpoint is the same THS series
+    and is the authoritative fallback, but it must still prove that it covers
+    the requested session before any partial data is merged.
+    """
+    import pandas as pd
+
+    data = hithink_call(
+        'index', 'history',
+        '--thscode', f'{code}.TI',
+        '--start-ms', str(hithink_date_ms(expected[:4] + '-01-01')),
+        '--end-ms', str(hithink_end_of_day_ms(expected)),
+    )
+    rows = []
+    for item in data.get('item') or []:
+        raw = item.get('date_ms')
+        if raw is None:
+            continue
+        day = datetime.fromtimestamp(int(raw) / 1000, CN).strftime('%Y-%m-%d')
+        if day > expected:
+            continue
+        rows.append({
+            'date': day,
+            'close': item.get('close_price'),
+            'open': item.get('open_price'),
+            'high': item.get('high_price'),
+            'low': item.get('low_price'),
+            'volume': item.get('volume'),
+            'amount': item.get('turnover'),
+        })
+    frame = pd.DataFrame(rows)
+    if frame.empty:
+        raise ValueError('同花顺未返回行业行情')
+    for column in ('close', 'open', 'high', 'low', 'volume', 'amount'):
+        if column in frame.columns:
+            frame[column] = pd.to_numeric(frame[column], errors='coerce')
+    frame = frame.sort_values('date')
+    if frame['date'].max() != expected or not (frame['close'] > 0).all():
+        latest = frame['date'].max() if not frame.empty else '未知'
+        raise ValueError(f'同花顺最新有效日期为 {latest}')
+    frame['code'], frame['name'] = code, name
+    missing = [column for column in columns if column not in frame.columns]
+    if missing:
+        raise ValueError(f'同花顺缺少列：{",".join(missing)}')
+    return frame[columns]
 
 
 def refresh_industry_data(model_dir: Path, expected: str, force: bool = False) -> dict:
@@ -228,6 +327,7 @@ def refresh_industry_data(model_dir: Path, expected: str, force: bool = False) -
     columns = {'日期': 'date', '收盘价': 'close', '开盘价': 'open', '最高价': 'high', '最低价': 'low', '成交量': 'volume', '成交额': 'amount'}
 
     def fetch(row):
+        failures = []
         for attempt in range(3):
             try:
                 frame = ak.stock_board_industry_index_ths(symbol=row['name'], start_date=expected[:4] + '0101', end_date=expected.replace('-', '')).rename(columns=columns)
@@ -237,10 +337,16 @@ def refresh_industry_data(model_dir: Path, expected: str, force: bool = False) -
                     raise ValueError('最新交易日或收盘价无效')
                 frame['code'], frame['name'] = row['code'], row['name']
                 return frame[old.columns]
-            except Exception:
+            except Exception as exc:
+                failures.append(f'akshare: {exc}')
                 if attempt == 2:
-                    raise ValueError(f"行业行情未补齐：{row['name']}")
+                    break
                 time.sleep(attempt + 1)
+        try:
+            return fetch_industry_from_hithink(row['code'], row['name'], expected, list(old.columns))
+        except Exception as exc:
+            failures.append(f'hithink: {exc}')
+        raise ValueError(f"行业行情未补齐：{row['name']}（{'；'.join(failures)}）")
 
     if not needed.empty:
         print(f'[rotation] 增量更新 {len(needed)}/{len(info)} 个行业', file=sys.stderr)
