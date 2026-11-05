@@ -45,7 +45,16 @@ CORE_MODULES = (
     "bs4",
     "playwright",
     "akshare",
+    "sklearn",
+    "scipy",
 )
+PANEL_COLUMNS = (
+    "date", "sh_close", "sh_ma250", "tradable_count", "advance_count", "turnover",
+    "limit_up", "limit_down", "first_board", "consecutive", "space", "next_space",
+    "bomb_rate", "yday_limitup_ret", "yday_lianban_ret", "p12", "p23", "p3p",
+    "board2", "board3", "board4p", "source",
+)
+WHISPER_MIN_BYTES = 50 * 1024 * 1024
 TRANSCRIPTION_KEY_BY_PROVIDER = {
     "groq": "GROQ_API_KEY",
     "openai": "OPENAI_API_KEY",
@@ -221,15 +230,20 @@ def _check_cookie(
     env_name: str,
     fallback: Sequence[Path],
     env: Mapping[str, str],
+    required: bool = True,
 ) -> Check:
     path, reason = _choose_cookie_file(env_name=env_name, fallback=fallback, env=env)
     count, parse_reason = _cookie_count(path)
     if reason or parse_reason:
+        detail = reason or parse_reason
+        fix = f"从已登录浏览器导出Cookie到 {fallback[-1]}，或用 {env_name} 指定只读挂载路径"
+        if not required:
+            return _warning(key, label, f"{detail}（可选；公开页仍会尝试）", fix)
         return _error(
             key,
             label,
-            reason or parse_reason,
-            f"从已登录浏览器导出Cookie到 {fallback[-1]}，或用 {env_name} 指定只读挂载路径",
+            detail,
+            fix,
         )
     return _ok(key, label, f"已找到 {count} 条可用Cookie；登录时效仍需采集时核验")
 
@@ -256,6 +270,25 @@ def _check_modules() -> Check:
             "按 deploy/cloud/requirements-cloud.txt 安装依赖",
         )
     return _ok("python_modules", "Python依赖", f"{len(CORE_MODULES)} 个核心模块可用")
+
+
+def _check_browser() -> Check:
+    """Launch the packaged Chromium once; a module import alone is not enough."""
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(headless=True, timeout=30000)
+            version = browser.version
+            browser.close()
+    except Exception as exc:  # noqa: BLE001
+        return _error(
+            "playwright_browser",
+            "浏览器运行时",
+            f"Chromium 无法启动 ({type(exc).__name__}: {str(exc)[:120]})",
+            "运行 python -m playwright install --with-deps chromium；云端镜像需保留浏览器缓存",
+        )
+    return _ok("playwright_browser", "浏览器运行时", f"Chromium {version} 可启动")
 
 
 def _check_tools() -> list[Check]:
@@ -348,7 +381,43 @@ def _check_hithink(env: Mapping[str, str]) -> tuple[Check, list[str] | None]:
     return _ok("hithink", "同花顺数据CLI", f"{source}认证可用；交易日历 {len(days)} 个日期"), days
 
 
-def _check_semantic_summary() -> Check:
+AI_ENDPOINTS = {
+    "DEEPSEEK_API_KEY": "https://api.deepseek.com",
+    "OPENAI_API_KEY": "https://api.openai.com/v1",
+    "SILICONFLOW_API_KEY": "https://api.siliconflow.cn/v1",
+}
+
+
+def _probe_ai_key(env: Mapping[str, str]) -> tuple[str, str]:
+    """Return (state, detail) for the first configured OpenAI-compatible key.
+
+    Only /models is called: it verifies authentication without spending tokens.
+    A network failure is a warning because egress policy is environment-specific.
+    """
+    import requests
+
+    for key_name, base in AI_ENDPOINTS.items():
+        value = str(env.get(key_name) or "").strip()
+        if not value:
+            continue
+        try:
+            response = requests.get(
+                f"{base}/models",
+                headers={"Authorization": f"Bearer {value}"},
+                timeout=8,
+            )
+        except requests.RequestException as exc:
+            return "warning", f"{key_name} 已配置，但认证探测失败 ({type(exc).__name__})"
+        if response.status_code in (401, 403):
+            return "error", f"{key_name} 已配置但服务端拒绝认证 (HTTP {response.status_code})"
+        if response.status_code >= 500:
+            return "warning", f"{key_name} 已配置，服务端返回 HTTP {response.status_code}"
+        return "ok", f"{key_name} 认证可用 (HTTP {response.status_code})"
+    return "unknown", ""
+
+
+def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
+    values = env if env is not None else os.environ
     try:
         from codex_summary_cli import semantic_summary_status
 
@@ -361,7 +430,22 @@ def _check_semantic_summary() -> Check:
             "检查 DEEPSEEK_API_KEY / OPENAI_API_KEY，或登录 Codex CLI",
         )
     if available:
-        return _ok("semantic_summary", "AI语义总结", f"可用来源: {source}")
+        state, detail = _probe_ai_key(values)
+        if state == "error":
+            return _error(
+                "semantic_summary",
+                "AI语义总结",
+                detail,
+                "更换有效的 DEEPSEEK_API_KEY / OPENAI_API_KEY / SILICONFLOW_API_KEY",
+            )
+        if state == "warning":
+            return _warning(
+                "semantic_summary",
+                "AI语义总结",
+                f"{source}；{detail}",
+                "确认云端出网策略允许访问模型服务；否则只能复用已有摘要缓存",
+            )
+        return _ok("semantic_summary", "AI语义总结", f"可用来源: {source}；{detail or '未配置可探测的API Key'}")
     return _error(
         "semantic_summary",
         "AI语义总结",
@@ -377,6 +461,29 @@ def _module_available(name: str) -> bool:
         return False
 
 
+def _whisper_cache_path(model_name: str, env: Mapping[str, str]) -> Path:
+    cache_home = str(env.get("XDG_CACHE_HOME") or "").strip()
+    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
+    return base / "whisper" / f"{model_name}.pt"
+
+
+def _whisper_ready(env: Mapping[str, str]) -> tuple[bool, str]:
+    """Verify both the Python packages and the actual model weights."""
+    if not (_module_available("whisper") and _module_available("torch")):
+        return False, "whisper/torch 未安装"
+    try:
+        import torch  # noqa: F401
+    except Exception as exc:  # noqa: BLE001
+        return False, f"torch 导入失败 ({type(exc).__name__})"
+    model_name = str(env.get("DOUYIN_WHISPER_MODEL") or "small").strip() or "small"
+    path = _whisper_cache_path(model_name, env)
+    if not path.is_file():
+        return False, f"模型权重未下载: {path}"
+    if path.stat().st_size < WHISPER_MIN_BYTES:
+        return False, f"模型权重不完整: {path} ({path.stat().st_size} bytes)"
+    return True, f"{model_name} 权重已就绪 ({path.stat().st_size / 1024 / 1024:.0f} MB)"
+
+
 def _check_transcription(env: Mapping[str, str]) -> Check:
     """Verify the configured Douyin transcription path before downloading video."""
     provider = str(env.get("DOUYIN_TRANSCRIPT_PROVIDER") or "local").strip().lower()
@@ -390,7 +497,7 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "改为 local、auto、groq、openai 或 siliconflow",
         )
 
-    whisper_ready = _module_available("whisper") and _module_available("torch")
+    whisper_ready, whisper_detail = _whisper_ready(env)
     configured = [
         name for name, key in TRANSCRIPTION_KEY_BY_PROVIDER.items()
         if str(env.get(key) or "").strip()
@@ -401,15 +508,15 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
                 return _warning(
                     "transcription",
                     "抖音转录",
-                    "云端显式使用本地 Whisper；1.5 CPU / 2GB 限制下可能超时",
+                    f"云端显式使用本地 Whisper（{whisper_detail}）；1.5 CPU / 2GB 限制下可能超时",
                     "如已配置转录 API Key，改为 DOUYIN_TRANSCRIPT_PROVIDER=auto",
                 )
-            return _ok("transcription", "抖音转录", "本地 Whisper（small，中文）可用")
+            return _ok("transcription", "抖音转录", f"本地 Whisper（{whisper_detail}）")
         return _error(
             "transcription",
             "抖音转录",
-            "DOUYIN_TRANSCRIPT_PROVIDER=local，但 whisper/torch 未安装",
-            "安装 openai-whisper 与 CPU torch，或显式配置可用的转录 API Key",
+            f"DOUYIN_TRANSCRIPT_PROVIDER=local，但{whisper_detail}",
+            "安装 openai-whisper 与 CPU torch 并预下载模型权重，或显式配置可用的转录 API Key",
         )
     if provider == "auto":
         if configured:
@@ -419,15 +526,15 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
                 return _warning(
                     "transcription",
                     "抖音转录",
-                    "未配置转录 API Key，将回退到 1.5 CPU 的本地 Whisper，可能超时",
+                    f"未配置转录 API Key，将回退到 1.5 CPU 的本地 Whisper（{whisper_detail}），可能超时",
                     "在云端 secrets 配置 GROQ_API_KEY、OPENAI_API_KEY 或 SILICONFLOW_API_KEY",
                 )
-            return _ok("transcription", "抖音转录", "未配置 API Key，将使用本地 Whisper")
+            return _ok("transcription", "抖音转录", f"未配置 API Key，将使用本地 Whisper（{whisper_detail}）")
         return _error(
             "transcription",
             "抖音转录",
-            "未配置 Groq/OpenAI/SiliconFlow Key，且 whisper/torch 不可用",
-            "安装 openai-whisper 与 CPU torch，或在 secrets 中配置转录 API Key",
+            f"未配置 Groq/OpenAI/SiliconFlow Key，且{whisper_detail}",
+            "安装 openai-whisper 与 CPU torch 并预下载模型，或在 secrets 中配置转录 API Key",
         )
 
     key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
@@ -460,6 +567,31 @@ def _csv_summary(path: Path, *, date_column: str = "date") -> tuple[int, str]:
 
 def _check_panel(data_dir: Path, trade_date: str) -> Check:
     path = data_dir / "sentiment_panel_v32.csv"
+    if not path.is_file():
+        return _error(
+            "sentiment_panel",
+            "情绪模型历史面板",
+            f"文件缺失: {path}",
+            "从本机长期数据同步 sentiment_panel_v32.csv，或让云端重新回补至少60个交易日",
+        )
+    try:
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            header = next(csv.reader(handle), [])
+    except OSError as exc:
+        return _error(
+            "sentiment_panel",
+            "情绪模型历史面板",
+            f"无法读取: {path} ({type(exc).__name__})",
+            "恢复可读的面板文件",
+        )
+    missing_columns = [name for name in PANEL_COLUMNS if name not in header]
+    if missing_columns:
+        return _error(
+            "sentiment_panel",
+            "情绪模型历史面板",
+            f"缺少模型必需列: {', '.join(missing_columns)}",
+            "恢复完整 v3.2 面板；缺列会被下游静默补 0，不能继续生成温度",
+        )
     try:
         rows, latest = _csv_summary(path)
     except ValueError as exc:
@@ -563,7 +695,10 @@ def _check_model(model_dir: Path | None, trade_date: str) -> list[Check]:
         ]
     checks = []
     missing = [
-        name for name in ("run.py", "config.json")
+        name for name in (
+            "run.py", "config.json",
+            "src/data.py", "src/features.py", "src/engine.py",
+        )
         if not (model_dir / name).is_file()
     ]
     if missing:
@@ -640,28 +775,46 @@ def _check_model(model_dir: Path | None, trade_date: str) -> list[Check]:
                             f"{daily_rows} 行，{info_rows} 个行业，截至 {latest or '未知'}",
                         )
                     )
-    else:
-        input_files = [
-            path for path in data_dir.rglob("*")
-            if path.is_file() and not path.name.startswith(".")
-        ]
-        if not input_files:
+    elif universe == "sw":
+        required = ("data/sw_l1_info.csv", "data/sw_l1_daily.csv", "data/benchmark_csi300.csv")
+        missing_data = [name for name in required if not (model_dir / name).is_file()]
+        if missing_data:
             checks.append(
                 _error(
                     "rotation_inputs",
                     "轮动模型输入",
-                    f"{data_dir} 中没有任何原始输入文件",
-                    "恢复模型必需的行情或因子数据；不能用旧排行结果代替",
+                    f"缺少: {', '.join(missing_data)}",
+                    "恢复申万一级行业行情与沪深300基准，不能用旧排行结果代替",
                 )
             )
         else:
-            checks.append(
-                _ok(
-                    "rotation_inputs",
-                    "轮动模型输入",
-                    f"{len(input_files)} 个原始输入文件",
-                )
+            try:
+                info_rows, _ = _csv_summary(model_dir / "data/sw_l1_info.csv", date_column="code")
+                daily_rows, latest = _csv_summary(model_dir / "data/sw_l1_daily.csv")
+            except ValueError as exc:
+                checks.append(_error("rotation_inputs", "轮动模型输入", str(exc), "恢复完整模型数据"))
+            else:
+                detail = f"{daily_rows} 行，{info_rows} 个行业，截至 {latest or '未知'}"
+                if latest and latest < trade_date:
+                    checks.append(
+                        _warning(
+                            "rotation_inputs",
+                            "轮动模型输入",
+                            detail + "；采集阶段将增量补齐",
+                            "云端必须允许访问申万行业指数和沪深300行情，否则先同步模型数据目录",
+                        )
+                    )
+                else:
+                    checks.append(_ok("rotation_inputs", "轮动模型输入", detail))
+    else:
+        checks.append(
+            _error(
+                "rotation_inputs",
+                "轮动模型输入",
+                f"未知 universe={universe}",
+                "config.json 只支持 ths 或 sw",
             )
+        )
     checks.append(_writable_check("rotation_writable", "轮动模型目录可写性", model_dir, create=False))
     if data_dir.is_dir():
         checks.append(
@@ -673,11 +826,49 @@ def _check_model(model_dir: Path | None, trade_date: str) -> list[Check]:
     return checks
 
 
-def _check_history(data_dir: Path) -> list[Check]:
+def _check_history(data_dir: Path, trade_date: str = "") -> list[Check]:
     checks = []
     rotation = data_dir / "rotation_history.json"
     if rotation.is_file():
-        checks.append(_ok("rotation_history", "轮动历史快照", str(rotation)))
+        try:
+            payload = _read_json(rotation)
+            if not isinstance(payload, dict):
+                raise ValueError("顶层必须是 {日期: 快照} 对象")
+            parsed = []
+            for key, value in payload.items():
+                if not isinstance(value, dict):
+                    raise ValueError(f"{key} 的快照不是对象")
+                names = value.get("names")
+                if not isinstance(names, list) or not names:
+                    raise ValueError(f"{key} 缺少非空 names 数组")
+                datetime.strptime(str(key), "%Y-%m-%d")
+                parsed.append(str(key))
+        except (ValueError, TypeError) as exc:
+            checks.append(
+                _error(
+                    "rotation_history",
+                    "轮动历史快照",
+                    f"JSON无效: {exc}",
+                    "从本机重新同步 rotation_history.json；坏文件会被采集器当作空历史",
+                )
+            )
+        else:
+            latest = max(parsed) if parsed else ""
+            if trade_date and latest and latest < (
+                datetime.strptime(trade_date, "%Y-%m-%d") - timedelta(days=30)
+            ).strftime("%Y-%m-%d"):
+                checks.append(
+                    _warning(
+                        "rotation_history",
+                        "轮动历史快照",
+                        f"{len(parsed)} 个交易日，最新 {latest}，已超过30天未更新",
+                        "同步最新 rotation_history.json；否则新进/跌出会与过期基线比较",
+                    )
+                )
+            else:
+                checks.append(
+                    _ok("rotation_history", "轮动历史快照", f"{len(parsed)} 个交易日，最新 {latest}")
+                )
     else:
         checks.append(
             _warning(
@@ -692,10 +883,15 @@ def _check_history(data_dir: Path) -> list[Check]:
         try:
             payload = _read_json(node)
             records = payload.get("records", []) if isinstance(payload, dict) else []
+            if not isinstance(records, list):
+                raise ValueError("records 必须是数组")
+            for item in records:
+                if not isinstance(item, dict) or not item.get("date"):
+                    raise ValueError("存在缺少 date 的记录")
             checks.append(_ok("node_history", "节点票历史", f"{len(records)} 个交易日快照"))
         except ValueError as exc:
             checks.append(
-                _warning("node_history", "节点票历史", str(exc), "从本机同步 node_cycle_history.json")
+                _error("node_history", "节点票历史", f"JSON无效: {exc}", "从本机同步 node_cycle_history.json")
             )
     else:
         checks.append(
@@ -790,14 +986,44 @@ def build_preflight(
 
     checks.append(_check_scripts(package))
     checks.append(_check_modules())
+    checks.append(_check_browser())
     checks.append(_writable_check("data_writable", "持久数据目录", data, create=True))
     checks.append(_writable_check("output_writable", "报告输出目录", output, create=True))
 
     if collecting:
+        try:
+            from cloud_bootstrap import bootstrap
+
+            boot = bootstrap(package, data, values)
+        except Exception as exc:  # noqa: BLE001
+            checks.append(
+                _warning(
+                    "cloud_bootstrap",
+                    "云端基线恢复",
+                    f"执行失败 ({type(exc).__name__}: {str(exc)[:120]})",
+                    "检查插件 data/cloud-baseline 是否完整",
+                )
+            )
+        else:
+            if boot["errors"]:
+                checks.append(
+                    _error(
+                        "cloud_bootstrap",
+                        "云端基线恢复",
+                        "；".join(boot["errors"])[:300],
+                        "恢复 data/cloud-baseline 中的历史数据与模型压缩包",
+                    )
+                )
+            else:
+                detail = f"新增 {boot['data_seeded']} 个基线文件"
+                if boot["model_dir"]:
+                    detail += f"；轮动模型 {boot['model_dir']}"
+                checks.append(_ok("cloud_bootstrap", "云端基线恢复", detail))
+
         checks.extend(_check_tools())
         hithink_check, trading_days = _check_hithink(values)
         checks.append(hithink_check)
-        checks.append(_check_semantic_summary())
+        checks.append(_check_semantic_summary(values))
         checks.append(_check_transcription(values))
         home = Path.home()
         checks.append(
@@ -825,11 +1051,12 @@ def build_preflight(
                 env_name="XUEQIU_COOKIE_PATH",
                 fallback=(data / "xueqiu_cookies.json", home / ".codex" / "xueqiu_cookies.json"),
                 env=values,
+                required=False,
             )
         )
         checks.append(_check_panel(data, trade_date))
         checks.extend(_check_static_data(package))
-        checks.extend(_check_history(data))
+        checks.extend(_check_history(data, trade_date))
 
         model_path = None
         try:

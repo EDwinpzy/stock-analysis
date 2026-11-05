@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "dates": {
+    "2026-10-10": {
+      "news": {
+        "https://finance.eastmoney.com/a/202610103891867714.html": {
+          "input_sha256": "3790afb4b7844430c8154a33ca46c9d8a590106171a763d8a4e87bd56d6ce910",
+          "summary": "{\"type\": \"中性\", \"reason\": \"工商增资信息；未给出上市公司业绩影响，不据此判断股价方向。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891866152.html": {
+          "input_sha256": "aa05259ac07be3cdbc794bcbf7deb47b283e82b74b3aec4a904334b20846e926",
+          "summary": "{\"type\": \"中性\", \"reason\": \"政策提出支持研发投入；具体扣除比例、适用范围和执行安排仍需配套文件。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891866343.html": {
+          "input_sha256": "199efdb703c65d065d9ceebeb8aa020e40fd85fc73ecfb7f017f552722728032",
+          "summary": "{\"type\": \"中性\", \"reason\": \"文保案件通报；未指向A股上市公司，不能据“处罚”一词判定市场利空。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891866642.html": {
+          "input_sha256": "9bfdf07aa1e36e0fee159575dbe1c9b9ab6b70f7f7c9ed113fa84b33c117fa1d",
+          "summary": "{\"type\": \"中性\", \"reason\": \"人才培训政策，属中长期供给侧信息，短期盈利影响未量化。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891866294.html": {
+          "input_sha256": "a11445a287dd6d5abfc9bdcafc86f6606190af64beb886de2ff827f2d62c0321",
+          "summary": "{\"type\": \"中性\", \"reason\": \"法国外贸银行的美国通胀与加息观点，属于机构预测。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891864863.html": {
+          "input_sha256": "527ccb4aaefbaa4cfb812eac2cda5e0bfac4527940cad12932a5ca6347b90771",
+          "summary": "{\"type\": \"中性\", \"reason\": \"海外频谱交易，尚未核验对A股企业订单的传导。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891864320.html": {
+          "input_sha256": "30656fac02bf4112542d0697cc034a3fdac007b5e64b23b48e907f89b0d57f5f",
+          "summary": "{\"type\": \"中性\", \"reason\": \"算力补贴尚处拟议阶段；最高50%针对数字广告企业，不能理解为普遍已实施。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891862692.html": {
+          "input_sha256": "4b35145a0d854dd13348f9860c23476a12797bfc53925f4d726ec844d66603bc",
+          "summary": "{\"type\": \"中性\", \"reason\": \"海外预测市场可疑交易调查，未指向A股上市公司。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891864517.html": {
+          "input_sha256": "136927d963e3ddefa5a69d90037e04d451c7591a90280c5ebbfd9b6de4d91ab8",
+          "summary": "{\"type\": \"中性\", \"reason\": \"海外灾害通报，未提供A股业务损失或订单影响。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891863930.html": {
+          "input_sha256": "f5c1a60a151af46cd92a95ca24cd5c38b17b9f1fe21b8c4f67198815c46308ef",
+          "summary": "{\"type\": \"中性\", \"reason\": \"子基金投资计划；拟参与投资不等同已完成出资或上市公司订单。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891862490.html": {
+          "input_sha256": "c5f86c32894e013939422d79e228a8fda73e7a201aedbef43053359756f91386",
+          "summary": "{\"type\": \"中性\", \"reason\": \"江淮汽车工商注册资本变更，不等同新增利润或已实现收入。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891862243.html": {
+          "input_sha256": "6839398d0c24f07aabf0dd71578f0ad24e2f18092eba2572dcf662078691650e",
+          "summary": "{\"type\": \"中性\", \"reason\": \"航运基础设施开工；未给出上市公司新增合同数据。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891861525.html": {
+          "input_sha256": "320866b082a3ca1e42f8d1904a888a98f348ad66d6a7f06c9e45505793dfcad5",
+          "summary": "{\"type\": \"中性\", \"reason\": \"未上市AI企业工商增资，不能直接映射为A股投资收益。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891860710.html": {
+          "input_sha256": "348e7ec57a2ef96b46944a07889c2d1e8de578a374ad776cc30556909e641b36",
+          "summary": "{\"type\": \"中性\", \"reason\": \"上市公司设立子公司，业务规模与盈利贡献尚未披露。\"}"
+        },
+        "https://finance.eastmoney.com/a/202610103891859082.html": {
+          "input_sha256": "66adb3c3db142d15704eaf0bce00438f7637512933f20d35d2fe5968210c91b4",
+          "summary": "{\"type\": \"中性\", \"reason\": \"创投入股信息；未提供上市公司盈利贡献测算。\"}"
+        }
+      }
+    }
+  }
+}

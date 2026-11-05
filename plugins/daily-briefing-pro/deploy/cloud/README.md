@@ -41,7 +41,9 @@ The Compose file explicitly maps cookie secrets to `/run/secrets/*.json`; do not
 
 ## Seed durable local history
 
-A clean cloud volume does not inherit the Windows runtime at `~/.codex/daily-briefing-pro/data`. Compose sets `DAILY_BRIEFING_CLOUD=1`, which disables first-run migration from the package's stale history baseline; cloud data must be seeded explicitly. The seed utility copies only the shared durable allowlist: sentiment panel/history, node-cycle and rotation history, AI summary caches, transcript cache, and stock caches. It never copies `*_today.json`, cookies, login state, `.env`, or delivery snapshots.
+A clean cloud volume does not inherit the Windows runtime at `~/.codex/daily-briefing-pro/data`. Compose sets `DAILY_BRIEFING_CLOUD=1`. Missing durable files are seeded automatically from the installed package's `data/` baseline, using the same allowlist as local migration: sentiment panel/history, node-cycle and rotation history, AI summary caches, transcript cache, and stock caches. Existing cloud files always win, and the seeder never copies `*_today.json`, cookies, login state, `.env`, or delivery snapshots. This is why a clean task starts with usable history instead of an empty panel.
+
+To copy a newer Windows snapshot into an existing cloud volume, or to refresh files that already exist, use the explicit seed utility:
 
 Preview first, then apply:
 
@@ -50,7 +52,7 @@ pwsh -NoProfile -File .\seed-data.ps1
 pwsh -NoProfile -File .\seed-data.ps1 -Apply -RefreshExisting
 ```
 
-The default source is `$HOME\.codex\daily-briefing-pro\data`; the default destination is `deploy/cloud/runtime/data`. Replaced files are backed up beside the target. The same allowlist controls first-run migration from the installed package, so stale installation snapshots cannot become cloud history.
+The default source is `$HOME\.codex\daily-briefing-pro\data`; the default destination is `deploy/cloud/runtime/data`. Replaced files are backed up beside the target. The same allowlist controls both paths, so installation snapshots cannot overwrite live cloud history.
 
 `-RefreshExisting` still protects a newer destination by comparing file timestamps. If the files crossed machines in a way that makes timestamps unreliable, inspect the preview and use `-Force` to replace differing files; every replaced file is backed up beside the target.
 
@@ -58,12 +60,25 @@ The script resolves its own directory at runtime, so it works with both PowerShe
 
 ## Install the rotation model
 
-The industry-rotation calculation requires the original `sw_rotation_model`. Place it in either:
+The skill ships a self-contained rotation model archive at
+`skills/daily-briefing-pro/data/cloud-baseline/models/sw_rotation_model.zip`.
+`cloud_bootstrap.py` extracts it once into a writable versioned directory
+(`~/.codex/daily-briefing-pro/models/sw_rotation_model-<sha>`) when no explicit
+model is present, so a clean cloud task can score without a manual upload.
+The archive includes `RECONSTRUCTED.md`: the original model directory was not
+in the marketplace package and was lost locally, so this is a functional
+rebuild with the original config and 38-feature contract. On the saved
+2026-10-19 snapshot it reproduces 8/15 T+5 names with a 0.50 score-rank
+correlation; the near-window T+5 RankIC is 0.0638. It is not a byte-for-byte
+copy of the lost model, but every local and cloud run now uses the same
+archive and inputs, so their scores are reproducible.
+
+To use a refreshed or custom model, place it in either:
 
 - `plugins/daily-briefing-pro/models/sw_rotation_model/` before building the image; the entrypoint copies it once into the writable `/runtime/models` volume, or
 - `deploy/cloud/runtime/models/sw_rotation_model/` directly on the cloud host.
 
-Required entries include `run.py`, `config.json`, and the model's original `data/` files. A cached `rotation_today.json` is display output only and cannot be used to recompute ranks. If the model is unavailable, preflight blocks the full run with an actionable error.
+Required entries include `run.py`, `config.json`, and the model's original `data/` files. A cached `rotation_today.json` is display output only and cannot be used to recompute ranks. An explicitly configured model always wins over the bundled archive. If neither exists, preflight blocks the full run with an actionable error.
 
 After copying model files directly into `runtime/models/`, run `sh ./init-secrets.sh` once to align their ownership with container UID 10001.
 
@@ -82,6 +97,11 @@ docker compose -f compose.yaml run --rm --no-build briefing \
 The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary credentials or Codex login, the configured Douyin transcription path (local Whisper or API key), TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
 
 Compose sets `DOUYIN_TRANSCRIPT_PROVIDER=auto`: a configured Groq/OpenAI/SiliconFlow key is tried first, then the container falls back to local Whisper. Because the container is limited to 1.5 CPU and 2GB memory, preflight warns when no transcription API key is available. The warning does not bypass the real-transcription requirement or allow title-only substitutes.
+
+The image bakes the `small` Whisper checkpoint into `/opt/whisper-cache`; the
+entrypoint copies it into the named runtime home on first start. This removes
+the build-time-only download gap that previously made the first cloud video
+transcription fail or take many minutes.
 
 ## Verify the reference report
 

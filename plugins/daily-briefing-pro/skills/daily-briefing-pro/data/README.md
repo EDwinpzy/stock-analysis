@@ -6,8 +6,11 @@
 白名单只含情绪面板/历史、节点与轮动历史、AI摘要缓存、转录缓存和行情缓存，不会把安装包里的
 `*_today.json`、Cookie、登录态或临时交付文件带进新环境。插件升级后，采集快照、历史面板、
 Cookie 和缓存继续留在同一持久目录。本文中的 `data/` 文件名均指这个运行数据目录中的相对路径。
-云端模式（`DAILY_BRIEFING_CLOUD=1`）不自动迁移安装包内的历史基线，必须先用
-`deploy/cloud/seed-data.ps1` 显式同步长期数据，避免旧面板或旧轮动历史冒充当前云端状态。
+云端模式（`DAILY_BRIEFING_CLOUD=1`）与本地共用同一份长期文件白名单：干净环境会把
+安装包内 `data/` 的历史基线按“缺失才补”迁入持久目录，已有云端数据优先保留。
+因此首次云端运行至少具备面板、节点/轮动历史和 AI 缓存基线；采集阶段再增量补齐
+当日数据。需要把本机较新的快照刷新到已有云端目录时，仍使用
+`deploy/cloud/seed-data.ps1 -Apply -RefreshExisting`。
 
 ## 采集脚本写出的当日快照
 
@@ -102,8 +105,10 @@ JSON 中备查，渲染层已屏蔽，避免一个页面出现两个“温度”
 ## 板块轮动数据（rotation_today.json）
 
 来自用户的**行业轮动模型 v2.0.0**（优先读取 `ROTATION_MODEL_DIR`，其次读取插件根目录的
-`models/sw_rotation_model`；Windows 开发机才识别历史固定路径）。云端必须挂载可写模型工作目录，
-因为采集会更新模型 `data/`，预测会写 `outputs/`：
+`models/sw_rotation_model`；Windows 开发机才识别历史固定路径）。云端两者都没有时，
+`scripts/cloud_bootstrap.py` 会把随包的 `data/cloud-baseline/models/sw_rotation_model.zip`
+解压到可写模型缓存目录，不需要人工上传模型目录。模型工作目录必须可写，因为采集会更新
+模型 `data/`，预测会写 `outputs/`：
 
 | 字段 | 内容 |
 |---|---|

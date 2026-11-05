@@ -87,11 +87,11 @@ metadata:
 | 报刊风（纸张质感）版式 | `scripts/build_broadsheet.py`；样式资产 `templates/broadsheet.css` | 同数据的报刊版 HTML（纸感 + 双栏长表） |
 
 路径约定：脚本和静态资源从本 Skill 根目录读取；运行数据统一由 `scripts/runtime_paths.py` 管理，默认保存到 `~/.codex/daily-briefing-pro/data/`，可通过 `DAILY_BRIEFING_DATA_DIR` 覆盖。首次运行只把旧 Skill 目录和当前安装包中的长期文件迁入持久目录，已有持久数据优先保留；`*_today.json`、Cookie、登录态和临时交付文件不参与迁移。不要从用户目录按旧 Skill 名称拼接脚本路径，也不要保留同名脚本副本。
-云端模式（`DAILY_BRIEFING_CLOUD=1`）不自动迁移安装包内的历史基线，必须用 `deploy/cloud/seed-data.ps1` 显式同步长期数据；否则预检会因面板或历史缺失而阻断。
+云端模式（`DAILY_BRIEFING_CLOUD=1`）与会话模式共用同一份长期数据白名单：干净环境会把安装包内 `data/` 的历史基线按“缺失才补”的方式迁入持久目录，已有云端数据优先保留；`*_today.json`、Cookie、登录态仍被排除。因此云端首次运行至少具备面板、节点/轮动历史和 AI 缓存基线，采集阶段再增量补齐当日数据，而不是从空面板起步。预检会校验面板 22 个模型列、历史 JSON 有效性和更新时间；基线过期会明确告警。
 
 插件执行入口为本 Skill 目录内的 `scripts/run_all.py`。普通运行会先执行 `scripts/runtime_preflight.py`，缺模型、历史面板、AI凭证、抖音转录环境、平台Cookie、同花顺认证或可写目录时在采集前阻断；只检查不采集使用 `--preflight-only`。在源码项目中维护时，使用 `plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/run_all.py`；不要修改安装缓存。定时运行加 `--scheduled`：先用同花顺交易所日历核验，非交易日跳过；日历缺失或未覆盖目标日则报错，不用星期推断节假日。
 
-行业轮动模型优先从 `ROTATION_MODEL_DIR` 读取，其次读取插件根目录 `models/sw_rotation_model`。模型工作目录必须可写，因为行情刷新和预测会更新它的 `data/` 与 `outputs/`；缺少原始 `run.py`、配置或行情文件时不得用旧排行结果代替计算。
+行业轮动模型优先从 `ROTATION_MODEL_DIR` 读取，其次读取插件根目录 `models/sw_rotation_model`；云端若两者都没有，会自动把随包分发的 `data/cloud-baseline/models/sw_rotation_model.zip` 解压到 `~/.codex/daily-briefing-pro/models/sw_rotation_model-<sha>`，无需人工上传模型目录。模型工作目录必须可写，因为行情刷新和预测会更新它的 `data/` 与 `outputs/`；缺少原始 `run.py`、配置或行情文件时不得用旧排行结果代替计算。随包模型是丢失原目录后的功能性重建，`RECONSTRUCTED.md` 记录了快照回归与已知差异；同一份压缩包保证本地和云端可复现同一组分数，但不宣称与原模型逐字节一致。
 
 安装插件后，在本 Skill 目录执行 `python scripts/run_all.py --scheduled`。源码项目另提供 `tools/run_daily_briefing.py` 启动器，从任意工作目录调用项目源码并固定 UTF-8 编码与项目报告目录；此项目启动器不属于插件安装包。恢复指定日期已采集数据时使用 `--date YYYY-MM-DD --resume`，日期和逐模块完整性校验仍执行，不能把其他日期的数据当成本日结果。
 
@@ -847,6 +847,14 @@ playwright install chromium
 ---
 
 ## 更新日志
+
+### v3.23.15 (2026-11-05)
+
+- 云端一致性：干净安装按“缺失才补”自动获得情绪面板、节点/轮动历史和 AI 缓存基线，已有云端数据优先保留；不再从空面板起步，也不把 `*_today.json`、Cookie 和登录态带进新环境。
+- 随包行业轮动模型：新增 `data/cloud-baseline/models/sw_rotation_model.zip`，没有显式模型时自动解压到可写缓存；修复插件根 `models/sw_rotation_model` 的路径识别。原模型目录未随市场包分发且本地已丢失，本版按原始配置与 38 个特征重建，2026-10-19 快照回归为 T+5 前15 重合 8/15、共同名称分数 Spearman 0.50、近端 T+5 RankIC 0.0638；详见模型内 `RECONSTRUCTED.md`。
+- 云端依赖补齐 `scikit-learn` 与 `scipy`，运行前预检同步检查；避免“模型目录有了但 import 失败”。
+- 预检加固：面板必须包含 22 个 v3.2 模型列；轮动/节点历史 JSON 必须有效；Whisper 权重必须真实存在；Chromium 必须能启动；AI Key 通过服务端认证探测；模型必须包含 `src/` 源码和三份原始行情输入。坏文件、缺列或缺依赖在采集前阻断。
+- 本地与云端现在使用同一份模型压缩包和同一份输入；干净安装验收中 2026-10-19 的 `all_scores` 与本地模型逐字节一致。
 
 ### v3.23.14 (2026-11-05)
 

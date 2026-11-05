@@ -1,4 +1,4 @@
-# Bundled model workspace
+# Local model workspace
 
 Place the original industry-rotation model at:
 
@@ -13,10 +13,16 @@ models/sw_rotation_model/
   outputs/
 ```
 
-The model code, parameters, training history, and scoring outputs are not part
-of this repository. `fetch_rotation.py` reads `ROTATION_MODEL_DIR` first, then
-this package-relative directory. On Windows it also recognizes the historical
-development path, but never scans another drive.
+This directory is gitignored and is not part of the marketplace package. Place
+a refreshed or custom model here for local runs; `fetch_rotation.py` reads
+`ROTATION_MODEL_DIR` first, then this package-relative directory. On Windows it
+also recognizes the historical development path, but never scans another drive.
+
+Cloud and clean installs do not need this directory: they extract the shipped
+`skills/daily-briefing-pro/data/cloud-baseline/models/sw_rotation_model.zip`
+into a writable model cache. An explicit model here always wins over the
+archive. See `RECONSTRUCTED.md` in the extracted model for the rebuild and
+regression notes.
 
 Do not derive model outputs from a cached `rotation_today.json`. Cloud runs
 require the original inputs so the model can be refreshed and recomputed for

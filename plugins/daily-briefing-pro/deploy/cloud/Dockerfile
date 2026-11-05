@@ -35,6 +35,12 @@ RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.or
     && npm install --global --no-audit --no-fund @hithink-tech/hithink-finance-cli@0.1.13 \
     && npm cache clean --force
 
+# Bake the small Whisper checkpoint into the image. The runtime home is a
+# named volume, so the entrypoint copies this cache into it on first start.
+RUN mkdir -p /opt/whisper-cache \
+    && XDG_CACHE_HOME=/opt/whisper-cache python -c "import whisper; whisper.load_model('small')" \
+    && chmod -R a+rX /opt/whisper-cache
+
 COPY . /opt/daily-briefing-pro/
 
 RUN mkdir -p /runtime/data /runtime/models /runtime/reports /runtime/home/.codex /runtime/home/.config /runtime/home/.cache \

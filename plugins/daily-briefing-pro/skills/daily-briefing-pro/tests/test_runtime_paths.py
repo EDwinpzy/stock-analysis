@@ -66,7 +66,7 @@ class PersistentDataDirectoryTests(unittest.TestCase):
             self.assertEqual((override / "node_cycle_history.json").read_text(encoding="utf-8"), "configured")
             self.assertFalse((home / ".codex" / "daily-briefing-pro" / "data").exists())
 
-    def test_cloud_mode_does_not_migrate_stale_package_history(self):
+    def test_cloud_mode_seeds_missing_durable_baseline_but_not_snapshots(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             home = root / "home"
@@ -79,6 +79,9 @@ class PersistentDataDirectoryTests(unittest.TestCase):
             (package / "data" / "node_cycle_history.json").write_text(
                 '{"records":[]}', encoding="utf-8"
             )
+            (package / "data" / "rotation_today.json").write_text(
+                '{"entries": []}', encoding="utf-8"
+            )
 
             result = get_data_dir(
                 package,
@@ -90,8 +93,9 @@ class PersistentDataDirectoryTests(unittest.TestCase):
             )
 
             self.assertEqual(result, override)
-            self.assertFalse((override / "sentiment_panel_v32.csv").exists())
-            self.assertFalse((override / "node_cycle_history.json").exists())
+            self.assertTrue((override / "sentiment_panel_v32.csv").exists())
+            self.assertTrue((override / "node_cycle_history.json").exists())
+            self.assertFalse((override / "rotation_today.json").exists())
 
 
 if __name__ == "__main__":

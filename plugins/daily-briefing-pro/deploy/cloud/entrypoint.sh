@@ -19,6 +19,13 @@ load_secret IMA_OPENAPI_CLIENTID /run/secrets/ima_openapi_clientid
 load_secret IMA_OPENAPI_APIKEY /run/secrets/ima_openapi_apikey
 load_secret HITHINK_FINANCE_API_KEY /run/secrets/hithink_finance_api_key
 
+# The image carries the small Whisper checkpoint; the named home volume does
+# not. Copy it once so local transcription works before any download.
+if [ -d /opt/whisper-cache/whisper ] && [ ! -e /runtime/home/.cache/whisper ]; then
+    mkdir -p /runtime/home/.cache
+    cp -a /opt/whisper-cache/whisper /runtime/home/.cache/whisper
+fi
+
 model_template=/opt/daily-briefing-pro/models/sw_rotation_model
 model_runtime=/runtime/models/sw_rotation_model
 mkdir -p /runtime/models

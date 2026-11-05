@@ -52,19 +52,39 @@ class PreflightCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             data = Path(temp)
             panel = data / "sentiment_panel_v32.csv"
-            panel.write_text("date,value\n" + "2026-10-01,1\n" * 10, encoding="utf-8")
+            header = ",".join(preflight.PANEL_COLUMNS) + "\n"
+
+            def write_rows(dates):
+                rows = []
+                for day in dates:
+                    values = ["1"] * len(preflight.PANEL_COLUMNS)
+                    values[preflight.PANEL_COLUMNS.index("date")] = day
+                    values[preflight.PANEL_COLUMNS.index("source")] = "test"
+                    rows.append(",".join(values) + "\n")
+                panel.write_text(header + "".join(rows), encoding="utf-8")
+
+            write_rows(["2026-10-01"] * 10)
             short = preflight._check_panel(data, "2026-10-20")
             self.assertEqual(short.state, "error")
 
-            panel.write_text(
-                "date,value\n"
-                + "".join(f"2026-08-{day:02d},1\n" for day in range(1, 29))
-                + "2026-09-01,1\n" * 32,
-                encoding="utf-8",
+            write_rows(
+                [f"2026-08-{day:02d}" for day in range(1, 29)]
+                + ["2026-09-01"] * 32
             )
             stale = preflight._check_panel(data, "2026-10-20")
             self.assertEqual(stale.state, "warning")
             self.assertIn("2026-09-01", stale.detail)
+
+    def test_panel_missing_model_columns_is_blocked(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data = Path(temp)
+            panel = data / "sentiment_panel_v32.csv"
+            panel.write_text("date,sh_close\n2026-10-01,3900\n" * 100, encoding="utf-8")
+
+            check = preflight._check_panel(data, "2026-10-20")
+
+        self.assertEqual(check.state, "error")
+        self.assertIn("limit_up", check.detail)
 
     def test_cookie_parser_never_echoes_file_content(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -79,6 +99,9 @@ class PreflightCheckTests(unittest.TestCase):
             model = Path(temp)
             (model / "run.py").write_text("", encoding="utf-8")
             (model / "config.json").write_text('{"universe": "ths"}', encoding="utf-8")
+            for name in ("data.py", "features.py", "engine.py"):
+                (model / "src").mkdir(exist_ok=True)
+                (model / "src" / name).write_text("", encoding="utf-8")
 
             checks = preflight._check_model(model, "2026-10-20")
             self.assertTrue(any(item.state == "error" and item.key == "rotation_inputs" for item in checks))
@@ -89,6 +112,9 @@ class PreflightCheckTests(unittest.TestCase):
             (model / "data").mkdir()
             (model / "run.py").write_text("", encoding="utf-8")
             (model / "config.json").write_text('{"universe": "ths"}', encoding="utf-8")
+            for name in ("data.py", "features.py", "engine.py"):
+                (model / "src").mkdir(exist_ok=True)
+                (model / "src" / name).write_text("", encoding="utf-8")
             (model / "data" / "ths_industry_info.csv").write_text(
                 "code,name\n881001,测试行业\n", encoding="utf-8"
             )
@@ -108,6 +134,9 @@ class PreflightCheckTests(unittest.TestCase):
             model = Path(temp)
             (model / "run.py").write_text("", encoding="utf-8")
             (model / "config.json").write_text('{"universe": "sw"}', encoding="utf-8")
+            for name in ("data.py", "features.py", "engine.py"):
+                (model / "src").mkdir(exist_ok=True)
+                (model / "src" / name).write_text("", encoding="utf-8")
 
             missing = preflight._check_model(model, "2026-10-20")
             self.assertTrue(
@@ -115,8 +144,14 @@ class PreflightCheckTests(unittest.TestCase):
             )
 
             (model / "data").mkdir()
-            (model / "data" / "industry_daily.csv").write_text(
+            (model / "data" / "sw_l1_info.csv").write_text(
+                "code,name\n801010,测试行业\n", encoding="utf-8"
+            )
+            (model / "data" / "sw_l1_daily.csv").write_text(
                 "date,code,close\n2026-10-20,801010,100\n", encoding="utf-8"
+            )
+            (model / "data" / "benchmark_csi300.csv").write_text(
+                "date,close\n2026-10-20,4500\n", encoding="utf-8"
             )
             complete = preflight._check_model(model, "2026-10-20")
             self.assertFalse(any(item.state == "error" for item in complete))
@@ -137,11 +172,7 @@ class PreflightCheckTests(unittest.TestCase):
         )
 
     def test_local_transcription_requires_whisper_and_torch(self):
-        with patch.object(
-            preflight,
-            "_module_available",
-            side_effect=lambda name: name == "torch",
-        ):
+        with patch.object(preflight, "_whisper_ready", return_value=(False, "whisper/torch 未安装")):
             check = preflight._check_transcription(
                 {"DOUYIN_TRANSCRIPT_PROVIDER": "local"}
             )
@@ -150,7 +181,7 @@ class PreflightCheckTests(unittest.TestCase):
         self.assertIn("whisper", check.detail)
 
     def test_auto_transcription_accepts_configured_api_without_local_modules(self):
-        with patch.object(preflight, "_module_available", return_value=False):
+        with patch.object(preflight, "_whisper_ready", return_value=(False, "whisper/torch 未安装")):
             check = preflight._check_transcription(
                 {
                     "DOUYIN_TRANSCRIPT_PROVIDER": "auto",
@@ -162,7 +193,7 @@ class PreflightCheckTests(unittest.TestCase):
         self.assertIn("groq", check.detail)
 
     def test_cloud_local_whisper_fallback_is_a_warning(self):
-        with patch.object(preflight, "_module_available", return_value=True):
+        with patch.object(preflight, "_whisper_ready", return_value=(True, "small 权重已就绪")):
             check = preflight._check_transcription(
                 {
                     "DOUYIN_TRANSCRIPT_PROVIDER": "auto",
@@ -186,6 +217,7 @@ class PreflightCheckTests(unittest.TestCase):
             output.mkdir()
 
             with patch.object(preflight, "_check_modules", return_value=preflight._ok("modules", "模块", "ok")), \
+                 patch.object(preflight, "_check_browser", return_value=preflight._ok("browser", "浏览器", "ok")), \
                  patch.object(preflight, "_check_hithink") as hithink, \
                  patch.object(preflight, "_check_semantic_summary") as ai, \
                  patch.object(preflight, "_check_cookie") as cookie, \
@@ -221,6 +253,7 @@ class PreflightCheckTests(unittest.TestCase):
             data.mkdir()
 
             with patch.object(preflight, "_check_modules", return_value=preflight._ok("modules", "模块", "ok")), \
+                 patch.object(preflight, "_check_browser", return_value=preflight._ok("browser", "浏览器", "ok")), \
                  patch.object(
                      preflight,
                      "_check_resume_datasets",
@@ -254,6 +287,10 @@ class PreflightCheckTests(unittest.TestCase):
                 preflight,
                 "_check_modules",
                 return_value=preflight._ok("modules", "模块", "ok"),
+            ), patch.object(
+                preflight,
+                "_check_browser",
+                return_value=preflight._ok("browser", "浏览器", "ok"),
             ):
                 report = preflight.build_preflight(
                     "2026-10-20",

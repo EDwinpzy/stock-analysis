@@ -64,6 +64,19 @@ def model_dir_candidates(
     add(values.get("ROTATION_MODEL_DIR"))
     add(package_root / "models" / "sw_rotation_model")
     add(package_root.parent / "models" / "sw_rotation_model")
+    try:
+        add(package_root.parents[1] / "models" / "sw_rotation_model")
+    except IndexError:
+        pass
+    try:
+        from cloud_bootstrap import model_cache_root
+
+        root = model_cache_root(package_root, get_data_dir(package_root, env=values), values)
+        for cached in sorted(root.glob("sw_rotation_model-*"), reverse=True):
+            add(cached)
+        add(root / "sw_rotation_model")
+    except Exception:  # noqa: BLE001  optional bootstrap; explicit paths still work.
+        pass
     if sys.platform.startswith("win"):
         add(LEGACY_WINDOWS_MODEL_DIR)
     return candidates
@@ -357,6 +370,13 @@ def main() -> None:
     parser.add_argument("--date", default=datetime.now(CN).strftime("%Y-%m-%d"))
     parser.add_argument("--refresh", action="store_true")
     args = parser.parse_args()
+
+    try:
+        from cloud_bootstrap import ensure_rotation_model
+
+        ensure_rotation_model(BASE_DIR, DATA_DIR)
+    except Exception:  # noqa: BLE001  find_model_dir still reports the missing model.
+        pass
 
     model_dir = find_model_dir()
     if model_dir is None:

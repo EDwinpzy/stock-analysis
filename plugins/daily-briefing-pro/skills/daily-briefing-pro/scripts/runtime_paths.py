@@ -66,8 +66,9 @@ def get_data_dir(
     Existing files in the durable directory always win. Migration checks the former
     stable skill location first, then fills remaining gaps from this package version.
     Only long-lived model/cache inputs are migrated; snapshots, cookies, and temporary
-    quote HTML never enter a clean runtime through package migration. Cloud runs must
-    seed their history explicitly so stale package baselines cannot masquerade as data.
+    quote HTML never enter a clean runtime through package migration. Missing files
+    are seeded from the package on both local and cloud runs; existing runtime files
+    always win, so a fresh package baseline cannot overwrite current history.
     """
     package_dir = Path(package_dir)
     env = os.environ if env is None else env
@@ -81,6 +82,8 @@ def get_data_dir(
 
     legacy_data_dir = home / ".agents" / "skills" / "daily-briefing-pro" / "data"
     _copy_missing_files(legacy_data_dir, data_dir)
-    if str(env.get("DAILY_BRIEFING_CLOUD") or "") != "1":
-        _copy_missing_files(package_dir / "data", data_dir)
+    # Missing-only: a clean cloud task starts from the shipped baseline, while
+    # refreshed runtime files always win. Snapshots/cookies are filtered out by
+    # the durable allowlist, so this cannot resurrect *_today.json state.
+    _copy_missing_files(package_dir / "data", data_dir)
     return data_dir
