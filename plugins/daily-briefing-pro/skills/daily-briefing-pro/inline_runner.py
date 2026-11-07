@@ -80,7 +80,6 @@ def save_result(name: str, data: dict):
     name_map = {
         "panic_greed_index_enhanced.py": "panic_today.json",
         "fetch_news.py": "news_today.json",
-        "fetch_selfstock_news.py": "selfstock_today.json",
         "fetch_future_events.py": "events_today.json",
         "pick_quote.py": "quote_today.json",
         "tgb_crawl.py": "tgb_today.json",
@@ -112,7 +111,6 @@ def main():
         # 情绪模型 3.2：增量几秒，首次构建 400 日面板需要数分钟
         ("panic_greed_index_enhanced.py", date_args, 1200),
         ("fetch_news.py", ["--source", "eastmoney", "--limit", "15"] + date_args, 60),
-        ("fetch_selfstock_news.py", date_args, 60),
         ("fetch_longhubang.py", date_args, 90),
         ("fetch_future_events.py", date_args, 60),
         ("fetch_lianban.py", date_args, 240),

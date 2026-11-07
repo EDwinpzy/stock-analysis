@@ -1,0 +1,59 @@
+{
+  "validated_at": "2026-10-21T09:08:09.631174+08:00",
+  "status": "checks_passed_distillation_partial",
+  "collection_checked_at": "2026-10-21T09:01:58.908650+08:00",
+  "latest_main_post_date": "2026-10-18 19:25:05",
+  "latest_author_reply": "2026-10-21 08:15",
+  "new_main_posts": 0,
+  "new_replies": 32,
+  "feed_pages": 23,
+  "feed_topics": 229,
+  "collection_errors": [],
+  "target_reply_pages_fresh": 163,
+  "old_threads_fresh_pages": 121,
+  "current_thread_fresh_pages": 42,
+  "live_revision_missing_new_id_discrepancies": 0,
+  "reply_coverage": {
+    "2vJb8Ncpins": 81,
+    "2vMJS1Nt1JK": 148,
+    "2vTaemOb3Ig": 150,
+    "2vZYBKxSFEq": 138
+  },
+  "pending_replies_covered": 517,
+  "image_url_coverage": 48,
+  "remote_image_fetch_and_local_byte_matches": 48,
+  "inherited_unchanged_images": 47,
+  "new_image_visual_reviews": 1,
+  "remaining_unreadable_or_masked_images": 6,
+  "date_label_discrepancy_reply": "103939216",
+  "outside_pending_legacy_images_not_claimed_reviewed": 7,
+  "queue_regenerated_without_mutation": true,
+  "unchanged_sha256": {
+    "distillation_state.json": "11421f5fd117f17a8590c41626d7c1eca1f658a2602175e70ccc1e27b216b5a6",
+    "latest.md": "76dd1ce2b062fe86188537c1ae7966179873ee13acc8a8e85e4a81be1eb7abf9"
+  },
+  "local_links_valid": true,
+  "tests": {
+    "command": "python -X utf8 -m unittest tests.test_yuanxiaoer_capture -v",
+    "passed": 17,
+    "failed": 0
+  },
+  "final_artifacts_sha256": {
+    "distillations/2026-10-21.md": "ba2ffcdc79dd3cce07dbce81d5664d58c9569d0fdf8883ad6b1fa054b42e46c4",
+    "latest_attempt.md": "92c3ea18389eb34f6a770e994b11236fd1f93580c852f5d26e37bf56084dfeec",
+    "reviews/2026-10-21-text.json": "addc25fec5139989f14bff494929eb41e04721d6994daa5c583579f254ed020d",
+    "reviews/2026-10-21-images.json": "57e92a651b790dcec216d291655d08eaa4c163c8413cb074485a80c1be7fff21",
+    "reviews/2026-10-21-source-reconciliation.json": "9da450b9ae3da37bb34ddebbafbc5411d45ba62935af734c4b1ee69a1d4b668b",
+    "reviews/2026-10-21-old-thread-live-audit.json": "1cae02527e35081d617597dc74d8ee58d7f5b385bcd28dc1b544da675610b833",
+    "reviews/2026-10-21-current-thread-live-audit.json": "7e0002d149367dac39166624c4d8f424e55c2d89208ee7c9368a7a8975d63807"
+  },
+  "visual_verification": {
+    "status": "passed",
+    "method": "本地文稿文本排版预览并目视查看全篇拼图及日期冲突所在第2页",
+    "preview_pages": 7,
+    "preview_contact_sheet": "reviews/2026-10-21-preview/contact.png",
+    "limitation": "文稿文本可视核验，不等同原生Markdown界面截图；未调用本地文件浏览器路线。"
+  },
+  "scope": "仅更新项目增量库；安装缓存、发布包与每日简报未修改。",
+  "final_scope_review": "核查仅涉及采集档案、本轮审查与证据、蒸馏记录和latest_attempt入口；未更改代码、成功状态、安装缓存、每日简报或发布包。"
+}

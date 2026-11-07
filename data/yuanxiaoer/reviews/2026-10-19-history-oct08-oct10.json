@@ -1,0 +1,258 @@
+{
+  "audit_id": "2026-10-19-history-oct08-oct10",
+  "checked_at": "2026-10-19T23:38:03+08:00",
+  "author": {
+    "name": "圆小二",
+    "author_id": "12089754"
+  },
+  "scope": {
+    "posts": [
+      "2vJb8Ncpins",
+      "2vMJS1Nt1JK"
+    ],
+    "reviews": [
+      "data/yuanxiaoer/reviews/2026-10-16-2vJb8Ncpins.json",
+      "data/yuanxiaoer/reviews/2026-10-16-2vMJS1Nt1JK.json",
+      "data/yuanxiaoer/reviews/2026-10-16-images.json"
+    ],
+    "distillation": "data/yuanxiaoer/distillations/2026-10-16.md",
+    "state_changes": "none"
+  },
+  "collection_snapshot": {
+    "checked_at": "2026-10-19T23:30:58.228736+08:00",
+    "feed_pages": 23,
+    "feed_topics": 229,
+    "feed_complete": true,
+    "errors": [],
+    "relevant_target_threads_changed_in_this_run": false,
+    "note": "采集快照中两条目标线程未变化；当次最新作者活动在其他线程，不纳入本次历史审计。"
+  },
+  "verification": {
+    "post_body_hashes_match_saved_text_and_2026_10_16_reviews": true,
+    "pending_reply_ids_exactly_match_review_entries": true,
+    "reply_text_and_images_hash_mismatches": 0,
+    "pending_reply_ids_missing_from_source": 0,
+    "pending_reply_ids_missing_from_2026_10_16_distillation_rows": 0,
+    "distillation_row_hash_mismatches": 0,
+    "pending_reply_entries_checked": 229,
+    "reply_hash_method": "tools.fetch_yuanxiaoer_posts.reply_digest: SHA-256 of JSON {text, images}, sorted keys, ensure_ascii=False, default separators including spaces, UTF-8."
+  },
+  "coverage_summary": {
+    "2vJb8Ncpins": {
+      "pending_body": false,
+      "pending_replies": 81,
+      "itemized_rows": 81
+    },
+    "2vMJS1Nt1JK": {
+      "pending_body": true,
+      "pending_replies": 148,
+      "itemized_rows": 148
+    },
+    "total_pending_replies": 229,
+    "overall_reply_gap": 0,
+    "main_body_gap_in_2026_10_16_project_report": "2vMJS1Nt1JK 的正文在项目报告里仅有一行概述，尚无正文级逐项展开；主线程已另行核对 yuanxiaoer 0.1.7/assets/圆小二增量蒸馏记录.md 末尾已有该主帖逐项提炼，因此本文件的正文梳理是项目审查补充，不代表首次蒸馏。"
+  },
+  "threads": [
+    {
+      "post_id": "2vJb8Ncpins",
+      "title": "[红包]混沌未破，节点为锚",
+      "post_url": "https://m.tgb.cn/a/2vJb8Ncpins",
+      "published_at": "2026-10-08 16:31:10",
+      "source_post_sha256": "c9603a0d39e6279c28e8a7afcd00f947171f854a19ede012d47b43cc789cb1ea",
+      "body": {
+        "latest_run_body_pending": false,
+        "review_body_pending": false,
+        "review_body_sha256_matches_source": true,
+        "review_statement": "正文未变，不重蒸馏。",
+        "2026_10_16_report_coverage": "报告保留正文版本哈希，但未在该报告内另列正文提炼；由于本轮正文不在待处理队列，不作为本次缺口或新增观点。",
+        "status_interpretation": "已有正文哈希核验和不重蒸馏记录；本次限定文件不足以复核更早正文蒸馏所在位置。"
+      },
+      "replies": {
+        "source_author_reply_count": 106,
+        "latest_run_pending_ids": 81,
+        "review_entry_count": 81,
+        "distillation_table_rows": 81,
+        "id_set_exact": true,
+        "reply_hashes_match_source": true,
+        "reply_hashes_match_distillation_rows": true,
+        "classification_counts": {
+          "非交易": 33,
+          "语义不足": 26,
+          "条件式应对": 5,
+          "观察": 15,
+          "通用经验": 1,
+          "实际操作自述": 1
+        },
+        "latest_author_reply": {
+          "id": "103587986",
+          "time": "2026-10-10 15:32",
+          "classification": "非交易"
+        },
+        "post_last_reply_date_field": "2026-10-10 20:30:41",
+        "time_boundary_note": "作者本人回复数组及逐项审查的最新时间为10月10日15:32；帖子字段 last_reply_date 晚至20:30:41，不能据此把较晚线程活动归为作者发言。",
+        "source_replies_outside_current_pending_set": 25,
+        "outside_pending_note": "这些回复不在本次 latest_run 的81个待处理ID中；本审计未将它们计作本批逐项蒸馏，也未据此判断其历史处理状态。"
+      },
+      "quote_attribution_check": "对照逐项审查中市场相关回复原文与摘要，读者提问只作为问答语境呈现；未发现把读者观点直接写成作者独立原话或规则。涉及“关注”的文字仍按观察/关注表达处理，不推定成交。",
+      "images": {
+        "latest_run_pending_reply_image_ids": [
+          "103558883",
+          "103553783",
+          "103551240"
+        ],
+        "explicit_2026_10_16_reviewed_reply_images": [
+          {
+            "reply_id": "103558883",
+            "status": "reviewed",
+            "finding": "粉丝互动与打赏截图，非交易内容。"
+          },
+          {
+            "reply_id": "103553783",
+            "status": "reviewed",
+            "finding": "宁德时代分时图显示300.46、+4.78%及B标记；结合本人文字仅作价格先于情绪的例证，不证明成交。"
+          },
+          {
+            "reply_id": "103551240",
+            "status": "reviewed",
+            "finding": "市场宣传新闻截图，无新增可执行条件；不将第三方观点当成作者结论。"
+          }
+        ],
+        "known_unreadable_pending_images": [],
+        "scoped_image_evidence_gap": "源帖还含6张正文图片，旧回复103540580含1张非头像图片；它们未出现在2026-10-16图片审阅台账。本审计不解读这些图。latest_run未将正文图或该旧回复图列入当前待处理图片，因此这里只记录本次范围内缺少明确审阅证据，不判断此前是否已核图。"
+      }
+    },
+    {
+      "post_id": "2vMJS1Nt1JK",
+      "title": "逐层推演，思路摊开",
+      "post_url": "https://m.tgb.cn/a/2vMJS1Nt1JK",
+      "published_at": "2026-10-10 19:59:59",
+      "source_post_sha256": "5bd253a87a3b7ade53eea9425211cf309a65360e8d60bc9dc43afe89ebf2b011",
+      "body": {
+        "latest_run_body_pending": true,
+        "review_body_sha256_matches_source": true,
+        "2026_10_16_report_coverage": "正文只在“最新变化与适用边界”有一行概括，主要说盘前拆科技、抱团、连板三路，盘中按竞价、承接和指数反馈排除，并列出传媒/电池/20cm观察。",
+        "state_boundary_note": "项目全局成功边界仍在10月9日，因此10月10日正文会继续显示待处理；这不等于作者正文从未蒸馏。主线程已确认安装包0.1.7资产已有此文逐项提炼。",
+        "audit_supplement_status": "以下是对已有正文蒸馏的项目审查补充，证据标记为📖仅语料；不新增、覆盖或提升为已验证交易规则。"
+      },
+      "replies": {
+        "source_author_reply_count": 148,
+        "latest_run_pending_ids": 148,
+        "review_entry_count": 148,
+        "distillation_table_rows": 148,
+        "id_set_exact": true,
+        "reply_hashes_match_source": true,
+        "reply_hashes_match_distillation_rows": true,
+        "classification_counts": {
+          "语义不足": 31,
+          "条件式应对": 17,
+          "实际操作自述": 15,
+          "观察": 23,
+          "非交易": 60,
+          "通用经验": 2
+        },
+        "latest_author_reply": {
+          "id": "103720441",
+          "time": "2026-10-14 15:07",
+          "classification": "语义不足"
+        },
+        "post_last_reply_date_field": "2026-10-15 09:44:24",
+        "time_boundary_note": "作者本人回复数组及逐项审查的最新时间为10月14日15:07；帖子字段 last_reply_date 晚于作者回复，不将其作为作者观点时间。"
+      },
+      "quote_attribution_check": "对照市场相关回复原文与逐项摘要；简短回答或引用读者问题的条目保留问答语境，没有将读者提问或读者意见并入作者规则。截图中第三方内容不转写成作者观点。",
+      "images": {
+        "explicit_2026_10_16_reviewed_non_avatar_images": 10,
+        "explicit_2026_10_16_partial_unreadable_images": [
+          {
+            "reply_id": "103607695",
+            "group_sha256": "d1261908c64bf227c98ab1e4db91ab8a60bfefa418e6059459427fa08c366eb7",
+            "status": "partial_unreadable",
+            "finding": "早盘文档截图大面积打码；可辨标题为10.11，但回复称10.12早盘。隐藏的指数、方向与买卖条件不可核验，保留待处理，不猜测。"
+          }
+        ],
+        "unresolved_image_only_trading_content": true,
+        "note": "正文6图与5张非头像回复图均有台账项，11张中10张完成审阅、1张部分不可读；另有头像图不算内容附件。"
+      }
+    }
+  ],
+  "supplemental_body_distillation": {
+    "post_id": "2vMJS1Nt1JK",
+    "source_url": "https://m.tgb.cn/a/2vMJS1Nt1JK",
+    "source_time": "2026-10-10 19:59:59",
+    "discussion_context": "回看作者描述的10月9日盘面推演与应对，并把10月12日周一列为待观察节点；以发帖时点为历史语境。",
+    "evidence": "📖 仅语料",
+    "mindset_extraction": {
+      "lens": "先辨环境和路径，再谈个股；把节点当作提高注意力的时间窗口，让方向由指数、竞价、承接和板块反馈给答案。",
+      "heuristic": "盘前从已知盘面推演多条互斥或竞争路径，为每条路径列观察线索、失败风险和参与约束；盘中用新增反馈淘汰路径。若每条路径都缺少可接受的风险收益条件，则等待本身也是选择。",
+      "confidence_limit": "这是单篇回顾中的方法归纳，标记“本帖观察，待跨帖验证”；不是作者给出的完整机械公式，也没有在本审计中做回测。"
+    },
+    "itemized_observations": [
+      {
+        "topic": "科技与超跌修复路径",
+        "author_content": "作者将节后首日情绪温度低于60、次日若继续下探至40附近视为“两连冰点”可能出现的修复观察场景；同时观察创业板超卖、中际日内低点、宁德时代提前止跌等线索。由于光芯片/科技恐慌可能扩散到PCB、且没有细分主动领涨，作者把追科技视为高风险方案，并说明周末消息发酵无法预判。",
+        "classification": "条件式观察；“大概率会出手”是条件性意向，不是成交证据。",
+        "limits": "温度和超卖口径未完整定义；利空传闻及资金意图没有外部核验。"
+      },
+      {
+        "topic": "抱团方向的相对强弱",
+        "author_content": "以善水科技、近岸蛋白为观察对象：善水是否能在分歧中获得承接，近岸竞价是否表态；近岸低开、盘中拉升被作者描述为相对被动。若周一实际成为指数节点、资金转向顺指数方向，抱团路径就可能不成立。",
+        "classification": "盘面观察与条件推演；列出标的不代表荐股或作者买入。",
+        "limits": "主动性与承接没有被编码成指标，属于当时判断。"
+      },
+      {
+        "topic": "连板梯队的后置确认",
+        "author_content": "作者讨论九阳股份与时代万恒的同梯队关系和模仿预期，并担心加速失败、换手板受量化影响；若观察九阳，等待上板确认会更靠后，但板上关注不在作者自述模式内，因此该路径仍被视为高风险。",
+        "classification": "条件式观察，不是买入指令；文中同时说明未把板上确认作为自己的模式。",
+        "limits": "对量化偏好的判断是作者解释，不能当成市场事实或通用规律。"
+      },
+      {
+        "topic": "辨别指数节点与周期节点",
+        "author_content": "指数路径看宽基与权重是否协同放量，以及科技有无辨识度领涨；作者用中证500/1000与沪深300的相对表现、两市成交额是否回到2万亿元附近作为当时观察线索。周期路径则回看新华周期、连板高度、首二板梯队和老周期抱团反馈。",
+        "classification": "情景分析；以上是作者当时采用的条件，不是当前行情的筛选阈值。",
+        "limits": "成交额门槛和周期阶段定义没有独立复核；历史类比不能保证重复。"
+      },
+      {
+        "topic": "节点候选方向与方向不确定性",
+        "author_content": "作者提出固态电池、生肖和20cm风格三种可能的新周期方向，明确说当时只能推演、需要之后由盘面验证。",
+        "classification": "备选观察，不是推荐或方向确认。",
+        "limits": "事后结果未用于本条审计，也不以最终涨跌反推其事前判断准确。"
+      },
+      {
+        "topic": "本人操作自述",
+        "author_content": "正文称其在节后首日于涨停附近“取关”东材科技，并回顾此前选择出手、持股过节。",
+        "classification": "作者操作自述；“取关”及持股表述不构成独立成交、价格、仓位或收益证明。",
+        "limits": "未用账户、委托或成交记录验证。"
+      }
+    ],
+    "historical_rule_boundary": "以上条目新增分析标记均为📖仅语料；不继承任何旧回测标签，不与已验证历史规则合并成机械公式。"
+  },
+  "image_gaps": [
+    {
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103607695",
+      "status": "partial_unreadable",
+      "action": "保留待核；不从打码区域推断交易信息。"
+    },
+    {
+      "post_id": "2vJb8Ncpins",
+      "reply_id": null,
+      "attachment_count": 6,
+      "status": "no_explicit_review_row_in_scoped_2026_10_16_ledger",
+      "action": "本次未查看，不能引用或推断图片内容；latest_run未将正文图列为当前待处理图片。"
+    },
+    {
+      "post_id": "2vJb8Ncpins",
+      "reply_id": "103540580",
+      "attachment_count": 1,
+      "status": "no_explicit_review_row_in_scoped_2026_10_16_ledger",
+      "action": "本次未查看；该回复不在当前81个待处理回复ID中，不能据此判断其过往图像核验状态。"
+    }
+  ],
+  "final_boundary": {
+    "new_distillation_claim": "本文件补充2vM正文的项目审查提炼；安装包已有记录，本次不宣称首次蒸馏。",
+    "image_only_material_unresolved": true,
+    "global_success_state_advanced": false,
+    "latest_md_modified": false,
+    "pending_queue_modified": false,
+    "plugin_cache_modified": false
+  }
+}

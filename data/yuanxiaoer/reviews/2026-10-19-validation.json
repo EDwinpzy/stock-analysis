@@ -1,0 +1,55 @@
+{
+  "validated_at": "2026-10-19T23:43:34.417088+08:00",
+  "collection_checked_at": "2026-10-19T23:30:58.228736+08:00",
+  "status": "checks_passed_distillation_partial",
+  "feed": {
+    "pages": 23,
+    "topics": 229,
+    "complete": true,
+    "errors": []
+  },
+  "reply_coverage": {
+    "2vJb8Ncpins": 81,
+    "2vMJS1Nt1JK": 148,
+    "2vTaemOb3Ig": 150,
+    "2vZYBKxSFEq": 106
+  },
+  "total_pending_replies_reviewed": 485,
+  "daytime_reply_hash_matches": 87,
+  "new_reply_hash_matches": 19,
+  "historical_reply_digest_matches": 315,
+  "oct14_content_hash_matches": 150,
+  "pending_queue_regenerated_without_mutation": true,
+  "image_url_coverage": 47,
+  "image_evidence_byte_hash_matches": 47,
+  "remaining_partial_images": 6,
+  "out_of_pending_historical_images_without_itemized_evidence": 7,
+  "state_and_latest_unchanged_sha256": {
+    "distillation_state.json": "11421f5fd117f17a8590c41626d7c1eca1f658a2602175e70ccc1e27b216b5a6",
+    "latest.md": "76dd1ce2b062fe86188537c1ae7966179873ee13acc8a8e85e4a81be1eb7abf9"
+  },
+  "local_markdown_links_valid": true,
+  "tests": {
+    "command": "python -X utf8 -m unittest tests.test_yuanxiaoer_capture -v",
+    "passed": 17,
+    "failed": 0
+  },
+  "visual_verification": {
+    "status": "passed_local_text_layout_preview",
+    "pages_rendered": 6,
+    "contact_sheet": "reviews/2026-10-19-preview/contact.png",
+    "inspected": "全篇4页与latest_attempt拼图；修订后的第一页和10/18勘误页另作逐页查看。",
+    "limitation": "本地文稿文本排版核验，不等同原生Markdown界面截图；未使用本地文件浏览器路线。"
+  },
+  "success_boundary_advanced": false,
+  "final_artifacts_sha256": {
+    "latest_attempt.md": "42273a1ea8c2a0c8cc44c4a1dd9ea4227fb951e65d0a358ab3dbadd2518510f3",
+    "distillations/2026-10-19.md": "8e157d41e7eecb8f7202d1adc10a421bffb30510ef22cbc94c58aca820a28b8c",
+    "distillations/2026-10-18.md": "35cfc000cc9c941d4844d4b7b1f4b2c2d0b4e6dc69e720621085fda9674abf84",
+    "reviews/2026-10-19-evening.json": "c346fa4c6ae7dbeb29e462b24cba7e79beb5b5b598ee9e230dbd46b871dd4857",
+    "reviews/2026-10-19-images.json": "e97c0c7ffb1dbb2425de44887e79e5779cfca4b9202d0e1e2b1af441ad99975c",
+    "reviews/2026-10-19-history-oct08-oct10.json": "228d7db3ae542027ef3101b39e84d249cfba857a400b6766e8986c70254fa20d",
+    "reviews/2026-10-19-history-oct14.json": "3a52f71d26581b2accfb61310edba036e087405115f751101e8866e3fe0e0143"
+  },
+  "final_diff_review": "修改集中在采集档案、夜间蒸馏、审查台账、最新尝试入口与10/18日期勘误；未更改成功状态、安装缓存或每日简报。"
+}

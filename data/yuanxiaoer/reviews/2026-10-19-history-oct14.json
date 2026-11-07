@@ -1,0 +1,3989 @@
+{
+  "schema_version": 1,
+  "post": {
+    "id": "2vTaemOb3Ig",
+    "topic_id": 8814246,
+    "author_id": 12089754,
+    "title": "[红包]心中无码，手中有道",
+    "date": "2026-10-14 16:54:29",
+    "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig",
+    "sha256": "736000e3ac7ac16c2b0d9ead840cb3a22a2e63d9586b22a533704e3aa4d18cee"
+  },
+  "review": {
+    "reviewed_at": "2026-10-19T23:36:24.205812+08:00",
+    "archive_fetched_at": "2026-10-19T23:30:58.228736+08:00",
+    "archive_replies_complete": true,
+    "archive_replies_complete_since": "2026-09-25",
+    "archive_last_reply_date": "2026-10-18 19:24:51",
+    "archive_reply_count": 150,
+    "unique_reply_ids": 150,
+    "reply_date_range": {
+      "oldest": "26-10-14 16:57",
+      "newest": "26-10-18 17:44"
+    },
+    "prior_review_count": 86,
+    "prior_review_id_date_matches": 86,
+    "new_reply_count_since_2026_10_16_review": 64,
+    "2026_10_18_distillation_mentions_after_expanding_compact_ids": 64,
+    "2026_10_18_full_id_mentions": 57,
+    "2026_10_18_compact_ids_expanded": 7,
+    "new_replies_given_item_level_conclusion_in_this_audit": 64,
+    "canonical_reply_content_hashes_recomputed": 150,
+    "source_review_overlap_count": 3,
+    "source_review_overlap_hash_matches": 3,
+    "legacy_review_hash_recipe": "tools.fetch_yuanxiaoer_posts.reply_digest: SHA256 UTF8 JSON{text,images}, ensure_ascii=False,sort_keys=True, default separators including spaces; 86/86 independently reproduced.",
+    "legacy_review_hash_note": "主线程用采集器原函数逐条复算旧86条reply_digest，全部匹配；另用四字段紧凑算法核验本次150条review_content_sha256，两类字段分别保留。",
+    "category_counts_all_150": {
+      "语义不足": 48,
+      "非交易": 50,
+      "条件式应对": 13,
+      "通用经验": 9,
+      "观察": 22,
+      "实际操作自述": 8
+    },
+    "image_bearing_reply_count_excluding_face_icons": 12,
+    "image_gap_reply_count": 2,
+    "image_gap_status_counts": {
+      "partial_unreadable": 2
+    },
+    "scope_note": "回复文本逐条覆盖；图像状态以reviews/2026-10-19-images.json专项台账为准。47/47全局附件字节哈希匹配；本帖回复附件均逐图有记录，仅103785358、103742497两张低清表仍有内容缺口。",
+    "status": "text_review_complete_two_image_gaps_pending",
+    "image_ledger": "reviews/2026-10-19-images.json",
+    "image_ledger_global_total": 47,
+    "image_ledger_global_remote_bytes_matched": 47,
+    "target_reply_image_count": 13,
+    "target_reply_image_byte_matches": 13,
+    "target_reply_images_reviewed_or_context_classified": 11,
+    "target_reply_unresolved_images": 2,
+    "historical_image_metadata_conflicts_resolved_by_ledger": 4,
+    "source_review_content_hash_recipe": "review_content_sha256=SHA256(UTF8 JSON{id,date,text,images},sort_keys=True,ensure_ascii=False,compact separators); byte_sha256为附件实际字节哈希，不等于采集器URL列表哈希",
+    "source_review_content_hash_scope": "仅对应review_content_sha256；该紧凑JSON口径在与2026-10-19 source_review重叠的3条回复上逐条匹配。",
+    "collector_reply_digest_recipe": "SHA256(UTF8 json.dumps(payload, ensure_ascii=False, sort_keys=True))；采用默认separators（含空格），与source_review_content_sha256为不同字段/口径。",
+    "prior_review_collector_digest_matches": 86
+  },
+  "mind_lenses": [
+    {
+      "name": "把事件空间套利与周期穿越分开",
+      "lens": "同一只票的3%异动空间，可以对应短线空间套利，也可以对应押注穿越周期；先区分参与意图，再看周期位置与承接，不能把异动空间本身当成安全买点。",
+      "sources": [
+        {
+          "reply_id": "103807760",
+          "date": "26-10-16 12:32"
+        }
+      ],
+      "limits": "作者当时明确说尚未决定是否博弈；这是本帖可见启发式，没有机械阈值或独立收益验证。",
+      "evidence": "📖 仅语料"
+    },
+    {
+      "name": "用负反馈情境检验高位票的承接假设",
+      "lens": "在判断高位抱团能否延续时，补问中位股若出现极端负反馈，强势票是否仍有承接；情景变差时下调关注或退出。",
+      "sources": [
+        {
+          "reply_id": "103813143",
+          "date": "26-10-16 14:21"
+        },
+        {
+          "reply_id": "103813975",
+          "date": "26-10-16 14:34"
+        },
+        {
+          "reply_id": "103821125",
+          "date": "26-10-16 16:11"
+        }
+      ],
+      "limits": "作者的操作是自述；“像华瓷”属于历史类比，未证明该类比稳定有效。",
+      "evidence": "📖 仅语料"
+    },
+    {
+      "name": "量能与广度决定反弹解释的强弱",
+      "lens": "把上涨家数、量能和题材扩散一起看；作者将“多数上涨但没有放量”归作反弹，并把量能变化作为细分题材或市场风格判断的条件。",
+      "sources": [
+        {
+          "reply_id": "103796079",
+          "date": "26-10-16 09:46"
+        },
+        {
+          "reply_id": "103807275",
+          "date": "26-10-16 12:19"
+        }
+      ],
+      "limits": "没有给出上涨家数、量能或持续天数的机械界线；“下午放量”是主观猜测。",
+      "evidence": "📖 仅语料"
+    },
+    {
+      "name": "推演未收敛时保留多种周期解释",
+      "lens": "作者在无法分辨高低切与周期末端时，直接保留不确定性；针对可观察的负反馈设置条件，而不把日历节点先验地当方向答案。",
+      "sources": [
+        {
+          "reply_id": "103813975",
+          "date": "26-10-16 14:34"
+        },
+        {
+          "reply_id": "103845958",
+          "date": "26-10-17 23:47"
+        },
+        {
+          "reply_id": "103846022",
+          "date": "26-10-17 23:53"
+        }
+      ],
+      "limits": "风格转变被作者描述为往往事后才看清；这提示事前识别边界，不能反推作者有稳定预测能力。",
+      "evidence": "📖 仅语料"
+    },
+    {
+      "name": "把消息持续性与板块承接放在一起复盘",
+      "lens": "单日反抽不足以确认地产修复；作者强调需要持续消息刺激，并用个股未封板说明板块反应仍不完整，同时提醒不要用事后结果苛责事前判断。",
+      "sources": [
+        {
+          "reply_id": "103845513",
+          "date": "26-10-17 23:06"
+        }
+      ],
+      "limits": "单条回复的经验性概括，没有给出消息持续性的编码方式，也未作跨样本验证。",
+      "evidence": "📖 仅语料"
+    }
+  ],
+  "image_gaps": [
+    {
+      "reply_id": "103785358",
+      "url": "https://image.tgb.cn/img/2026/10/15/gs843kswtd2l.png_760w.png",
+      "byte_sha256": "bcd7cf662309f5775e490f99d6afdbc7a0ba2e547363d84fb36bb9336a86d8ad",
+      "status": "partial_unreadable",
+      "reason": "10月13日至15日情绪表，仅760×35像素。部分数字与最右侧交易思路无法可靠辨读；本人文字温度48已单独保存，图中独有内容仍待核验。",
+      "action": "保留待处理；只记录已核实文字，不恢复模糊小字或隐藏交易条件。"
+    },
+    {
+      "reply_id": "103742497",
+      "url": "https://image.tgb.cn/img/2026/10/15/cdb7rj2fwl3l.png_760w.png",
+      "byte_sha256": "8605afa2dd58c6e369a9ec4390ca9294d61fef1bfedf9a4905f2959bd059a26e",
+      "status": "partial_unreadable",
+      "reason": "9月25日至10月14日作者情绪表，仅760×69像素；部分交易思路小字无法核验。本人文字60以上已保存，不猜测模糊栏目，保留待处理。",
+      "action": "保留待处理；只记录已核实文字，不恢复模糊小字或隐藏交易条件。"
+    }
+  ],
+  "entries": [
+    {
+      "id": "103727226",
+      "date": "26-10-14 16:57",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-44?type=new",
+      "text_sha256": "c3f42552e85be4b333811d6f4964d111cd4faaeed5f0ffcb2b1712e58f5cec06",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a8e251f8d228f60403acfcf65383e8fee9f474d3ef64d3c999fa06f347875580",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "🐉一",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "daec865cef56a3dda1852f403bb51a43cd7921c9f6b9158bf5e3cd4f5f44f45f",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103728399",
+      "date": "26-10-14 17:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-44?type=new",
+      "text_sha256": "41b20c4a2efff1810f99fda50bf6227b728f3d765cfddc0696e54e860fe9435e",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4a1a08413a83cf34d51eab0b967c72ae2e6e6c5797072ebebdb2a18cf4deb6d0",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "下午举手的🙋都康康哈",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "4b669fa0d08477d44d4b09fbe2606d1084a09f553973d4a5a5468192fbeba45d",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103728873",
+      "date": "26-10-14 17:32",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-43?type=new",
+      "text_sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "f04be47b7eb072e4be338a1ed07bca690cfff8f8e01ee9f674ae31bf29499c9e",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "10",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "fab4ea5fa05d8df94d1c8a267e3fac5c7aa747748c495c5a8e2af23480e0ceee",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103728878",
+      "date": "26-10-14 17:32",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-43?type=new",
+      "text_sha256": "0cca2280dcdc34d950576c9b1c1038df6cc99f436b472749e5f2fa64fe35ee81",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a8e7124ea02e25b40036ef5c515844884aebb05cdb5b145ae39669f55fdda858",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "还压抑吗",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "7f0c93bd98384f4e478951e119ebc4f70930b67b60323375c729a5608b9d3598",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103729293",
+      "date": "26-10-14 17:42",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-43?type=new",
+      "text_sha256": "d27432b6dd4cff4d4fcbff490357ed3a02bd5a3985e139046919963c3337df4f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "81f2f763a50e9a4b4a29f5de6a5d639ee049cfed7fcfbb34d8287d3bba26e54a",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "冒！",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "9aed365745e1a3f9fb53d86e522c5ced9f7f7c1ef09d5ab0672f3ab6f7bd4d2b",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103729304",
+      "date": "26-10-14 17:43",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-43?type=new",
+      "text_sha256": "aece4a2ecf86320ce1b297cf5adb011f464bffa9faaa59ed5607284f8cc00e82",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "858c849a9f84dfaef18687e65acea5fd60efcd090bd181820ac8d20bb8f0cac5",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "压抑的感觉吗",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "395fe20203b8afdc7ae17652c8e95c784e6b0b9eb12b80e9f6ccf46a9c83bbed",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103729368",
+      "date": "26-10-14 17:44",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-43?type=new",
+      "text_sha256": "987df4442188fa5984cc7f6422bb7dd35b3012f80a134c5df8a531b4829cd35d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0d9c7f10f7d4b37dee86c8a2f8ac8d553396d7145e4e94693d78476b86166d31",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "还没下班，你意思是早上下杀那一下吗",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "d0fdcade5e5073685347fcabb29790c8bf95a4bb56da4ca789753eb9cfb2fe01",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103729965",
+      "date": "26-10-14 17:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-42?type=new",
+      "text_sha256": "a137dfd9baed38b09687d2371fbdca37e62659647c9338abac16afc4da486d3f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0bcb4edd5f30b8e07a999ed8c45f3488f0a11ea6647e7cbda3106b65d3688afd",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "他估计性压抑",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "a0c163215eec720bcfa7502debddd35217561d8a7c92fedcd8fdb16eeee1e23a",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103730341",
+      "date": "26-10-14 18:08",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-42?type=new",
+      "text_sha256": "822627007eb7ef45907cf0727cad5cb34c91c08a0cc162612ff81d992e681f7f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3787591cc520bcb197ce22a637bf100e8e83591525db87d83e44e31dbde75290",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者称自己尚未复盘、印象中煤炭没有明确锚点；把板块归因于厄尔尼诺发散、个股归因于板块抱团，并称昨日炸板后今日弱转强开盘、前一日打板者兑现并不意外。",
+      "review_conclusion": "“你觉得跌破5所以走了”是作者转述读者可能的判断，不作为作者观点；作者自己的分析也注明尚未复盘，属于带不确定性的回应。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "f35c598e01faf80b71e3d305143b347d047168cb43d6a6e118b85cb3472ddb29",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103731802",
+      "date": "26-10-14 18:50",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-41?type=new",
+      "text_sha256": "cfda647d50e05f7093cd66e849bd32b399149dc4e1f26c5040e7ea30c929ea62",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b1d13778e93834094656e5b54acec479fb7da70b202bd2c6d43cf1cbc50f7c23",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "怎么呢 展开说说",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "3256e83deb33b864e2af28cb2addc815f8e1568a574f7dadd7da333c4412ae25",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742472",
+      "date": "26-10-15 02:02",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "8dc4158ff7928bbf01e99a145ae87411d03ec5c9bb9cf93110ce88b4bd164e70",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "2c8a56dc17e6d2c0c0b793b5f220b33b302c3a8f5a064dfa114e8b26f9210d34",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "建议参考历史周期及各周期诞生的题材。",
+      "review_conclusion": "是概括性研究方法，没有说明如何识别或据此行动。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "47d84dc6d3a952555ad27de278bccad0aae01174968f94e57410c68a56ba5e99",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742474",
+      "date": "26-10-15 02:03",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "7b185d2fee2903e34c3ed5277b2f436e519b8096c8cbf9956619904dd2acd2ae",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c60a8d23f26142df801e7f31b8a89012ed564b9ce10b5383ba3f29b3c3e373b7",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "穷疯了？就为了领红包",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "9ba9f4d486ba0cd536d409461f80b0d6592395ccaeec928f5e4c1628d8a93759",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742476",
+      "date": "26-10-15 02:04",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "a3ecbbcae0d2b1f1e45a8c00922a8ad89622394ec4e2e7dc4a76eafb87a17d5a",
+      "image_url_manifest_sha256": "9311bb8f8900fe0b4d919db8bcef36ef6d33cb3743f0a07a338bdf4e09746d37",
+      "review_content_sha256": "592b8fc74141b9a4e1e726cd456293a818d0663fe15e8d2ee47b4e6971867396",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/sab9vwryboml.png_760w.png"
+      ],
+      "category": "语义不足",
+      "summary": "好家伙的 我看看怎么个事",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "f56b654d97287a1c792629467f016b3b7e98b913b404b7f44b2c7e5bdba77fa8",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/sab9vwryboml.png_760w.png",
+          "byte_sha256": "868eae70e108197321fb3a78306b5de708521227d461cd3eeb8cb4f84b3b4500",
+          "expected_sha256": "868eae70e108197321fb3a78306b5de708521227d461cd3eeb8cb4f84b3b4500",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "美国股票行情截图；本人未附A股交易条件，不推导跨市场结论。",
+          "checked_at": "2026-10-19T23:36:27.815349+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配"
+    },
+    {
+      "id": "103742493",
+      "date": "26-10-15 02:15",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "a8b2c1b0a48a9ed9e16dca71bb20c190aac52afc9d666288b5b6a3e34c5095dc",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "62594a2e2986a686b54efd96d634a72e8303fbadb8574b569f879ddb8ae0a34b",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "6nm",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "3e67316688b353b799b594e3c50ea6857762f8830a275e6d9517a1a71f6ac727",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742496",
+      "date": "26-10-15 02:16",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "b2d76d2c1a8c8a76988f1ad459981351c1a90f1dafd8d4d269bfa8f5ced138c5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "2463c7fdabaa95de4cec1b92dd8b1f06973595ae93b14ba2018aa05357fc7c40",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "作者提醒读者不能只记他人结论，要有自己的思路。",
+      "review_conclusion": "是通用思考建议，没有提供可执行的买卖条件。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "13d608fb5a05b8b910bb438ba71802f1a3b006227aec2cd3322881e8b3526d97",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742497",
+      "date": "26-10-15 02:17",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "8f0d1b411a519526a0ecce8d4cf4bf018993206547b05d05cfc99b8c42f8502c",
+      "image_url_manifest_sha256": "36f22299827ffe5bca19a6a2db09a4bb9449e34134fc366c9111b95d87e710bb",
+      "review_content_sha256": "466d0df9d510ac24d306494874baab09c171269ddf8e8be8c39ee431d014eac8",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/cdb7rj2fwl3l.png_760w.png"
+      ],
+      "category": "观察",
+      "summary": "作者称当日情绪温度仍在60以上。",
+      "review_conclusion": "只记录作者文字；图表未检查、口径未核验，不据此确认市场情绪事实。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "partial_unreadable",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "eef52c2825d1824aee4855da89a40c8cf346f51e470fc24f365813e44f3960c9",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/cdb7rj2fwl3l.png_760w.png",
+          "byte_sha256": "8605afa2dd58c6e369a9ec4390ca9294d61fef1bfedf9a4905f2959bd059a26e",
+          "expected_sha256": "8605afa2dd58c6e369a9ec4390ca9294d61fef1bfedf9a4905f2959bd059a26e",
+          "remote_bytes_match_review": true,
+          "review_status": "partial_unreadable",
+          "conclusion": "9月25日至10月14日作者情绪表，仅760×69像素；部分交易思路小字无法核验。本人文字60以上已保存，不猜测模糊栏目，保留待处理。",
+          "checked_at": "2026-10-19T23:36:27.626612+08:00"
+        }
+      ],
+      "historical_image_metadata_note": "沿用2026-10-16局部不可读结论；2026-10-19专项台账重新核对字节哈希，低清小字仍无法可靠辨读。",
+      "prior_distillation_recorded_image_sha256": "36f22299827ffe5bca19a6a2db09a4bb9449e34134fc366c9111b95d87e710bb",
+      "prior_image_hash_note": "历史记录值保留作追溯；当前附件字节哈希以专项图片台账为准。"
+    },
+    {
+      "id": "103742501",
+      "date": "26-10-15 02:19",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_url_manifest_sha256": "57f91f2a9f382935256e3fd7a8d6b711e97b1f568bf2a9f8d889842dccb26c05",
+      "review_content_sha256": "b943c7232d0394427b367cc6eba001fbfa999cd9d4a7cea76192b707738579ad",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/kjntmmwjpqsl.png_760w.png"
+      ],
+      "category": "语义不足",
+      "summary": "文本为空，仅有图片附件；图片未检查。",
+      "review_conclusion": "文本为空且只有图片；本任务不查看图片，因此没有可用文字证据。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "b55598ec89a2c911ad3ec66d2facfaf5b9e558b3a77ef054538eefe12fd7f17c",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/kjntmmwjpqsl.png_760w.png",
+          "byte_sha256": "f61ba1d19917ce0b0b6420362ad5487762179fa41406aa8956f45fc068eb381e",
+          "expected_sha256": "f61ba1d19917ce0b0b6420362ad5487762179fa41406aa8956f45fc068eb381e",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "第三方彭博AI煤炭新闻摘要；作者仅贴图，没有独立表达交易条件，不当作本人验证后的供需事实或交易建议。",
+          "checked_at": "2026-10-19T23:36:27.563916+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "historical_image_metadata_note": "2026-10-16旧review标签/文字存在“reviewed”与“图片或图表未检查/未核查”冲突；以2026-10-19图片专项台账的逐图复核和字节哈希匹配为准。"
+    },
+    {
+      "id": "103742520",
+      "date": "26-10-15 02:27",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-40?type=new",
+      "text_sha256": "67c0cb90c1b5cd45d1602eea34cdc204facb229f287cc5a3d663f6a3dbdc98be",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "fe4c43da325a7d1084c382f5b003c4a77586672b19c5280d430c7c9e21f46e93",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者让读者看自己的空仓节奏。",
+      "review_conclusion": "仅记录作者声称曾空仓；引用图片未审、时段与账户情况未知，不能独立确认实际持仓。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "b70b870bcec8d9ca96a4660a512209761a9330b521a83e54b9f6605c0bb46f35",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742525",
+      "date": "26-10-15 02:33",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-39?type=new",
+      "text_sha256": "ab164edef8df44a175f6dea997eae22e27745afdadcbe8bbec2048e948cf38a4",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c104475db739a6037ff44693ba88ee0f0bbeed00b15eda0cebd67fbe36c2936f",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "作者概括题材节奏：启动大涨后前排加速，随后数日分歧，之后可能回流/反包，再转震荡或结束；是否再开空间另看。",
+      "review_conclusion": "是作者的经验序列，未统计检验，不能当固定周期规律。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "829a3ec7ebd853e530b46d89613e1bde29eca069bb3dbb2d67f21aa45f9130d4",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742542",
+      "date": "26-10-15 02:44",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-39?type=new",
+      "text_sha256": "e593b0fdfe72335b70a1b3a3d3afe1cbce048bd06623d7184bc9714e0ac944c1",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4632fecd9d0f4746387cfc52ae159bbf70f2a1f27cd8ef20b639e8ebaefb4a13",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者列出多个题材观察方向，并称游戏轮动可提示传媒高潮、染料深水后观察回流。",
+      "review_conclusion": "这是题材观察清单和条件判断，名单不等于买入指令，配图未作为证据。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "4d2a44fda10d3fd3e91fc09e23e8807ce01c8e3a211af4177b9e2caab4eac901",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103742555",
+      "date": "26-10-15 02:59",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-39?type=new",
+      "text_sha256": "8e8ab87d12f0e9af0168fc00921388bae1ada192163456773544b934cbcb81fa",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "d7f6bc5ec61044758367fbd43a5b9f8bb7ced5738a1c54c1926badf0db561834",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者谈科技股箱体与趋势位置，同时转述机构对科技资金出清、国家队流入及指数位置的说法，并提出自己对36XX性价比区间的推演。",
+      "review_conclusion": "须区分作者自述与其明确归为机构观点的部分；价格、资金流与机构说法均未独立核验，不能视为交易建议。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "592fbd51f257f60e4203a5ab55cf70f262ef440bbd99df1feba40e7fbc6af0a8",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103743398",
+      "date": "26-10-15 07:50",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-38?type=new",
+      "text_sha256": "508b1f3b5e6e5ec96b328ff70174f8dceb1263d3fe8cdfee9d3128859c224073",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a8e8cacc5709745e0a044326a06a18b3e2459ce861b308ecdc3bc06e95761887",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "10月15日早盘推演：作者认为中期可能仍未见底、当前成交量只支持小票抱团；若传媒分歧且量能不足，电池、染料或金融可能回流，也可能出现新分支。",
+      "review_conclusion": "这是时点明确的作者预案，包含猜测与条件；未验证为现实结果，板块名单不是买入指令。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "099d7f1afa489066f42e38945d013cfd72d66c908cc00eab5743649a85aa23f4",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103745601",
+      "date": "26-10-15 08:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-37?type=new",
+      "text_sha256": "b7d36e9751bafa8ce802fc350bccde602b7358b0d6ae5df224cacc03e234d628",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "599924dadd71a0407229e0111367ddd35c4a01e6cba0a2007628735b7745962c",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "意思做 电池 的回流是吧",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "2a52e02d2b6bd469570ab0162a3c15274e427f334bf0324af81826dfa152d21a",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103745633",
+      "date": "26-10-15 08:59",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-36?type=new",
+      "text_sha256": "6389583642acd9bb01a0b6031a5c7dfc533ff564581792842b0eff49b87320ac",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3696bdbaa86a75131062272c5bf85e7e3d64dfa1907977a6ee5df6b2a9034aed",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "啊这几天没说医药啊",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "0e323e41507296ccdb9b67a471bf6d557f2116ff67765446e597b2781ed6a0bc",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103745640",
+      "date": "26-10-15 08:59",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-36?type=new",
+      "text_sha256": "0ccfb2490625a1cb44eeca0ae4f371400d09578fe266b02e2844066a7d20d6aa",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "caecd40dc7e41ad27f3ef04dba6719f34dc0b7fd0f41bd7eb6a0b79059606109",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "睡啊",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "bff4bddb9d5564aa837f2d96a7a86f2d8beec5353fdaee63e61c104ce6bc710d",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103748089",
+      "date": "26-10-15 09:39",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-36?type=new",
+      "text_sha256": "3cfa0a8a830022ab088f025718833605a583e9a92f7eeaf69cdb6751447003f5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "ce80fec55cfe97e8ba8ebb1384700f2a793e4cf841b313a01fc0bc4e29ecb20c",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "称科技、传媒、医药的辨识度标的仍有表现，高位抱团能量没有因指数反弹预期而瓦解。",
+      "review_conclusion": "记录作者观察，不把列举个股视为推荐，也不独立核验当日行情。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "015133abde86583af0b29316d6dc8946503c63ba8dba2807123e6a64fa5e53f1",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103748108",
+      "date": "26-10-15 09:39",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-35?type=new",
+      "text_sha256": "75cfdf532eae16ef07840ada770e821da64b7ca3f824e8bf8e3c60e6a7d3a9e4",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "67c8dd36b5a782f47f519b8bba4ba489e113c01b0f67d9e6f3bcba4560472d5c",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "称平均股价重新做箱体、热点板块轮动。",
+      "review_conclusion": "是作者对盘面的概括，未给出区间或量化验证。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "bc570fc6ca268eef885f638e2a9cfd868a31f4fbf1d0a98df1e5040bb86b4f31",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103748446",
+      "date": "26-10-15 09:44",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-35?type=new",
+      "text_sha256": "24060d38818809d11c7fc2d397394c23a96e72334c3b149d3c489c734aa0fce5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "23529a54940e3338144fc71f95bb6716bad57eed0ee909d52070553e71a7028e",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "观点不变，还是围绕早上的八字箴言展开",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "79486b38b8150270e96a487341a5b9f62c1cf91576582b09a4040a459fdf8b02",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103749404",
+      "date": "26-10-15 09:55",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-35?type=new",
+      "text_sha256": "5faf9fc7efbe29dcc94d5609e60dc5148a39e9b8a817dffab5ceb426e307c8c4",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0c9876baf15a720f51abd912f28e043c2cc4a375011c380724586ef35b639224",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者称对九阳股份“轻关注”。",
+      "review_conclusion": "保留作者原词；“轻关注”无法证明有持仓或成交。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "98162f40d32316af12e716a622cf046c68e567c9b40f420bbccc981488ec6b0a",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103749472",
+      "date": "26-10-15 09:56",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-35?type=new",
+      "text_sha256": "a95b39982bc6f0d07cac47e07b5f59056e6158abbd21238a1a95ba0b192e87ee",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "664612faa37451a71f8ca24363c0dace78fdc2fa674da07f56b492d99d8d88da",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者把高位抱团视作整体，称回流时倾向卖出，并结合复牌与异动预期，推测次日可能有人提前拿先手。",
+      "review_conclusion": "这是围绕具体日期与个股别称的条件式预期，不等于作者实际买卖；相关别称和判断未独立核实。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "5d68f1293e81308f221739995fa13fe2583770bcff3b8f6d056c96422c7af2cf",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103752139",
+      "date": "26-10-15 10:24",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-34?type=new",
+      "text_sha256": "fc9628085060fc188a9fc73711dfb3cc391bda455494555f47eb6d2756d32692",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9dd9ffb648a3552e9ff6b583021621762078d7616fc84ab8653e06362a9231fe",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "拿过来啥呀姐",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "c0d4c53f623fb7220176b6df5b76fbb4d6b745aaeb8e684cb7499558cad81fc5",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103753881",
+      "date": "26-10-15 10:45",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-34?type=new",
+      "text_sha256": "00abe1b241c1b60e44eaf6b87fc02d2176b4a063b20fb5d7e0621825cf5e5781",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "e90a715907816bc40ec1ffed762740768831331f43f28bb02a514eda55a50056",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称当时情绪温度是“4开头”。",
+      "review_conclusion": "仅记录作者文字，不推断具体值或独立测量口径。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "8ec6b8ebbd77e04acbe42400be7aed9928f8038901f0ab7c74eac3494e5a4a73",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103755329",
+      "date": "26-10-15 11:02",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-34?type=new",
+      "text_sha256": "55305d9a434865ee77809c654707794811aa8b7f5535495274e4b31c76df0fdd",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "40a86f4dd160fcf744bb67f31a4bc9839bedc03fe508cdcdc9920b5c1c5d3c5d",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "讨论异动监管经验、善水科技的几种定位，以及指数反弹或量能不足时科技大票与高位抱团的风险路径；称若反弹不能持续放量，磨底概率仍大，个人偏向抱团。",
+      "review_conclusion": "整段是作者自己的经验和情景推演。监管阈值不是本审查核实的官方规则；个股定位、市场底与指数预期均仅语料。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "00945b710f7a9abd19929a9e91dabecea180a7af99ef05c706e550a711526423",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103755535",
+      "date": "26-10-15 11:05",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-34?type=new",
+      "text_sha256": "e9ab315e29b276805bf8769b1884753bf7f93f9b34b871e5edddcb945b3729b9",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "89c4c582335df52c81cfcda4b860aad241d7f21d28cfe1398cbc5ed8ad498f2c",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "我把思路置顶了啊",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "060d57ab8697c818bab0cb237a354370c7ad94e1ab2f127032eca7f6e458137c",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103756414",
+      "date": "26-10-15 11:17",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-34?type=new",
+      "text_sha256": "fe05f6ca65a34aee8e1358e54067164c2892cb8f4f71bcdf2b9364f1ca014af7",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "264101a0e27810339a0b9ec4daab5b9eb6fcc61387e7a252f210c7c60f048061",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者回应称，自己有些需要手速的超短操作没有公开发出。",
+      "review_conclusion": "是作者对公开披露范围的自述，无法验证交易；说明公开帖子不能代表其全部操作。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "1e9f09b97d01b4064956bb39b4c75d157d7e9f4a9e360c51ec488543fe76beef",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103756523",
+      "date": "26-10-15 11:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-33?type=new",
+      "text_sha256": "b9d78e5b5a178dc3c9e9e86739ccc023308fddcafebd52d8d58a1b25713e25ae",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1e9f83b42d82d1e4b1f341491288deecb0aace12ac39ccb67420147808976384",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "转述一条未经核验的死亡相关消息。",
+      "review_conclusion": "闲谈中的消息没有来源核验，不作为事实或市场判断。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "6c6c60dd3fa8b0a2c32cdada61a8673ae191043c115244068dd483900ae94694",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103757048",
+      "date": "26-10-15 11:25",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-33?type=new",
+      "text_sha256": "ff6f7a68e452507b8b809ecb989f2279933a6d89e4145a8cfbf572fdb02f43fb",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "bdf6fe59744ddeddf66d9ae46ffc6e62b8f9fadc96b877a4637736a07eec7350",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "称已把善水科技“关注回来一些”，收盘时再看是否增加关注。",
+      "review_conclusion": "保留作者“关注”原词；可能指跟踪或仓位管理，不能认定为买入、加仓或成交。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "5ef5469869059dcef2d01c116b1f4a8b155728cf2b9a23745a62f125a2ca2601",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103757156",
+      "date": "26-10-15 11:27",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-33?type=new",
+      "text_sha256": "4bb688bb39aaade7c74cba0bb82862ba4b068f4a131411c42bc12e04d83b9db6",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "08c130b8a7e0209b027c8940fb33673b63ca9f1b44c7714eef5484973aa20db1",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "还能这样啊",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "06e7741a7d4fac433312a0cf20c4086c4420164c1f6cd8bcb10ed47f24a6eb9c",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103757278",
+      "date": "26-10-15 11:29",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-33?type=new",
+      "text_sha256": "1778ecf400b1e811e361670a925c80c1451c82df05c94d31dfc828c372de4cdf",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "ce9e4774c812d3d417e60947da852db79f8f8dd734d4985b35d452119743f435",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "对一条死亡相关消息表示惊讶。",
+      "review_conclusion": "对象、来源与核验结果不明；不将消息当作事实，也没有可归纳的交易观点。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "302547d9e6a888e7f86082b55aaca4f31b99e49bfe5a0afe82242c0b4922f5a0",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103757789",
+      "date": "26-10-15 11:37",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-33?type=new",
+      "text_sha256": "9406248cc24c26d5940f9eecc1a71cc9fd1787be117e797a72856ff0fdec3d83",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0e1c8601df1a61143bac50bbc4f837660a5eed1db62a9dec790ff8d2fe98d604",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "新华就看明天资金怎么认了，如果认做是“爱丽家具”，那就悬了，作为“ 传智教育 ”替身的九阳和时代也会遭殃，反之就是异动空间问题。",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "d20cf53e76242b083d3c62f3b18dc068815a3cc91be1f887a9c036f36f7c10fa",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103758092",
+      "date": "26-10-15 11:42",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-32?type=new",
+      "text_sha256": "31379b34422cf438a47b35bb796be0891afdf1eaa06c3f435befe3649c3157aa",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9d40f23633047614b78467b62716b793429c83ed463201836f39fcb98f6e8a0b",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "啥意思，哪里来的超买？",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "94e15facaaaa1008e51b4723618eecfddafeafae24605ccade39c9f0b1dbad9d",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103758574",
+      "date": "26-10-15 11:52",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-32?type=new",
+      "text_sha256": "785b7e5a5a953655d47309626b682462b6823223999adb0e4736b968784d912f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "2895e4e0711093e9b40c75cdd82d8e989cadb15c6e8127aecb6aedc9c90efec9",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "称深V反弹本身不构成超买，除非连续出现数根大阳线。",
+      "review_conclusion": "这是作者提出的技术判断经验；“超买”定义、标的与参数未给出，未验证为规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "ae1e23a40bde844ff3dad8cff36d924e2a3ce329d6bee73e520227aceb01ea48",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103759674",
+      "date": "26-10-15 12:21",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-32?type=new",
+      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_url_manifest_sha256": "67bd26376c73c7d2b300fab6664e50e319c73d0ad4ae0d320510f3c9224d051c",
+      "review_content_sha256": "a5a0769c092facb732fcb52de4b20cab6a89b7ac77d5cb05786a0f234192e75e",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/e6t45d6at7el.jpg_760w.png"
+      ],
+      "category": "语义不足",
+      "summary": "文本为空，仅有图片附件；图片未检查。",
+      "review_conclusion": "文本为空且只有图片；本任务不查看图片，因此没有可用文字证据。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "819278d98d59d8ae45ca463c603abbfc9cd0011a5ddd1fda017a27cfec362985",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/e6t45d6at7el.jpg_760w.png",
+          "byte_sha256": "7cb5b84068dc7956b6d3f7d4b1b3ad61fe34b5bb722544b0d5368d1d436da788",
+          "expected_sha256": "7cb5b84068dc7956b6d3f7d4b1b3ad61fe34b5bb722544b0d5368d1d436da788",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "羊字图片，可能指向文中生肖题材；没有标的或触发条件，不推导为买入指令。",
+          "checked_at": "2026-10-19T23:36:27.546144+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "historical_image_metadata_note": "2026-10-16旧review标签/文字存在“reviewed”与“图片或图表未检查/未核查”冲突；以2026-10-19图片专项台账的逐图复核和字节哈希匹配为准。"
+    },
+    {
+      "id": "103760479",
+      "date": "26-10-15 12:40",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-31?type=new",
+      "text_sha256": "de5a6f78116eca62d7fc5ce159d23ae6b889b365a1739ad2cf36f925a140d0cc",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0c15bd090f7102a96b86d8d36a65e8b56be59e75f61b8f80df2d82867c69349c",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "V",
+      "review_conclusion": "只有字母“V”，可能是表情或简写；不补充未提供的语境。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "4cf220596eab8bfd7f141d20894894f88b783f27e2c693bf48f8d9c4389e5309",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103760493",
+      "date": "26-10-15 12:40",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-31?type=new",
+      "text_sha256": "02898b39f6bb1720d6a97e7981c3240d474319754df9ca949e7e76663f791afa",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1e2a87c89de424b8ea8ab576456995e515d5d68cee818d03bdb1ce508983bab4",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "唉我很久没有锻炼身体了",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "64498bc38b685248df5ae2d06e9b3c9c066a8c0c64134537fbaa3ad3bff9ee28",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103761163",
+      "date": "26-10-15 12:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-31?type=new",
+      "text_sha256": "6954aa7a58c6f480f7078cda13ed1288c635ce717a0672d059a27c2ac8e88753",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "23bcabd26e5cea6db29ad234445edc206837fc1524447a25f87af83e3ce507de",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "转述一则关于两融强平安排的网络“小作文”。",
+      "review_conclusion": "原文明确是传闻，未核实；不把它当监管事实或交易依据。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "8d5906fa98c8b962761fddee2c80306a7cd2b0bb932048e40f5677a8e0e7d233",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103761355",
+      "date": "26-10-15 13:05",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-31?type=new",
+      "text_sha256": "df2492fdbfcf7071ace69a2b76333f3929245bbbb773b8346cd69e10188cf923",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3b82a79ce966e054fc630d9e53e66db75fbfc3ca0a320b74d064dc0100a3f552",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "不知道啊 问问你的券商",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "933292767ba10ee6f9526ad4741bd7c35cef02c59797e5a235af1d3adeae6146",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103762869",
+      "date": "26-10-15 13:32",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-30?type=new",
+      "text_sha256": "fe4b3aafff68d668e433cea6c58350116830da3323b39c21cd252ec1d136ad16",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "7f73515b8ac54150a09cbb16a8690238d3fc921dc33756120ef78fe466a130df",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "还不救？ @狗队 ，该你出手了",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "10c8d3ee162b15751c0707be5b34fc7301139e10458a191eba10699e4abb4313",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103763077",
+      "date": "26-10-15 13:36",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-30?type=new",
+      "text_sha256": "eccb4a5b7e6a0e36eebd26850bfd7eb6c451ef3ff310d7815db53ad769504c01",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "424b8f945608bb0daeb1b188f80b94a821ad29fe41df4aaf77aaa206f36009f6",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "给我个面子行吗 狗队",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "064b152a86ae52f257eca85d8ce288692e7f540934231a4f1523ff882ddfe4e1",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103763673",
+      "date": "26-10-15 13:45",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-30?type=new",
+      "text_sha256": "06fcb9802553acaf26413596c3c3ceb27425839d195f19aef54dcac3c6256303",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "5b68dab65e11d45ecbf409d641da100911a4c9c7f27382a2c7a632c758330d10",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "称抗跌后回流的方向除券商外还包括抱团。",
+      "review_conclusion": "是作者当时的板块观察，未给出完整条件或独立验证。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "20d81748b7a10be517e79e1bd1b8c4f6c0606324f623c8fd4af2a50800b91491",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103763836",
+      "date": "26-10-15 13:48",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-29?type=new",
+      "text_sha256": "395bcde3e0e99b5ccfba1ecfc055fa3fba639b7bf96fb579075497296bc6f5c8",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "53afca94483d5d521fb3cb0b0ddfacb0f2850a957898e03d0438b2d2dd609227",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "再次把国家队介入解释为救流动性而不是托举市场。",
+      "review_conclusion": "这是作者对政策资金作用的解释，不能视为官方目标或已证实事实。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "47de340d00a935b61f78f751893548ce6391f834ad1631ca583aa9effcb24206",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103764508",
+      "date": "26-10-15 14:00",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-29?type=new",
+      "text_sha256": "c36b6f13cda2265dcba06300379b1e84d5e2e90ff68e5354699585eff9ba899f",
+      "image_url_manifest_sha256": "8fef5d0eb1d9a785bc4a6dca933a31a73c17856113fe7618ad69e90eba803702",
+      "review_content_sha256": "eba49b70eed93885519cc33f4a31dcd4c398b7bf0c66a5675594ee4f1a8dfc53",
+      "image_urls": [
+        "https://css.tgb.cn/images/face/011.png"
+      ],
+      "category": "非交易",
+      "summary": "梁子爹，我给你跪下了，让兄弟们好一天吧，我求你了",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "8ad4dc6c04a43708d9ac3d355d7caaa8fdf9267c8f5e7b93e094fa024e04ea15",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103764657",
+      "date": "26-10-15 14:04",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-29?type=new",
+      "text_sha256": "f072d2a1287b9278f646a86447615158c4782a7a572e97993aee66749c4c92c4",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "780d6026a07dca57e25d0efb2205654c5d778320a5c9bdd89dbff4b84ff97e4a",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "你哪年炒的股",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "3a1140e3c07b9bf332a8aa1f5b1b196aa0e8e3fa22713e456468f0a0c3701249",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103764976",
+      "date": "26-10-15 14:10",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-28?type=new",
+      "text_sha256": "41a32917b5a4d36804511108e7b9d1ca98bc58bc179fd356e870b1aff4ed3d9f",
+      "image_url_manifest_sha256": "8b80fe02c42dc302dfc02140b934f56c9309ca0aebbffd9a88d83d462de93ec9",
+      "review_content_sha256": "6df8875399b2a61d9dc98abe3ac5567c660474210fdcb45ee3147643607a24cf",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/wb0yh9sgyiil.png_760w.png"
+      ],
+      "category": "非交易",
+      "summary": "求求了",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "fc072ed341af5996e7c640f2f30efc46d3f3fcd1694d1dab2f90e141db212cba",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/wb0yh9sgyiil.png_760w.png",
+          "byte_sha256": "a88c75d8f0ead37600533da986c959cd74d8faec3b3436bbaa24df85fd4a9317",
+          "expected_sha256": "a88c75d8f0ead37600533da986c959cd74d8faec3b3436bbaa24df85fd4a9317",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "量化砸盘主题讽刺漫画；情绪表达，不是对具体机构或程序行为的事实证据。",
+          "checked_at": "2026-10-19T23:36:27.440753+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配"
+    },
+    {
+      "id": "103765020",
+      "date": "26-10-15 14:11",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-28?type=new",
+      "text_sha256": "8dfa45ae0f1a5ade5ed12aaa48f0b65568a690cc161f816c44fbcab35e8c8c9b",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "60fbf42df86860856d1c1866d65fc909527cde5321a29cdf4947ce2b84181e61",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "你属于圆始圆终了",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "2fa5cbdb267d7605e8fe911afe139c948170c6e0a5be53d0deed5bde049188ad",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103765239",
+      "date": "26-10-15 14:15",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-27?type=new",
+      "text_sha256": "0376e8b9ae0e51645021c6a7b0c15f8d32c96f3ab4beb6a12b39e44c20635de9",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "64a181fc1e9447f22bdcd55883da31120d83d03eba46a8319146ee182028aec3",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称电池与券商（金融）出现回流，并让读者对照早盘思路。",
+      "review_conclusion": "记录作者对当时盘面的判断，不独立验证板块数据，也不等于买入建议。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "a36b0682245ebbc1d879743992d7ff63762a66817e1c32e78705a99885e35142",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103765444",
+      "date": "26-10-15 14:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-27?type=new",
+      "text_sha256": "6ef3781b40d88bccc912f8488559b9848b8df5c73dbb1e86af1748f2130d9236",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "68c1298c5c0ff20a6d8dd68a2a4eef22ef7b76793b1cf0ef662be2a4d2a84cfa",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称传媒开始抢跑。",
+      "review_conclusion": "属于作者对盘面节奏的即时观察，未提供量化依据，不能外推为普遍规律。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "08992ed1522bd52c04bd1c90f9cf943739c9aff252f47ab332ad2b8e50d8f2c3",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103765559",
+      "date": "26-10-15 14:20",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-27?type=new",
+      "text_sha256": "211315587f284f8dcbf52e8c9785d64193476c43f107579ce3f4f796eca5b8d1",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "583870a7107cca16b7c8a0777ce8c6131c694fc27f08c588e42439b1941ec45e",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者强调其讨论焦点是抱团风格而非宁德相关，并重复抱团判断。",
+      "review_conclusion": "这是作者对当时市场风格的强调；没有提供额外验证指标或明确买卖动作。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "fcf33a2f5a9bad5f563e961eab85e651b6a10b5f80378e0554859f0275dc44de",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103765567",
+      "date": "26-10-15 14:20",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-27?type=new",
+      "text_sha256": "96e53379950c597d746e1ea89b28373da6de226e5b284ac190cc0faa01537c64",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "596c28b02fc737c15ad2124148b90ad73dacad8ee01de70d074a346693673d4f",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "参考传媒",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "931f3e349b639fef216ae99f01776b8b2d33fdca45bd986a062957bf83c79bff",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103765602",
+      "date": "26-10-15 14:21",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-27?type=new",
+      "text_sha256": "b327088d42a56b3f489b2a82747fce7c2927d63f05e2b441ffaf67bb8554c7ba",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3a0f9dbd2170ae1386b07f077b5107f67864cf654a8cd71d0c8f197ed26bc94b",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "同一套玩法 地产-传媒- 电池",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "058756e35eb1db0ad04dfb3da669032618a4f30b1f9d2eb6fd19ab3bffff32cb",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103766382",
+      "date": "26-10-15 14:37",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-26?type=new",
+      "text_sha256": "db03006f500cf2e129b62911b8da5e5ea34168fb40baec1b9686fb378177351f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4d985f41dfc92b72c513470bc5938b1717a2b573924e8fc155f93301ebd7dafd",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "称希望指数反弹让读者回回血，即使反弹令自己手中的抱团持仓走弱也无所谓。",
+      "review_conclusion": "作者自述持有抱团类仓位，但没有标的、仓位或成交记录；不能确认买卖或账户事实。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "85c526471a57d10fe266c18330ae702bffae9e310e0c61d62131e4bfe174184b",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103767072",
+      "date": "26-10-15 14:50",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-26?type=new",
+      "text_sha256": "0315b15c3adc2b5c7276bc9b7aab074e4355241cd24de91a4a1cd581c324caa2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "7e91788c0703c6fa856c6a73b8748e033e99a6b87c86bcd5016ee03be87d5d43",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "唉哟我天天看着评论区都是丧气鬼我可难受",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "3da894255081470daf0cf3d93297d372109049a6c621bc077c885fb83f1e57d0",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103768032",
+      "date": "26-10-15 15:02",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-25?type=new",
+      "text_sha256": "1b94eb3a574a319e2d16fb5fb904a8ed8313ab14486b8733c4b04d7ffe92ccde",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c09939be0817126c8ea7ccd08bbc0d412fd606cd940b871f80417049f95891ff",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "咋不发工资",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "9ba6593cf2af65214bc8cf2b093a25c4d3f0e4a859e209a6af49a0e87e447712",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103768141",
+      "date": "26-10-15 15:03",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-25?type=new",
+      "text_sha256": "1b94eb3a574a319e2d16fb5fb904a8ed8313ab14486b8733c4b04d7ffe92ccde",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0ab0c80a9db8c215d1c6b1a41449c5c8e582f6dfcbf6659ea93caea3a2e9dedd",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "咋不发工资",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "9ba6593cf2af65214bc8cf2b093a25c4d3f0e4a859e209a6af49a0e87e447712",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103769212",
+      "date": "26-10-15 15:13",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-25?type=new",
+      "text_sha256": "28d10e6948a673cb90a44ca7fcf2fcca2a48314ee5f7c4269640561f6f327811",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "768aa03720321273e0a169144a020a340a3dde2a786e06a4e4f773a7df599a86",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "明天我去参加一个重要金融会议，我去看看到底怎么个事！",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "7c1d092e4a4bb55ff6e90a17a1145e6cfcd85356f754b230e68a3ffc323e332d",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103773080",
+      "date": "26-10-15 16:07",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-24?type=new",
+      "text_sha256": "8ddab50d9a78e4e45d3038add71815a1e4f6ff46ef36a3ec4a7f3932376e2291",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c475dd369ad115a76e3a0c0cc898fee5ec1c27b2a598c9404b812948afc42d5a",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "然后当场击毙我",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "b973ceb0666ed709594a2ba38747d3a60e1ee116d570250b31379041d5c846ef",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103785358",
+      "date": "26-10-15 21:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-24?type=new",
+      "text_sha256": "53e41f5177f9472ca7109e2ba19cafee5f67b42cb9c5caf06d1be8e53a7a43b5",
+      "image_url_manifest_sha256": "da8024717fdf009381b3b8abad939eaa1817ec17aa60aef7cda0e973c16e25b3",
+      "review_content_sha256": "ce18ae0d70a8aeb9b887eba1f2e02e6ce22784470f772f498ba01e4bb77ac71d",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/gs843kswtd2l.png_760w.png"
+      ],
+      "category": "观察",
+      "summary": "作者自报当日“温度48”，询问读者是否需要情绪安慰。",
+      "review_conclusion": "只记录文字中的温度值；配图表格未检查且口径未核验，不能当成独立测算数据。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "partial_unreadable",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "6c47086fd861f12caa993c3ddd9720c154c41ed2ecc38433a52dbf5788cd8761",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/gs843kswtd2l.png_760w.png",
+          "byte_sha256": "bcd7cf662309f5775e490f99d6afdbc7a0ba2e547363d84fb36bb9336a86d8ad",
+          "expected_sha256": "bcd7cf662309f5775e490f99d6afdbc7a0ba2e547363d84fb36bb9336a86d8ad",
+          "remote_bytes_match_review": true,
+          "review_status": "partial_unreadable",
+          "conclusion": "10月13日至15日情绪表，仅760×35像素。部分数字与最右侧交易思路无法可靠辨读；本人文字温度48已单独保存，图中独有内容仍待核验。",
+          "checked_at": "2026-10-19T23:36:27.177362+08:00"
+        }
+      ],
+      "historical_image_metadata_note": "沿用2026-10-16局部不可读结论；2026-10-19专项台账重新核对字节哈希，低清小字仍无法可靠辨读。",
+      "prior_distillation_recorded_image_sha256": "da8024717fdf009381b3b8abad939eaa1817ec17aa60aef7cda0e973c16e25b3",
+      "prior_image_hash_note": "历史记录值保留作追溯；当前附件字节哈希以专项图片台账为准。"
+    },
+    {
+      "id": "103786003",
+      "date": "26-10-15 21:34",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-23?type=new",
+      "text_sha256": "4528212d82e0c97768c086e066598cbeab776fd907ffc02ebdb1a191ab4c94dc",
+      "image_url_manifest_sha256": "6fd60e2ff785b5dd0ab2aa20de509509e312fd05d8934984baf05a52123c35da",
+      "review_content_sha256": "775d4062df1df51cc81a9d4b393cf4d1b13b79ebaffa9be5f560424fb325a056",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/ju7ghceetrwl.png_760w.png"
+      ],
+      "category": "通用经验",
+      "summary": "以过去约4000亿元成交、市场高度常在二板为例，回忆低成交与低连板高度的市场环境。",
+      "review_conclusion": "是作者的历史经验陈述，日期及所指图表未核查，不构成当前信号。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "528541a094bc70cae1a8cb19529907483f0cf547945874749f54796cefb49105",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/ju7ghceetrwl.png_760w.png",
+          "byte_sha256": "ba84cbcfa17477c28015d888f1640f0e873ecacc7fb51ae8d9bc2ea865fce8d7",
+          "expected_sha256": "ba84cbcfa17477c28015d888f1640f0e873ecacc7fb51ae8d9bc2ea865fce8d7",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "8月12日至16日旧情绪表，可见成交量约4956、4773、4775、5915、5912；年份不明，为作者历史对比，不能当2026年当日数据。",
+          "checked_at": "2026-10-19T23:36:27.183428+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "historical_image_metadata_note": "2026-10-16旧review标签/文字存在“reviewed”与“图片或图表未检查/未核查”冲突；以2026-10-19图片专项台账的逐图复核和字节哈希匹配为准。"
+    },
+    {
+      "id": "103786025",
+      "date": "26-10-15 21:34",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-23?type=new",
+      "text_sha256": "aa3d7004395fd22981c9d472e563c85c191cacbe06d142a8fbf1216ae4efe923",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "19c8fa6f8133c2740ea82e390518a2775e099fa4825fce6fa400aa999cf6cf45",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "好的，先回答你们问题，我在写。",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "16f810529bbc558231ae9910a032f5d06d9861ba1b3402eadcb7442359ed48db",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103786306",
+      "date": "26-10-15 21:41",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-23?type=new",
+      "text_sha256": "f93261d91dba1c78b3a0ff90d9eed2f8ba57944516b4edcd42946de85c4d6e2f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c915bb90c64d01f2431e3c817b57f68efc7a01e7c14137a16cba92bcf0c5fbda",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者把救市资金作用解释为提供流动性、避免无序下跌及强平，并推测市场回暖后资金会卖出。",
+      "review_conclusion": "这是作者对资金行为的解释与预测，不是已验证的政策意图或资金流事实。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "0c6f7796990c7e1971d8d3d8bdb8c985e89cd297c6e063841443416b66a6ee9b",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103786470",
+      "date": "26-10-15 21:45",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-23?type=new",
+      "text_sha256": "ea48c450b2868278a157a4d8b8a6b1abbfab63275a4fac4633c4ab78bad10a9a",
+      "image_url_manifest_sha256": "da8b998a2be7ad8295ef4b153fc8697aea9b08f5ac6317d33d56b74900fc5839",
+      "review_content_sha256": "86f552bdec7a228cd16aecb2423591d5344fe65078552a01c8988daaacab883e",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/ip9lhd7qynxl.png_760w.png",
+        "https://image.tgb.cn/img/2026/10/15/tg4nr01mn7lw.png_760w.png"
+      ],
+      "category": "观察",
+      "summary": "作者称PCB走抱团风格，并说明通过总市值排序与涨跌幅排序对照观察。",
+      "review_conclusion": "记录作者文字中的板块解释；配图未检查，不核对图表数据或结论。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "reviewed",
+      "image_media_url_count": 2,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "5c92a27e46b1cb6d5a9174eebd6039fbf7b3cd306e3c0ab364d1d5167a04adcc",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/ip9lhd7qynxl.png_760w.png",
+          "byte_sha256": "cb2e6497f952e65e493e0ce4bae88cc393eb3aef6049877b35e9f4088b5b8d7b",
+          "expected_sha256": "cb2e6497f952e65e493e0ce4bae88cc393eb3aef6049877b35e9f4088b5b8d7b",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "PCB总市值排序截图：较大市值品种多下跌；结合下一张涨幅排序图理解作者抱团观察，不把排列当成资金流证明。",
+          "checked_at": "2026-10-19T23:36:26.846620+08:00"
+        },
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/tg4nr01mn7lw.png_760w.png",
+          "byte_sha256": "2dc2200aa73efda9fdfb8e04ef8ebd99a03ba849357d3edf846908fdbf805fbd",
+          "expected_sha256": "2dc2200aa73efda9fdfb8e04ef8ebd99a03ba849357d3edf846908fdbf805fbd",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "PCB涨幅排序截图：上涨品种与大市值品种分布不同；支持作者所指的局部抱团观察，不是逐股推荐。",
+          "checked_at": "2026-10-19T23:36:27.280383+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "historical_image_metadata_note": "2026-10-16旧review标签/文字存在“reviewed”与“图片或图表未检查/未核查”冲突；以2026-10-19图片专项台账的逐图复核和字节哈希匹配为准。"
+    },
+    {
+      "id": "103786585",
+      "date": "26-10-15 21:48",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-22?type=new",
+      "text_sha256": "d21dbd1c9f5be648ba25bb8eae2541c56ebc8b23b632ff066c50450a4588fc30",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "f8f3bd8ca9af41bb1489ba3a11b82cc82b973bbfd10b4fbc97644fcfd1ee7f5b",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "不算高，只是跌的太多了",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "460104e26a9247b6837334b6ba7cb8266edde214e5f16efdd9c267287ebea2a8",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103787959",
+      "date": "26-10-15 22:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-22?type=new",
+      "text_sha256": "c07e26ec0b42353c03ea095f84d6a5d9498c2f004e0d05c8f511951f6b48dd36",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "2bc98e8e9de99280b4d07fe3d07fa54ade7d3ac441996f351a1886f513e29278",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "建议市场压力大时暂离资讯应用，转去做能看到正反馈的生活事项；同时称创业板日线处于超卖区间，并与历史时点作类比。",
+      "review_conclusion": "主要是情绪管理经验。历史类比及“政策底”判断是作者自述，不能据此确认市场底或形成机械规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "a1df71de08ef021e011384533a45dcbc050ea23d38d84fa57589430e5f5cea6f",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103788443",
+      "date": "26-10-15 22:36",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-22?type=new",
+      "text_sha256": "b17adf1722960bc0960db7dd94a6f6679531c5a0fe9105107dedc09d6451e674",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9d95777da623da0ab46c1da302ffb8d7819b8eccc07e995d7911738d544da6a4",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "我都不用dps，做的跟屎一样",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "a4862aa3f78f8c49f3e1c194e5454a33d7c568cfc2c82ed734247b31b1e71f28",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789393",
+      "date": "26-10-15 23:06",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-21?type=new",
+      "text_sha256": "daf0e222cdd2835764626a8f78ae892363e6076367e242bc3006438fc583448c",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "ae9a2edd1429533828ef93c6a0996b7bba0ab623431e18132dc4a2113b5ec719",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "好嘞，没事常来，可以闲聊其他。",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "f991df291bea342fe8b3f1d593707b9f5b6d0cc10a658f87d0bd0a9fb5ab590e",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789422",
+      "date": "26-10-15 23:07",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-21?type=new",
+      "text_sha256": "8285fa4db4b0274f41b01955442c4bb41ca1ce5e656b1abb72b52d727569992f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "75ec4d2db83d2bbc19fa7acf837847c779128cc2410837187002f8640891ec27",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "那梁子的dps连我的244都整不明白",
+      "review_conclusion": "提到“DPS”和“244”但没有定义指标或展示判断过程；只能记录为语境不足的调侃。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "b80e6309c7cfe30dcab6c414c6a417aa159090f22a43b01eab2db24b2ab0d77a",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789447",
+      "date": "26-10-15 23:08",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-21?type=new",
+      "text_sha256": "232f4abd1bc15d8788938bc872731f94a9090536061966cbfbdb736553c79e14",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a8d18291166a413f5aaeb01bb55d4ec198b7a9612fa6b0906fb8c6677b4997be",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "谢谢兄的打赏哦~",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "ab41306290e4498607e1e29bd7699e7ebfb61f0689fe59922d8f736f49d365bb",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789499",
+      "date": "26-10-15 23:09",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-21?type=new",
+      "text_sha256": "5deab10210eb7aba56a2b4dec026b7f1cd7a7dac8ed762ce8c62cc7f9b620e4d",
+      "image_url_manifest_sha256": "4d03aca677864c76b9f276d0b1fafa41da8e5b7701eec7a1a6991e73637a79a1",
+      "review_content_sha256": "1591061cc195353acf79241eeacbbdc8ea9e898129eb5a8cfc8a4ff04af48bd9",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/15/oc6169loalwn.png_760w.png"
+      ],
+      "category": "非交易",
+      "summary": "大声读出来题目的后四个字",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "413a9354564e76c23b9f3fee7e8e9241a159b1761f891f3f22b9771bca85511d",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false,
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/15/oc6169loalwn.png_760w.png",
+          "byte_sha256": "6b5501bfad6c770c0b095c11f5d48d4abbead45f8bd36ba1a3eb3c9401a25502",
+          "expected_sha256": "6b5501bfad6c770c0b095c11f5d48d4abbead45f8bd36ba1a3eb3c9401a25502",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed",
+          "conclusion": "作者2026-08-22旧帖标题天气多变、少谈格局；是旧内容提示，不构成当日新增通用规则。",
+          "checked_at": "2026-10-19T23:36:26.873390+08:00"
+        }
+      ],
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配"
+    },
+    {
+      "id": "103789626",
+      "date": "26-10-15 23:15",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-20?type=new",
+      "text_sha256": "a80fd5ada448818f8de07f0854015647bed28a972f4b77b9beb4671553565dc6",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b5d5da97c3f4602a4239f4fc5c20d5a12bb7c00621915ad452bacbe3071a783f",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "别叭叭，先打赏伍佰看看实力",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "7c4d48329e1e18e0b396f966e3fbe04fa5db24cea0e1d65193d70f66d389cac3",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789753",
+      "date": "26-10-15 23:20",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-20?type=new",
+      "text_sha256": "b2c8dc916fc2b3df648d81a26c925e18b3e89c28e72148e8628e3c64b217256f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "eb5fb15ec88b984296a2d0f002d629e5253b5d86fa37624f22a76867447265f0",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "你已经是一个销户的人了，你要记住",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "decdd2b47930e1201df41c67123668f82ef6d5a42614e69e6efc976d268bf6af",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103789847",
+      "date": "26-10-15 23:24",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-20?type=new",
+      "text_sha256": "18967f2af7023813d2f191fd0f7a812e4550320e16fa65b2b3fe79bc23c393d1",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4e4f6f4e302aa046882afe8ca35dd3e4d09529025566b2f955439005cc731f9b",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "回应美股讨论：区分宽基指数与个股，指出美股也有剧烈波动的个股，并认同读者离开市场的决定。",
+      "review_conclusion": "“美股总体向上”等前文是被回应者的说法，不归给作者；作者自己的补充是跨市场概括，未经核实，也不是A股操作规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "7ad5076dc3f012e3028e72c7bfd49c58d8903719bfdd3ad3a83d4e5ceb9452cf",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103790530",
+      "date": "26-10-15 23:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-19?type=new",
+      "text_sha256": "8b1b0f27f15efb27f5ed2ac5733b3a94395338d16c8e2491698c9fc8ff246d88",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9321c4762e80cfe58cd5cd5da119c34834dcd2b14b42b038a3dc44270e5bfa77",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "我拿手机看是算的",
+      "review_conclusion": "“算的”指向何种数值或口径不明，无法据此归纳作者观点。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "a3eabb5e30e9d031a7ebb6441982acfa9839f86edb88037e9aa25250e6e1dab6",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103791994",
+      "date": "26-10-16 07:46",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-19?type=new",
+      "text_sha256": "89717c1e7fc4fd3a79ade70d9ccd5e162c5dc55cf6c691d61034ff73a34478fa",
+      "image_url_manifest_sha256": "a5e1d28d6bd96867f0d832560df76c0a7f7e303a4569adce4e31c644e60097a2",
+      "review_content_sha256": "529c690c69ca5e165506420d8c330be327d9f8527328dbe5027d5bbdcf9131fd",
+      "image_urls": [
+        "https://css.tgb.cn/images/face/007.png"
+      ],
+      "category": "非交易",
+      "summary": "那你是够快的",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "cd6d075b214ee3bdef57be0646c939e71fafeebc7a7b13f43c43d917c9b1cc93",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103792009",
+      "date": "26-10-16 07:47",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-18?type=new",
+      "text_sha256": "38c1b4580e53a2708b52ce8513d0869c892e9191b117c9f8f358d95c44596902",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a7ab620c12e48edae5aa2507c3392fd6396f302d63ff1c2408f1a27bc0589bdc",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "tgb还有做左侧的呢？我觉得我就够左了",
+      "review_conclusion": "原文过短或依赖未提供的上下文，无法确认所指对象或作者立场；不据此扩写交易规则。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "55475c228d5706cc8129007ef7b8e77eba9777b92e352edfef0ac9571ca55fa0",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103792210",
+      "date": "26-10-16 08:04",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-18?type=new",
+      "text_sha256": "a698fb0323835b2261b711cfdc72f2ea14205e795d836fdaef6885f330ad20d6",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "d39580dfff844cbddc10700e136c8c2ffa034683682858e7bea8346f43e922d1",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "10月16日早盘推演：作者把3674附近视为“政策底”的较大概率位置，主观预期短线反弹；提出“走两边不走中间”并列出观察池。",
+      "review_conclusion": "这是作者基于指数、资金与梯队的条件式判断。3674和反弹是主观推演；观察池不等于买入指令，未独立验证。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "adeabe5d1de203f19f4b07229a481cc3d3ef36cd0b587a7e802182880f7a1c21",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103792224",
+      "date": "26-10-16 08:05",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-18?type=new",
+      "text_sha256": "42d5254963576227c4ac448d9b2c599e4d99ca2c9a1ecb9948ad0688d662cc7e",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c1f3377f57e64ccc13bffc37507e4fd76aca05fe6c63bf96ce26d396923b1563",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "@股天乐 ，乐哥，我写错了，不是圆宝复盘，是圆宝早盘，帮俺改一下",
+      "review_conclusion": "原文属于社交、行政或生活闲聊，没有给出市场判断、交易条件或操作信息。",
+      "distillation_or_review_sources": [
+        "reviews/2026-10-16-2vTaemOb3Ig.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": {
+        "value": "dbd92b1a8e0752c1ab01ad241e25125d9ca460eb633dd0466c1925def0a8761f",
+        "also_stored_as_reply_digest": true,
+        "algorithm": "采集器reply_digest按json.dumps(payload,ensure_ascii=False,sort_keys=True)默认separators序列化；旧review未记录payload字段集合，不与source_review_content_sha256直接比较。"
+      },
+      "source_review_content_hash_match": false
+    },
+    {
+      "id": "103793845",
+      "date": "26-10-16 08:57",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-16?type=new",
+      "text_sha256": "057f123d5b387daf3ea1e1961e9ba742f48fafa319063fe89045e0b3fbd9d2db",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "549d04e91dd8204bb36f921754999325118f1d64b9df787161149811c7b0e9d8",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“对✔”为确认式回复，缺少被确认对象和命题。",
+      "review_conclusion": "只保留为上下文互动，不据此形成市场判断。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103793912",
+      "date": "26-10-16 08:59",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-16?type=new",
+      "text_sha256": "e33ddfaa55ba63ddc5099bb914c40ae6512e4fc6662581f26209370ab1f26f04",
+      "image_url_manifest_sha256": "75618618b6270a79f3a01711bc4fd317e08147dba69bfea9dbe386a452c38233",
+      "review_content_sha256": "7305fbdaf1bf7350d7651c8807b961244b442fc3caa729738a9a5a4fc908420b",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/16/vbvej7mcdmwn.jpg_760w.png"
+      ],
+      "category": "语义不足",
+      "summary": "作者称让读者自行看盘；图片为论坛嘉宾证照片。",
+      "review_conclusion": "结合专项图片复核，只记录为行程/运营背景；没有新增交易条件，不提取个人身份信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed_nontrading_context",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。",
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/16/vbvej7mcdmwn.jpg_760w.png",
+          "byte_sha256": "c4354dff7f9c980878a42964d86f467b826128466d1db3f2510a6adf791b28fe",
+          "expected_sha256": "c4354dff7f9c980878a42964d86f467b826128466d1db3f2510a6adf791b28fe",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed_nontrading_context",
+          "conclusion": "论坛嘉宾证照片，结合“自行看盘”只作作者行程/运营背景；无新增交易条件，不提取个人身份信息。",
+          "checked_at": "2026-10-19T23:36:28.067807+08:00"
+        }
+      ],
+      "prior_distillation_recorded_image_sha256": "75618618b6270a79f3a01711bc4fd317e08147dba69bfea9dbe386a452c38233",
+      "prior_image_hash_note": "历史记录值保留作追溯；当前附件字节哈希以专项图片台账为准。"
+    },
+    {
+      "id": "103795358",
+      "date": "26-10-16 09:34",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-16?type=new",
+      "text_sha256": "7aeb6aaed3e85c0c9328864a36160616154f98e0384f90202557ada149b4174f",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "f8e97144e5b957a3e5b86dbf61a1b487eed2d2decca2ccb1f883ac08edf33e17",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者称降低对善水科技的关注度。",
+      "review_conclusion": "记为作者的关注度调整自述，不等同于可核验成交，也不扩成通用卖出规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103796079",
+      "date": "26-10-16 09:46",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-16?type=new",
+      "text_sha256": "c8ec0ce8c4228b4bdee72c1260731cb26d5c0b4fbd732d8c8cbe8d33c6f37dbd",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "7aad12bdc84720f9d386b74ba4339de4667fe563125fd5c5cfbf6ef731ab0659",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "善水触及前高后降低关注；其他标的若无极端负反馈则继续观察；豆浆机等待回流；四千家上涨但无放量时定性为反弹而非反转。",
+      "review_conclusion": "同时保留触发条件与盘面观察：价格位置、负反馈、回流和量能影响判断；“反弹/反转”仍是作者当时的定性，没有机械阈值。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103798973",
+      "date": "26-10-16 10:21",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-15?type=new",
+      "text_sha256": "9ea6811af98933b08e13e1e9ac44dd7432335266c5dc4c80feeb71bb940bcae8",
+      "image_url_manifest_sha256": "79fca25d5cedfda9e099d7ff6030560e1a090c6b434da3b20eb66c504a935267",
+      "review_content_sha256": "535057b29b0923e68486cfabebdf03bccd7daa01ef9b0177c7bfd7bf0ab2817c",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/16/cnl64s33bmwn.jpg_760w.png"
+      ],
+      "category": "非交易",
+      "summary": "文字是算力/短视频相关调侃；图片为会场与演讲幻灯片照片。",
+      "review_conclusion": "会场照片不能证明作者参会身份；第三方幻灯片不升级为作者投资结论，文字没有可执行量化规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed_nontrading_context",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。",
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/16/cnl64s33bmwn.jpg_760w.png",
+          "byte_sha256": "43a6215ff167042d1a5e9061de03142dc07c6179af5c9e5e30bb5bbae6af94f3",
+          "expected_sha256": "43a6215ff167042d1a5e9061de03142dc07c6179af5c9e5e30bb5bbae6af94f3",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed_nontrading_context",
+          "conclusion": "会场与演讲幻灯片照片；不能核验个人参会身份或把第三方幻灯片升级为作者投资结论。作者算力/红果表述保留为随口评论，无可执行量化规则。",
+          "checked_at": "2026-10-19T23:36:28.086936+08:00"
+        }
+      ],
+      "prior_distillation_recorded_image_sha256": "79fca25d5cedfda9e099d7ff6030560e1a090c6b434da3b20eb66c504a935267",
+      "prior_image_hash_note": "历史记录值保留作追溯；当前附件字节哈希以专项图片台账为准。"
+    },
+    {
+      "id": "103799801",
+      "date": "26-10-16 10:29",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-15?type=new",
+      "text_sha256": "ac13d29b9f7b11cc27a06f729ac7ff56fef7b27cf52c71916333bdf28aca908b",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "fdd861315d2f32c9d16375ac9c13554205c07d919539eccc5c9d5e8cc94b1de9",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者表达无语，未陈述市场判断或交易条件。",
+      "review_conclusion": "仅记录情绪表达。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103802080",
+      "date": "26-10-16 10:57",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-15?type=new",
+      "text_sha256": "6329556df73518cb4f43aeeeca43417432a93df871177ffb5a666c23b69533a4",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "f1bdd278af2f52b2443983c3a72c70c8c768799ff80b591c0d237b62c69e5ee6",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者称九阳股份在3%附近降低关注度。",
+      "review_conclusion": "保留为作者当时的关注度调整及其提及的3%位置，不等同于成交证明或普遍卖出指令。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103805860",
+      "date": "26-10-16 11:49",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "15d42be838506dda44acb0cde64ac8c4e7ab20847ca2a85142f8324f6ca1501d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "96330a8a0b70a8961e8f085c2431598c12f9057d9988528c1a06a6029735fb79",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“我一会看看”，未说明查看对象或结果。",
+      "review_conclusion": "没有独立市场判断，不扩写。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103805869",
+      "date": "26-10-16 11:49",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "f0b3e8e065079c59fbd2926c1d10260f2a3e74a8330a74aaa58fe14446dfe4e5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c898930599f17f7f34a393537e7b8c1f072cf8488cbe274950347e19e0c3daf0",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“不是啊，那是前一排的”，指代对象缺失。",
+      "review_conclusion": "保留原意不明的上下文回复。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103806727",
+      "date": "26-10-16 12:07",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "ff5bbc015208ae1adbf1882c236997628f31554f5063f39d18457750e4d9e828",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "88a5cf0ceec210bc364b3637c8c104a5563fe88388d2da17c43d27ad0ce9fc55",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者将当时炒作方向指向特斯拉飞行汽车。",
+      "review_conclusion": "作为作者的题材解释记录；不是个股买入条件，也未独立验证题材驱动。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103806735",
+      "date": "26-10-16 12:07",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "5b9b4b41a9a5575bcd637f2ebf00bd53934cadb3ebd1037643b1839f0f787e5b",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "2dc6bbbe47246eaedbe9d4dcec0e8d70f40afa93bdb2f54a2241321ed97cf0c2",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“✔”确认式回复，缺少被确认内容。",
+      "review_conclusion": "不据此推断观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103806751",
+      "date": "26-10-16 12:07",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "ff25b6f87f29e9b8541996cbd641be044500b80c05226de3a7f6555597c36cb5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b07373e627515ae6fc0c6389560513d1a96eed1214cc9d6195fc4f57227b8399",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“电梯战神”为语境化称呼，未说明标的或逻辑。",
+      "review_conclusion": "不把调侃扩为交易结论。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103806767",
+      "date": "26-10-16 12:08",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-14?type=new",
+      "text_sha256": "1d8907edcf32a3e6799dcce4f8a1438460f69a0bba63576444af114a305f7201",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "fddf35d57b9bc0b0b379b707849b22296086753ff69652f4942031db5b3c9122",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "作者询问对方所指是否为时代万恒，属于对象确认。",
+      "review_conclusion": "只说明名称辨认，不能据此推断看多或买入。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807040",
+      "date": "26-10-16 12:14",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "785a8c6ed1366fcd629f90f7e59d3590362a3734f645dfc33dbad2f55ba4188a",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "22c62c51c698b50523671e7461cf7d355412c6afe297b033826a1158afe27d48",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“好滴姐”，社交回应。",
+      "review_conclusion": "没有市场信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807043",
+      "date": "26-10-16 12:14",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "03694678584fa7cf838ab39f8a3ced1515d5eaf35e15b4b71e8f4b99302ac177",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "7c20a162060bd9a282c0aea191c8ee24ab23c3fabb513aba5437dc49be67a0c9",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“老bk”，疑似称呼或上下文用语。",
+      "review_conclusion": "含义不足，不扩写。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807052",
+      "date": "26-10-16 12:14",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "ba1b32427531fa09ece9d1504621feceadadd418862e262f60444c3227f79c28",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "05e27cc6f7a971f4649e7bb34e3982045b84ab69cd1913249dd469eddb68402f",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“我每天都在看”，没有说明所看对象。",
+      "review_conclusion": "不能据此判断作者持续跟踪了哪只股票或指标。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807067",
+      "date": "26-10-16 12:14",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "9b58bee9c89452bd2c271aa2329f41a770dd63cdd31b7ee3568e24760137bf36",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "e9d75289694dbef837b3dedf08182fbf85e1486da39de5f0d81054af9ac7554b",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者把当时风格概括为高位抱团与超跌反弹。",
+      "review_conclusion": "保留为盘面风格观察；该概括没有给出可机械筛选的阈值。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807120",
+      "date": "26-10-16 12:15",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "6ec0ec96b91ef5508df19f32ec038ad8526386ba2eac450ebe209823ee2f897e",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "d8794881d488add3f66a4982f8acc9153fbf2114088e6367b9d2eda169597570",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者指出善水下周将有业绩披露与监管节点。",
+      "review_conclusion": "记录为事件日历观察；没有单独的买卖方向，具体影响待市场反馈。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807231",
+      "date": "26-10-16 12:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_url_manifest_sha256": "adb5cd547e5703909065c4f5071f3f0fb434257d2d3512f06282d4e3b3ac9320",
+      "review_content_sha256": "129c9b8379d1808238d6ce57ce4add2b7276666bb7681cc0e56dac1b0d842f1d",
+      "image_urls": [
+        "https://image.tgb.cn/img/2026/10/16/3epx05lvmwn6.png_760w.png"
+      ],
+      "category": "语义不足",
+      "summary": "正文为空；图片为第三方2026年Q4军工/空军/军贸事件日历。",
+      "review_conclusion": "专项图片复核表明这是第三方事件日历，作者未附独立交易判断；活动日程和主办方未逐项核验，不转录为已核验事件或节点规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "reviewed_third_party_not_rule",
+      "image_media_url_count": 1,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。",
+      "image_hash_provenance": "reviews/2026-10-19-images.json；current_bytes_sha256与expected_sha256匹配",
+      "image_review_records": [
+        {
+          "url": "https://image.tgb.cn/img/2026/10/16/3epx05lvmwn6.png_760w.png",
+          "byte_sha256": "57c95600f79bcbf53f81aea38bf76a22a4cd7e120356e2013bfd8acb3061a7ce",
+          "expected_sha256": "57c95600f79bcbf53f81aea38bf76a22a4cd7e120356e2013bfd8acb3061a7ce",
+          "remote_bytes_match_review": true,
+          "review_status": "reviewed_third_party_not_rule",
+          "conclusion": "第三方2026年Q4军工/空军/军贸事件日历；作者未附独立交易判断。活动日程与主办方未逐项核验，不转录为已核验事件或节点规则。",
+          "checked_at": "2026-10-19T23:36:28.005328+08:00"
+        }
+      ],
+      "prior_distillation_recorded_image_sha256": "adb5cd547e5703909065c4f5071f3f0fb434257d2d3512f06282d4e3b3ac9320",
+      "prior_image_hash_note": "历史记录值保留作追溯；当前附件字节哈希以专项图片台账为准。"
+    },
+    {
+      "id": "103807275",
+      "date": "26-10-16 12:19",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-13?type=new",
+      "text_sha256": "f05735b1b05bbbade3aaeb96791f90a2ec2c9117ae94cab8da67cb44396931f2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1f12001c4c70e4c3cdb400b05b2d95bf18280dca28997010b377cfa23ca90c7b",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者称若大盘不放量则倾向炒作细分，并猜测下午会放量。",
+      "review_conclusion": "这是以量能为条件的盘面推演，且“下午放量”是主观猜测，不作为已验证规律。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807399",
+      "date": "26-10-16 12:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-12?type=new",
+      "text_sha256": "4d02fde0aab66fffb751791fcc7c10a8b44fe32c6803916986f5e2266a22ab82",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9269f5e2d1e46cb3f27c4b4923a76e9d09a1b60bbd1b0bd66139eb09bc26b5f4",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "社交式玩笑，没有市场信息。",
+      "review_conclusion": "不纳入交易观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103807760",
+      "date": "26-10-16 12:32",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-12?type=new",
+      "text_sha256": "badf5df397d3410386346ca2a51655fa73a61409b7a250fee043ac5f3cee191a",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "cd30a8869814fcf7be104666a686fc2b0f74c808e1a6b63b210eaca4cd49f506",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者区分依据异动空间套利与博弈周期穿越；认为周期临近尾端，若新华断板则关注低位分歧中主动走强方向，并预期可能重新抱团。",
+      "review_conclusion": "节点/高低切是场景化观察，不是日期买点；3%异动空间套利与周期穿越属于不同交易意图，作者当时也表示尚未决定是否博弈。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103808797",
+      "date": "26-10-16 12:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-11?type=new",
+      "text_sha256": "b448935ebbcb03e6cb579dac110dddbeacf3c3658791b8de0edfa4c53e8e93f2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "951afbd6d648360de001d20ef70c10efe3953b8c69fd84985732e477da1c47a1",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "作者称“没有”，并提到可观察下午最先上板的标的；上下文对象不明。",
+      "review_conclusion": "不把孤立回复提升为首板追涨规则；对象、触发条件和作者实际应对均不清楚。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103809462",
+      "date": "26-10-16 13:13",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-11?type=new",
+      "text_sha256": "0f64d179d09e224dabe955c979b3ff3948d7b66efebd579d15fc959636091d52",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1c8a0306e850b5cd16cf50bb40baacd409149a09bac980b56db0bb04e945089b",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "作者不确定是否为下午第一个上板者，并称自己不在电脑前。",
+      "review_conclusion": "标的和观察口径不明，不能形成明确的盘面结论。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103809628",
+      "date": "26-10-16 13:16",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-11?type=new",
+      "text_sha256": "b0aeec07e8b8afa40c86f967629004ecbdb727a9e582f2d02455b2f9351f3303",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b530151cbe933bde331e00ed3021b57c0b2e78aa67813e5760ec52031ff405b4",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称自己还没有孩子。",
+      "review_conclusion": "生活闲聊。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103809674",
+      "date": "26-10-16 13:17",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-11?type=new",
+      "text_sha256": "e06217a18ce16d6ba5133a1de47b80c2754c2e564c6b2b0a9604cc4fa27b989d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "f8a1f23fa47bc414daf3f25531d8954402c0f21f66437a4e2a3eaf6fb78b14f1",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“不喜欢”，未说明对象。",
+      "review_conclusion": "不推断其市场立场。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103809715",
+      "date": "26-10-16 13:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-11?type=new",
+      "text_sha256": "36e1dac134f97018c692565efcbb2d715fa6512a040c8cf8dfbbf2bba5a79c74",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1139cecc371d92f5cd45e85b6869db7f3fd2e83244530e7e0678552a4d438658",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "提到小作文与量化的调侃，未给出清楚的操作条件。",
+      "review_conclusion": "不将玩笑改写成“消息发酵即买入”等规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103811406",
+      "date": "26-10-16 13:49",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-10?type=new",
+      "text_sha256": "59f4ca3853959bde8cd42490bdf8547fc0355f59d1653c88efcdc9a0b5740a29",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "057976e1e71b7a3411bc9b0148445d3ed26d1c792192342cad8a8dcdc357cab9",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "睡觉表情。",
+      "review_conclusion": "没有市场信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103811579",
+      "date": "26-10-16 13:52",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-10?type=new",
+      "text_sha256": "0b374836823d23f6f1380f424b0e73b13fdc27ff7e12b2ce1ba00bdd923e45c2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4e290e7105e964b326b0528f19bfa64f76ac34af4c7e91d40aa6d32c6516be58",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“领导催眠”，生活/工作调侃。",
+      "review_conclusion": "没有市场信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103813143",
+      "date": "26-10-16 14:21",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-10?type=new",
+      "text_sha256": "613fca0416469a121fdcfd64b5cac06bfc1d5dbfe97acc1b5d00aca96054092d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "758f61967c96529d6cdc0dec584103713c5cdc0e27a606e891a4ca1919d1b38e",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者推演若中位股出现地板一字负反馈，九阳可能像华瓷一样即使卡过异动也无人承接；因此自述下午取关，并称有心气者可等周一验证。",
+      "review_conclusion": "这是风险情景和作者当时的关注度/取关自述；中位股负反馈是失效条件，不能把“卡异动”单独当作安全信号。自述成交未经外部核验。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103813975",
+      "date": "26-10-16 14:34",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-10?type=new",
+      "text_sha256": "7e31d736d8d213292b1c279d993ee2f1fb9533727656f642982f1de7247ceb1b",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3e9f9c2bd535d8292b61acc125704794952e22d53518978463211cc8e1a23186",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者认为时代与九阳面临相似情境；新华若属于规模较小的小周期，资金可能将其视为补涨周期。",
+      "review_conclusion": "保留“资金可能如此定义”的条件式推演，不把历史周期类比视为确定分类。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103814160",
+      "date": "26-10-16 14:38",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-10?type=new",
+      "text_sha256": "9cbd3ac991771166b7b3d2efa7d9cb3a113019fdb1b5a57f3f7b17aaaef8a937",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "c9556b7dc87f372c5d19fddb916985ed74acf5193fdb6fd437c453070c7b7050",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "只问“药明康德怎么了”，未表达作者判断。",
+      "review_conclusion": "问题本身不构成观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103814395",
+      "date": "26-10-16 14:41",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-9?type=new",
+      "text_sha256": "645237dc58286ab70ba1ad8a1d60ee7514a523ce73f25824f5ec3e5655d2b576",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "abde5afa3203567d74a953c51d03f3bdfabf1b794a66df5be94f376d04139ba4",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“好吧真的透了”，对象及“透了”的含义不明。",
+      "review_conclusion": "不扩写为行情结论。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103814679",
+      "date": "26-10-16 14:45",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-9?type=new",
+      "text_sha256": "358f32bd216cb035a799a982309ebe13a9436e07384bd6b1512305afecce2c40",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "36560971fb106fc549ca426aad8714085253319ec5f8dfd24cbcbb8296dffaae",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“大哥在狂压呀”，交易/盘面指代不明。",
+      "review_conclusion": "只保留为未能定位对象的即时观察，不据此建立规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815191",
+      "date": "26-10-16 14:52",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-9?type=new",
+      "text_sha256": "400dec021900917734c326aff0b49b45df89945fa700445adfb132f682d3200a",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "9c0a256025e8bf81e12a9e53896f05b49939225a7b546dc0ed9384fec211153d",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者怀疑所谈新闻是2024年的旧消息。",
+      "review_conclusion": "记录为对消息时效性的疑问，原文以“好像”表述，未独立核实年份。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815243",
+      "date": "26-10-16 14:53",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-9?type=new",
+      "text_sha256": "0ce7010cb2ca6c31b38472910c6a0d612310afe19f8b1e0e2f342625a1a5991d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "5c51647ef7ca553d53943d28ade840a1347f0c82ce1cf968f52ffc0c6378e4cd",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者提及读者梁子的“小作文”并表示好笑。",
+      "review_conclusion": "社交互动，无独立交易判断。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815642",
+      "date": "26-10-16 14:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-8?type=new",
+      "text_sha256": "c5b45cbee94e0192105dc3a4332a502341551822f228fdf40186bf65532f1d52",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "29b1d34b9a1f1d582ac8a64daabe00dd604eddf8e09a6d4a0623919b4fab6be8",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "转述关于梁子离开的玩笑。",
+      "review_conclusion": "不涉及市场规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815748",
+      "date": "26-10-16 14:59",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-8?type=new",
+      "text_sha256": "6ee1c0bd801f6f5524ea9513ad9998b65d7ea3ec5f9ffa5185edbe7942306210",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "04ec83c9439935ae4f5e2f66c614e4ba9f22aa1d49f161b920765021af0f89e0",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“有没有可能根本不是人”，玩笑式回应。",
+      "review_conclusion": "不涉及市场规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815770",
+      "date": "26-10-16 15:00",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-8?type=new",
+      "text_sha256": "e836c15abd8d052803c78a054b20f42a1240dc16c7af87201ad7c0f7763224eb",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "098f625fe573c9b6e99007775479d1fd03412b315ef594d8b242a53eff61a3df",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者以“不是唯一关注的主播”表达失落。",
+      "review_conclusion": "社交互动。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103815913",
+      "date": "26-10-16 15:01",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-8?type=new",
+      "text_sha256": "878fb526626bd5a83f4dc5268854cb3d8f5854ac5a85708eacfca4f57a326e53",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "35aeb92ea2f55e69b041fc470bd0acdf25538df7bf3d701e6d0a93f50bfdb0de",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "作者说自己推演出一种节点，周末再说明，但当前回复没有给出日期、条件或结论。",
+      "review_conclusion": "节点内容未在这条回复中展开；不能用后续主题替代缺失原文或推断其具体规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103818114",
+      "date": "26-10-16 15:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-7?type=new",
+      "text_sha256": "cf03136ab41e63ffde7a335214ea28fa94d8f4a2c947a7e11a565e284999c086",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b1aae008649cee3dcc28d036d351abea5e674ae27dc7b359eee2c40bb081bdf7",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“啊哦🙄”，表情式回应。",
+      "review_conclusion": "无独立市场观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103818122",
+      "date": "26-10-16 15:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-7?type=new",
+      "text_sha256": "cf03136ab41e63ffde7a335214ea28fa94d8f4a2c947a7e11a565e284999c086",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "52c46c80980d22639ca4338e1cb7bafb1df13e5deff13db8153bfd39d0ade314",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“啊哦🙄”，表情式回应。",
+      "review_conclusion": "无独立市场观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103818132",
+      "date": "26-10-16 15:22",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-7?type=new",
+      "text_sha256": "262333620c4548a5370b4476d29f05ac2c159bdab84b049d34ef38967b18f916",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b573fdcf7591f57a53b95d5c524e82db3d431ba7c87a28b54bc88b973f9b2c5d",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "“男人的嘴”，社交调侃。",
+      "review_conclusion": "无独立市场观点。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103818641",
+      "date": "26-10-16 15:28",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-6?type=new",
+      "text_sha256": "29644599c70d67c1cfded550dce38aeddc4601490ad804f4d85dbe26c876c431",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "4e8e1b2becfddee729d7ae1888bf8a0c0e4248129e31420fbf569bd1927a0265",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“梁山泊”，单独出现的语境词。",
+      "review_conclusion": "对象和立场不明，不据此蒸馏。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103818663",
+      "date": "26-10-16 15:28",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-6?type=new",
+      "text_sha256": "754aa1a377afd989614516e828e97cc7eb75cf011a1c5d3a2cda86f2f29a5896",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "18b15922bd0ad3e135b699242e6e7c5099915f3c2f6e684015c5efe76c8c4dd6",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称“好多药跳”，指向医药股当时下跌，但没有给出范围或应对。",
+      "review_conclusion": "仅作即时盘面观察，不能推断医药板块后续方向。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103821125",
+      "date": "26-10-16 16:11",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-6?type=new",
+      "text_sha256": "16a87637d908030b0492c5ad902178d2ca971153b5d3c9c37e9a44eef5918ae1",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "0bdfd581f282a63337d3d5fd16bf8e2a5c355a57e089aa369356f2e5dc3575e5",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者称原则上如此，但下午提到的风险推演仍可能发生。",
+      "review_conclusion": "结合此前103813143，只能记录其保留风险情景；不把“按理”当作确定结论。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103822802",
+      "date": "26-10-16 16:47",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-6?type=new",
+      "text_sha256": "e4417aca4a104e90665bfe309c78eaa38270362544d1f3a3c317ae9b541c91a9",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "8704ffa828fe36bc8c7d89b93c3f6f0d520f57e34d657555d48d2b535a9be7c6",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称姚明相关新闻是两年前的消息又被翻出。",
+      "review_conclusion": "记录为新闻时效性观察；消息年份与市场影响未独立核验。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103830913",
+      "date": "26-10-16 21:49",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-5?type=new",
+      "text_sha256": "60856a95b4e41852935b1ef743b7e3c92d755410a4280633a2dc71247495b64d",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "bb2252b7e3bc14f78de5443aac294d5116209c4cc6ac0ec4518c2fd254cad0c2",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "只出现“药明康德”名称。",
+      "review_conclusion": "单独股票名称没有方向、条件或操作信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103830920",
+      "date": "26-10-16 21:49",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-5?type=new",
+      "text_sha256": "f09581e423a90e319562e862b3282421b60ac86c227369d0fc67e630ce8e3700",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "8364bf90a503269020bf442061656db613b8fe772f84c3bab507e262966d0679",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "作者称对方知道某种形态，但未说明形态内容。",
+      "review_conclusion": "不能据此补写形态规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103830933",
+      "date": "26-10-16 21:50",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-5?type=new",
+      "text_sha256": "1bc86b6018d03cdbee68b6f1794cc257d660369ccae94923e84e099967070160",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "273086d0cccab52a193e8f9d3cc7288c8ca84665756f40fda3c5d8e4e5927ede",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "关于开车翻越黑牛城道的夸张玩笑。",
+      "review_conclusion": "生活调侃，无市场信息。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103841876",
+      "date": "26-10-17 18:01",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-4?type=new",
+      "text_sha256": "7213342a5cf5d85150054ef8874860298e1b0f60297f5762b8a7aa18a484bec7",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "029b9a5c78b7dc599a4beeffe41a1e52de4a17b89d6a17185f170544ffd07a26",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称当天没有开电脑，之后有空再看。",
+      "review_conclusion": "状态说明，不是操作或盘面结论。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103841877",
+      "date": "26-10-17 18:01",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-4?type=new",
+      "text_sha256": "5caa05c55d436efbec7867d970864c289431e77274c9fe69e575a8e3676e9524",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "7a0235491437507023f54c70a62efa0e1f0302e9d3f8e8edd8c6ad268b5ceb20",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称睡了一天。",
+      "review_conclusion": "生活状态。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103843600",
+      "date": "26-10-17 20:32",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-4?type=new",
+      "text_sha256": "e97306479bfc5dfb84b336f8afc1482cb03e4fcd5f75f63b78a9632d158e9940",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "79f28fad391964bbd23c82315fb3e8319049192fda8eb945a0de4a1317282100",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称工作一周很累。",
+      "review_conclusion": "生活/工作状态。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103843697",
+      "date": "26-10-17 20:41",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-3?type=new",
+      "text_sha256": "50b0a7ea985f3ed8afe5edffc56542ae4413c837649dbff0d55060a8c0054c91",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "1d951d89c84e63e53473406f7a80eb67ffdf716771514c5408ac1acfaa396ad9",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称自己睡不醒。",
+      "review_conclusion": "生活状态。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103844186",
+      "date": "26-10-17 21:18",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-3?type=new",
+      "text_sha256": "0190cb17c4da1498c76938284edca5c4def59de6211cbeea9fff426969f9f231",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "24c59422c44d79b6481bb4f61365bbc361af9c4e880b99c8cd8bdb5525885640",
+      "image_urls": [],
+      "category": "非交易",
+      "summary": "作者称复盘不动、觉得自己做得不错但读者表现也不好，因此缺少动力。",
+      "review_conclusion": "记录为当时的创作与情绪状态，不转写成市场决策规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103845398",
+      "date": "26-10-17 22:57",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-3?type=new",
+      "text_sha256": "4b4aa67846db67b927f7846211baf65c079974d6a71de8f8e64fc274983d1407",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "57cd6346eb5750e4a1ff8f05e0e498e243bbc34d9945bae453f6daa84281c346",
+      "image_urls": [],
+      "category": "实际操作自述",
+      "summary": "作者回应“我就没买”。",
+      "review_conclusion": "作为未买入的操作自述保留；没有账户或成交证明。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103845432",
+      "date": "26-10-17 23:00",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-3?type=new",
+      "text_sha256": "e79a428803e8476aba4bd99056fa7bd6d270726f58b58ffc7a0775af17d5c202",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3759e3da714a572dff7bf00604362b07ce1c3d3e65fb1593679c1ae75e7e8da8",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者称对方选的几只股票看起来不错。",
+      "review_conclusion": "是对他人选股的即时评价，不等于作者推荐，也没有后续表现证据。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103845467",
+      "date": "26-10-17 23:02",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-3?type=new",
+      "text_sha256": "a16f71275fd3d3beeb5419ddc95f7b9bc7c7fa4fa742444edd141a31a40b16bd",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "72fca3b165b7faab431f037648ecc7848caf87ba1ac55a971f0f142824ea0667",
+      "image_urls": [],
+      "category": "观察",
+      "summary": "作者认为对方的选股模式似乎不确定、选择也不一致。",
+      "review_conclusion": "属于对他人方法的元评价；可记录“方法一致性”关注，但不是作者已说明的筛选规则。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103845513",
+      "date": "26-10-17 23:06",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-2?type=new",
+      "text_sha256": "f8ef1f5c595beaf382f0640afa77f446bb3fc2a72ecac76a49fa0ac49c6d1ea2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3b61100cf24b79063effef9d32a6cb645cc9190974961628d440879c861f8566",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "作者称地产需要持续消息刺激，周五更像集体反抽且深物业未封板；认为不能要求周四预判周五地产回流。",
+      "review_conclusion": "把消息持续性与板块承接作为解释维度，并提醒避免事后归责；这是经验性表述，未量化验证。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103845958",
+      "date": "26-10-17 23:47",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-2?type=new",
+      "text_sha256": "0647945d8890746b27c664b13528a22d35e1149e1976afc673ce97aabd23e0e2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "a8763133341356a1b96b6d7c9ea9165d47303de0f7c0f8a344b8ef0649d65359",
+      "image_urls": [],
+      "category": "条件式应对",
+      "summary": "作者称推不出周期结论，但预期下周会有指数放阳放量的一天；无法判定抱团高低切还是周期末端。",
+      "review_conclusion": "同时记录主观预期与明确不确定性；不强行把“节点”解释成确定方向。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103846022",
+      "date": "26-10-17 23:53",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig-2?type=new",
+      "text_sha256": "1f543ca826eca556cac0dbeafde8d4814ef53843ba0342d0cb765dce3e011fec",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "87dc07e6e0cffdc6d4ae359ef5631755f8e61090ee48ef5cd58bee02ae9b80a2",
+      "image_urls": [],
+      "category": "通用经验",
+      "summary": "作者认为风格转变不会特别鲜明，可能在抱团未结束时趋势已悄然出现，往往事后才看明白。",
+      "review_conclusion": "形成“风格变化可能渐进、识别滞后”的本帖观察；不能据此证明事前识别能力。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md"
+      ],
+      "evidence": "📖 仅语料",
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": false,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103853033",
+      "date": "26-10-18 16:58",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig?type=new",
+      "text_sha256": "8c7be3e70afc12dfe64e097095cfc53774e6140859f407e060a5b50a099ddae2",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "b5065cebd26919001ca87b87decae1d481a38bc5859d8c87b6bd02887d1b64de",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“你小子，可以”，短句单独无法还原指代。",
+      "review_conclusion": "244形态规则单列，不与节点择时混用；短句本身不足以复原具体条件。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md",
+        "analysis/2026-10-19-node/source_review.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": true,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103853061",
+      "date": "26-10-18 17:00",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig?type=new",
+      "text_sha256": "89e37d0fb07a74eeff307a67256600395a058798924996e2be9d949998cfc5e5",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "24a642f046d0c0ed4f82b3a53ff45e08f7585683c6300b1f6f9d1f47e06e7d8f",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“那咋了”，依赖上下文。",
+      "review_conclusion": "已审阅并保留；没有独立、可用于本次节点筛选的明确条件，不据此增加规则",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md",
+        "analysis/2026-10-19-node/source_review.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": true,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    },
+    {
+      "id": "103853615",
+      "date": "26-10-18 17:44",
+      "source_url": "https://m.tgb.cn/a/2vTaemOb3Ig?type=new",
+      "text_sha256": "0078497a14c2c02351ce6652d14ad60c473b532be69c2a28a6b84248c57d5ef3",
+      "image_url_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "review_content_sha256": "3a3724c56eb6e1a378a51fc0b9f3594f303915dda83679709ac339bbf3c58f31",
+      "image_urls": [],
+      "category": "语义不足",
+      "summary": "“意思确实挺标准的找的”，单句没有说明所指形态。",
+      "review_conclusion": "244形态规则单列，不与节点择时混用；短句本身不足以复原具体条件。",
+      "distillation_or_review_sources": [
+        "distillations/2026-10-18.md",
+        "analysis/2026-10-19-node/source_review.json"
+      ],
+      "evidence": null,
+      "image_review_status": "no_pending_noncontent_image",
+      "image_media_url_count": 0,
+      "image_conflict_note": null,
+      "legacy_review_digest": null,
+      "source_review_content_hash_match": true,
+      "normalized_item_review_added_here": true,
+      "category_note": "按作者可见文字逐项归类；上下文不足时保留语义不足，不把操作自述当成交证明。"
+    }
+  ]
+}

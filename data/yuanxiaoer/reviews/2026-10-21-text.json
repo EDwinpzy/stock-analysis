@@ -1,0 +1,758 @@
+{
+  "reviewed_at": "2026-10-21T09:05:47.087299+08:00",
+  "collection_checked_at": "2026-10-21T09:01:58.908650+08:00",
+  "author_id": "12089754",
+  "post_id": "2vZYBKxSFEq",
+  "post_title": "新华之后，抱团何方",
+  "post_url": "https://m.tgb.cn/a/2vZYBKxSFEq",
+  "scope": "仅审查本轮 changes 中该帖32条新增本人回复；不处理其他积压贴、图片内容或共享状态。",
+  "feed_pages": 23,
+  "feed_topics": 229,
+  "feed_complete": true,
+  "collection_errors": [],
+  "latest_main_post_date": "2026-10-18 19:25:05",
+  "latest_reply_in_scope": "26-10-21 08:15",
+  "hash_recipe": "由 tools/fetch_yuanxiaoer_posts.py 的 reply_digest(reply) 原函数计算：SHA256(json.dumps({\"text\": reply[\"text\"], \"images\": reply.get(\"images\", [])}, ensure_ascii=False, sort_keys=True).encode())。",
+  "id_reconciliation": {
+    "changes_new_reply_ids": 32,
+    "source_reply_records_matched": 32,
+    "unique_ids": 32,
+    "all_ids_match": true
+  },
+  "nuwa_heuristics": [
+    {
+      "id": "H1",
+      "heuristic": "先写分支情景，再等可观察反馈，避免把单一路径当作确定预言。",
+      "sources": [
+        "103903868",
+        "103946904"
+      ],
+      "method": "对指数走势分别设“有外力/无外力”等场景，再把实际盘面反馈用于更新倾向；抄底拥挤也被纳入反向风险情景。",
+      "boundary": "“外力”定义与量化门槛未给出，来源方解释未独立验证；本轮单篇证据，只是观察到的推演方式。"
+    },
+    {
+      "id": "H2",
+      "heuristic": "拆开指数、市场广度/情绪和题材结构看，局部修复不自动等同全面反转。",
+      "sources": [
+        "103907293",
+        "103907572",
+        "103908615",
+        "103923646",
+        "103946904"
+      ],
+      "method": "同时记录指数线、红绿家数/微盘反馈、板块和个股梯队；把单日信号看作多空博弈中的“小型战果”。",
+      "boundary": "信号筛选、权重、确认期和失效阈值未定义；盘面数据及“最后一杀”等解释未独立复核。"
+    },
+    {
+      "id": "H3",
+      "heuristic": "老周期弱回流而新方向未走出时，把注意力后置；先列观察对象，等待分歧与承接反馈。",
+      "sources": [
+        "103906378",
+        "103906514",
+        "103906544",
+        "103906765",
+        "103911963",
+        "103946904"
+      ],
+      "method": "将老周期、新方向分开判断；允许对航发科技仅加自选，对甘化/国科作不同风险偏好的条件观察，不把名单当成买入清单。",
+      "boundary": "“走出来”“后置”“承接”均无本轮机械定义；个股名称和量化解释仅保留在当日语境。"
+    },
+    {
+      "id": "H4",
+      "heuristic": "用关联标的/细分的反馈检查题材强度，若代表表现不能带动相邻资产则下调预期。",
+      "sources": [
+        "103906514",
+        "103903868"
+      ],
+      "method": "早盘提及飞行汽车细分与代表个券/转债的联动不足，据此降低该方向预期；保留“观察细分”而不泛化为整个主题已失败。",
+      "boundary": "联动观察的标的、幅度、时间窗均未编码；作者描述未独立验证，单篇观察待跨帖验证。"
+    },
+    {
+      "id": "H5",
+      "heuristic": "把短线入场位置与中线方向分层，修复需要拉扯确认，不用单日走势代替周期结论。",
+      "sources": [
+        "103908615",
+        "103923646"
+      ],
+      "method": "可以同时表达“短线仍偏左侧、理想买点接近日内低位”和“中线不宜继续看空”；通过多空反复博弈逐步更新判断。",
+      "boundary": "适用周期、确认信号和仓位规则未给出；不能据此生成普遍买卖标准。"
+    }
+  ],
+  "operational_distinctions": [
+    {
+      "topic": "航发科技",
+      "reply_ids": [
+        "103906378"
+      ],
+      "status": "仅加自选看看；观察名单，不是交易自述。"
+    },
+    {
+      "topic": "甘化科工",
+      "reply_ids": [
+        "103906765",
+        "103908615",
+        "103911963"
+      ],
+      "status": "先以高风偏者可观察的条件表达出现；后有本人“微关注”及“自己关注”的自述。未提供成交记录，不能改写为明确买入或推荐已验证。"
+    },
+    {
+      "topic": "国科军工",
+      "reply_ids": [
+        "103911963"
+      ],
+      "status": "有688权限者“可以看看”；是观察性表述，不等于本人操作。"
+    },
+    {
+      "topic": "ETF",
+      "reply_ids": [
+        "103908615",
+        "103910124",
+        "103911963"
+      ],
+      "status": "本人称继续买入/捡ETF，并称当前ETF比股票多；另表达宽基ETF较板块ETF稳的看法。没有ETF代码或精确类别，不能补全基金与仓位。"
+    },
+    {
+      "topic": "5日线减仓",
+      "reply_ids": [
+        "103928138"
+      ],
+      "status": "仅为未明标的的具体读者图形回复；不升级为通用减仓规则。"
+    },
+    {
+      "topic": "图片独立处理",
+      "reply_ids": [
+        "103939216"
+      ],
+      "status": "正文为空，附件仅由独立图片台账审查。"
+    }
+  ],
+  "limits": [
+    "本记录仅凭可见作者本人文字与来源元数据；不读取读者引文补全未显示的上下文。",
+    "所有策略归纳标为📖仅语料；本轮观点为单篇观察，不能代表完整稳定模型。",
+    "外力干预、量化介入、原油跳水和市场表现等作者陈述未独立核验。",
+    "10/20早盘提及周五节点；按日历推得10/23仅为日期语境，不是独立确认的节点规则。",
+    "本轮不含市场数据回测或外网核验。"
+  ],
+  "entries": [
+    {
+      "id": "103903868",
+      "date": "26-10-20 08:18",
+      "text": "【10.20圆宝早盘】\n大局观：昨天盘后有政策利好以及晚上美股反弹都给今天A子带来高开条件，那么今天就是A子最近的第二次高开。\n一般事不过三，在3674附近展开了拉锯战，等第三次高开才是多空双方的真正决战。\n按我的全年节点图，本周有个大节点，对应的大概率是主力资金对指数的最后博弈点。\n题材：\n1、传媒后面大概率会有一次回流，但猜不到回流的先锋，只能临盘看。\n2、飞车和低空，前者最有预期的细分储气罐和\n碳纤维\n表现都不好，最强的保隆都没带动他的债，所以飞车的预期降低了，低空同理。可以参考前面的\n电池\n和冰雪。\n3、军军这里倒是有说法，原因只有一个：量化介入的深。\n之前聊过一个观点：量化现在的玩法，就是盯着一个细分猛干，比如881166\n军工装备\n。\n4、植物人，不必多说，路边一条。\n综上，今日八字箴言是【观察细分，周五节点】如果你也认可就打在评论区提醒自己吧～",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-12?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103903868#103903868",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "b23095d02d88b20078e4e82ea144aad83010453b991600333e0b3e7112af6e0c",
+      "classification": "盘前场景推演",
+      "conclusion": "10/20早盘：作者以所述政策利好和美股反弹解释当日高开条件，并把当日称为近期第二次高开，关注第三次高开时的多空博弈。按其全年节点图把本周节点放在周五。传媒回流先锋未明；因细分及核心带动反馈不佳，下调飞车/低空预期；军工装备列为观察方向，其量化介入解释未独立核验。以上为当时盘前预案，没有给实际买卖动作或完整节点算法；无外力/有外力两剧本属于10/21另一条回复，不归入本条。",
+      "evidence": "📖 仅语料",
+      "limits": "作者对外力、外围反弹、量化介入和板块表现的解释均未独立验证；盘前推演不是结果确认。"
+    },
+    {
+      "id": "103906378",
+      "date": "26-10-20 09:29",
+      "text": "老的九阳高开，想模仿国芳\n新的\n军工\n，\n航发科技\n加个自选看看",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-10?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103906378#103906378",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "bd9479f3fbb88468e3d2206de0d0d3ffa2e9e72ded969c07d46a00ddeabfa966",
+      "classification": "个股自选观察",
+      "conclusion": "作者说老周期九阳高开并希望模仿国芳，新方向军工；对航发科技仅说“加个自选看看”，属于观察名单，不是买入或持仓自述。",
+      "evidence": "📖 仅语料",
+      "limits": "自选动作不等于实际交易，也不等于节点票确认。"
+    },
+    {
+      "id": "103906514",
+      "date": "26-10-20 09:33",
+      "text": "老周期九阳模仿国芳，新的目前看没有走出来的，飞行汽车封单也不行，暂时等等看看盘面再说。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103906514#103906514",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "44fc8a86f9f52dea6360f9ffb9c4118995c7914259de3a1662c42090e57d568f",
+      "classification": "盘面等待与预期调整",
+      "conclusion": "作者认为九阳属于老方向，新方向尚未走出；飞行汽车封单表现不佳，因此暂时等待盘面反馈。记录为有条件的预期下调与等待，不是板块彻底否定。",
+      "evidence": "📖 仅语料",
+      "limits": "封单和板块表现是作者当时判断，未独立复核；没有量化阈值。"
+    },
+    {
+      "id": "103906544",
+      "date": "26-10-20 09:34",
+      "text": "目前来看是老周期弱回流，新东西分歧，关注点需要后置",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103906544#103906544",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "4d0296cf70dc49b054aaa6a8faa7ccb62f98da6fd504b8bf2cfede4417c64878",
+      "classification": "关注后置",
+      "conclusion": "作者将当时盘面概括为老周期弱回流、新方向分歧，并据此建议关注点后置。可记为“方向尚未确认时减少抢先介入”的本帖观察。",
+      "evidence": "📖 仅语料",
+      "limits": "“后置”没有明确时间、触发器或仓位规则，不能当作稳定模型。"
+    },
+    {
+      "id": "103906765",
+      "date": "26-10-20 09:37",
+      "text": "假设军军真是量化介入深的方向，他们的风格你们懂的\n风偏高的可以观察\n甘化科工\n，不想做的就算拉倒。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103906765#103906765",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "8b63c2d238d2849d31ed1152ec9613c6b39f203342d8aa9f4001b8a9bcf6022c",
+      "classification": "条件式高风偏观察",
+      "conclusion": "作者以“如果军工确为量化深度介入方向”为前提，称高风偏者可观察甘化科工，也允许不参与。属于条件式观察，标的观察风险偏好较高；不是无条件推荐。",
+      "evidence": "📖 仅语料",
+      "limits": "量化介入深度是作者解释，未核实；未给买点、持有期或退出条件。"
+    },
+    {
+      "id": "103907293",
+      "date": "26-10-20 09:45",
+      "text": "指数黄黑线分裂，从开盘三千家绿转三千家红，\n银行\n指数向下，科技这边还是pcb。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103907293#103907293",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "a7f1fcbb2f411589f964691762a2c3d38223eb2da0d2415601f8e0765ceb1b05",
+      "classification": "盘中广度与风格观察",
+      "conclusion": "记录作者所见指数黄黑线分化、绿盘家数转红、银行走弱而科技/PCB相对活跃。属于盘中截面观察，不足以单独确认指数或科技反转。",
+      "evidence": "📖 仅语料",
+      "limits": "家数与板块走势未独立核验；单个时点可能快速变化。"
+    },
+    {
+      "id": "103907572",
+      "date": "26-10-20 09:48",
+      "text": "昨天和今天的特点还是以九阳代表的老抱团，明显和指数翘翘板了。\n目前盘面有几个信号：\n1、科技的总熊头\n德明利\n有企稳的意思\n2、代表情绪的微盘股基本可以判断昨天是最后一杀\n3、平均股价指数收出底分型雏形",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103907572#103907572",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "18f5d19eef064cce5e9d303a73158668b2e04e30977e133dae44db12a813e67f",
+      "classification": "多信号底部观察",
+      "conclusion": "作者把九阳代表的老抱团与指数翘翘板并列，并列出德明利企稳迹象、微盘股可能完成最后一杀、平均股价指数出现底分型雏形。是多个信号的底部假设，不是确认。",
+      "evidence": "📖 仅语料",
+      "limits": "“最后一杀”及底分型是作者判断，未独立核验；不同信号未给权重或失效点。"
+    },
+    {
+      "id": "103908615",
+      "date": "26-10-20 10:01",
+      "text": "止跌，企稳，修复，是需要一个拉扯过程的，多空双方的博弈不是一天就决定的，也就是我总说的白天到黑夜，黑夜到白天，上面所说的信号就是多空双方的小型战果。\n我今天微关注了甘化，继续捡了Etf，其他没别的了。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-9?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103908615#103908615",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "da5393ac45db76d48be180e6ca047cd227bf61d48c2e07e826e94c4cbfea278d",
+      "classification": "修复节奏与操作自述",
+      "conclusion": "作者认为止跌、企稳、修复需要多空拉扯，不会由单日决定；把信号比作阶段性小战果。同时自述当日“微关注了甘化，继续捡了Etf”。分开记录：甘化为轻度关注自述，ETF为操作自述；均无账户、价位、数量或成交凭证。",
+      "evidence": "📖 仅语料",
+      "limits": "“捡ETF”不明代码与类型；自述未独立验证，不据此计算收益或仓位。"
+    },
+    {
+      "id": "103910124",
+      "date": "26-10-20 10:17",
+      "text": "我etf比股票多现在",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-8?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103910124#103910124",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "19245d0632150f4bb58c2de4cfbd59c033c05023c3d0998aa641fb18b7f34c2d",
+      "classification": "资产配置自述",
+      "conclusion": "作者称“我etf比股票多现在”，仅作为其当时资产/关注比例的本人自述记录。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无标的代码或ETF类型，无法判断是宽基、行业、债券或其他ETF，也不能量化比例。",
+      "limits": "无持仓凭证、比例和统计口径；不推广为通用配置建议。"
+    },
+    {
+      "id": "103910144",
+      "date": "26-10-20 10:18",
+      "text": "哪个170",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-8?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103910144#103910144",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "d82db450d31db6a32d95d17cb41245edc3fa6ffc0f9902f252351d889d3fe4f2",
+      "classification": "语境不足",
+      "conclusion": "短句询问“哪个170”，没有所回复读者内容，无法确认数字、证券或讨论对象。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少引文上下文；不猜测标的或代码。"
+    },
+    {
+      "id": "103910150",
+      "date": "26-10-20 10:18",
+      "text": "没去",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-8?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103910150#103910150",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "bae9aadf6e0ca13128bc31e1d2ce89929b584b729ac6baec5876234736c2dcad",
+      "classification": "语境不足",
+      "conclusion": "“没去”缺少所回复对象，不能判断指未买某标的、未去某处或未参与某事。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少上下文；不映射到任何个股或交易动作。"
+    },
+    {
+      "id": "103911963",
+      "date": "26-10-20 10:38",
+      "text": "市场的特点和指数刚才拆过了，不再重复，从性价比来考虑，当下ETF宽基要比板块ETF要稳一些。\n题材这里老周期目前确认是在出清阶段，留下的活口是九阳豆浆机，本身K线是在模仿911的国芳K，其次也叠加了植物人属性，但也能反应出来这里新华周期属于上一个远古抱团的补涨周期。\n新东西一个是\n军工\n，他这两天量化介入的非常深，不会一下子就结束，板块今天可以看作二分，有688权限的可以看看\n国科军工\n，我自己关注的是甘化，这个风偏比较高，另外低位反弹的是植物人，但我对植物人的态度你们是知道的，现在也不好关注了，后面分歧再考虑。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-8?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103911963#103911963",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "9e6bd3611e06dd0c28b08c706e90716903515dee10f94345dc29c0798bdb290e",
+      "classification": "ETF比较与题材观察",
+      "conclusion": "作者按性价比称当下宽基ETF比板块ETF稳一些；老周期出清语境中提九阳，军工方向称量化介入较深，并说有688权限可看国科军工、自己关注甘化且风偏较高；植物人只考虑后续分歧。区分作者观察对象与行动自述：国科军工是“可以看看”，甘化是“我自己关注”，并非同等强度的买入信号。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "ETF代码未给出，宽基/板块ETF只是类别比较；不补具体基金。",
+      "limits": "量化深度及周期判断是作者解释，未核验；对国科军工无明确买入指令，甘化的具体操作另见103908615。"
+    },
+    {
+      "id": "103912404",
+      "date": "26-10-20 10:44",
+      "text": "我做的是创业板",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-8?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103912404#103912404",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "ca0b1deb61d92072306f79aa8bae92c90aea8736f091f96757dd3cbf70af8732",
+      "classification": "操作语境碎片",
+      "conclusion": "作者称“我做的是创业板”，保留为交易范围/语境自述，未说明具体标的、买卖或对应仓位。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少上下文与标的；不推断创业板某股或某笔操作。"
+    },
+    {
+      "id": "103923646",
+      "date": "26-10-20 14:43",
+      "text": "【10.20圆宝收评】\n节点未到，所以科技这里依然是偏左侧买点，除非买在日内最低才行。\n还有，上午科技最猛的依然是元器件，这也是老东西，这点也是资金所担忧的。\n不过诚如盘中拆解的信号，这里科技随时可能反转，从中线角度不宜再看空。\n我理想中的剧本是过度题材在周二至周四活跃，逻辑是依托于新华周期还未彻底结束，末尾发酵的题材反复活跃，直到某一天新华回流，完成逻辑闭环为止。\nTime～",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-7?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103923646#103923646",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "054e064736a0bf1aa438ce9e9e17a9a63fc21e2c3a1b52da3a9bd88766739dae",
+      "classification": "盘后周期推演",
+      "conclusion": "作者判断节点未到、科技仍偏左侧买点，只有买在日内最低才理想；同时称科技可能随时反转，从中线角度不宜继续看空。计划题材周二至周四反复活跃，等待新华周期末段回流构成闭环。体现短线介入位置偏左与中线方向判断并存，须保留不同时间尺度。",
+      "evidence": "📖 仅语料",
+      "limits": "“节点未到”“日内最低”“反转可能”均无客观机械定义；周二至周四是当时理想剧本，不是已验证预测。"
+    },
+    {
+      "id": "103924485",
+      "date": "26-10-20 15:00",
+      "text": "✔",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103924485#103924485",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "35aabc8cf0dc289d393468813e25a0040f1fff2befbdafda35828a709d2fc99e",
+      "classification": "非交易互动",
+      "conclusion": "仅为勾选符号，没有可识别的交易信息。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "没有可提炼的交易内容。"
+    },
+    {
+      "id": "103924498",
+      "date": "26-10-20 15:00",
+      "text": "俺也母鸡",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103924498#103924498",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "a9f8880cd443fef182a9ec80e18d462943f77a8e238482b6bbc5b35dcd6c285f",
+      "classification": "语境不足",
+      "conclusion": "“俺也母鸡”（也不知道）是对话片段，未说明所指问题。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少上下文；不补充标的或观点。"
+    },
+    {
+      "id": "103925047",
+      "date": "26-10-20 15:04",
+      "text": "我都懒得T",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103925047#103925047",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "c1e029362bb3788d57674649adce325e537a4e2a34881997d721ce40e69e27dd",
+      "classification": "交易习惯碎片",
+      "conclusion": "作者称“我都懒得T”，是未说明标的、持仓与时段的个人习惯/态度表达。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "没有足够语境判断是否不做T、具体持仓或策略规则。"
+    },
+    {
+      "id": "103926531",
+      "date": "26-10-20 15:20",
+      "text": "啊 就是正常的周期推演啊",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103926531#103926531",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "6a8e4cbd96a9b977c1b74a0fe053e6c0f3f71ed2a15f9fa16f3b37826a473c78",
+      "classification": "对话确认",
+      "conclusion": "仅称“就是正常的周期推演”，未新增周期条件或交易动作。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无新增可执行信息。"
+    },
+    {
+      "id": "103928138",
+      "date": "26-10-20 15:43",
+      "text": "减也行 你那个高点正好是反抽5日线不过 出卡顿",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103928138#103928138",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "cdfc7ba2a9c2b23f0dd393bcb0e84e2cd40b908537e0e4beed2c6a5cf47180d5",
+      "classification": "具体读者情境下的减仓反馈",
+      "conclusion": "作者称“减也行”，并解释读者所说高点正好是反抽5日线未能顺畅越过、出现卡顿。只记录为该读者图形/价位情境下对减仓的认可与观察；不扩展成通用5日线减仓规则。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "标的与完整图形上下文缺失；这是具体回复场景，不是全局止盈/减仓标准。"
+    },
+    {
+      "id": "103928149",
+      "date": "26-10-20 15:43",
+      "text": "那说明你看我看的还是少啊",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-6?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103928149#103928149",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "abf200ea9f1282c3258afe0f0980559e8fe6fb286c4d90da4142f4fc157fc89f",
+      "classification": "语境不足",
+      "conclusion": "“那说明你看我看的还是少啊”指向未提供的对话内容，无法映射到标的或投资观点。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少上下文；不推断被认可的交易结论。"
+    },
+    {
+      "id": "103928805",
+      "date": "26-10-20 15:55",
+      "text": "妙人？",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-5?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103928805#103928805",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "237b511b23ecbdce1dad261d9279401c12bbcf56a1e33fead778883dc158c64c",
+      "classification": "非交易对话",
+      "conclusion": "“妙人？”未提供交易条件，属于对话用语。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无交易信息。"
+    },
+    {
+      "id": "103939049",
+      "date": "26-10-20 20:40",
+      "text": "讲好听的，业绩好，超跌，资金终究会认错\n讲难听的，隔三岔五问，不如翻我最早跟你说的话\n讲差不多的，哎~",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-5?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103939049#103939049",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "50eebc83975ec5a9e94ea881d96bbd53d73beb64bec560e7484e813f6518bd03",
+      "classification": "个股逻辑片段但对象不明",
+      "conclusion": "作者用“业绩好、超跌、资金终究会认错”描述一类逻辑，并建议反复追问者翻看早先所说内容；未指出当前上下文的具体标的。可留作概念性表达，不映射给任何股票或转成选股阈值。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "原文无标的、业绩定义、超跌区间、催化期限及失效条件；不猜上下文股票。",
+      "limits": "资金终将认错是作者判断，非已验证事实。"
+    },
+    {
+      "id": "103939216",
+      "date": "26-10-20 20:44",
+      "text": "",
+      "images": [
+        "https://image.tgb.cn/img/2026/10/20/13kck3487tqw.png_760w.png"
+      ],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-5?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103939216#103939216",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "f998ee7495d9faa7de9a47b8e6ec3d0abdb8ab311f94253b24177d7c0ac9900c",
+      "classification": "图片独有内容待图片台账",
+      "conclusion": "正文为空，只有1张图片附件；内容与交易判断均不在本文本审查内，由独立图片台账核验。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "不根据附件文件名、相邻对话或猜测识别图中标的与观点。",
+      "image_review_note": "图片内容由独立图片台账负责；本文本审查不猜图。"
+    },
+    {
+      "id": "103939474",
+      "date": "26-10-20 20:50",
+      "text": "why",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-5?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103939474#103939474",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "71324a73f22d986211e3e7fe61da2a6210ca0d5c5312c60b10fefdc05d476165",
+      "classification": "语境不足",
+      "conclusion": "单词“why”没有可见问题上下文。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无法判断其所问为何；不推断立场或交易对象。"
+    },
+    {
+      "id": "103940421",
+      "date": "26-10-20 21:13",
+      "text": "俺不懂",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-4?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103940421#103940421",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "bc6304052cb11e8df0284821378c60cd3d6a181c641eb40bc28cc4146a35a5a8",
+      "classification": "语境不足",
+      "conclusion": "“俺不懂”未说明不理解的对象。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "缺少上下文；不赋予交易含义。"
+    },
+    {
+      "id": "103942727",
+      "date": "26-10-20 22:25",
+      "text": "老哥，方便问一下你今年多大岁数吗大概",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-4?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103942727#103942727",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "41df16c363af2a04537fec627469b0d4210f5a42373f60fb252a998d6e048cdc",
+      "classification": "非交易互动",
+      "conclusion": "询问读者年龄，与交易判断无关。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无交易内容。"
+    },
+    {
+      "id": "103943006",
+      "date": "26-10-20 22:34",
+      "text": "好滴姐姐，那就不问了，再问就不礼貌了",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-4?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103943006#103943006",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "6ff67dace3f1359cce64118501af79c65c41aceb83be4bed618d344ddb6d5800",
+      "classification": "非交易互动",
+      "conclusion": "礼貌回应“那就不问了”，无交易内容。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无交易内容。"
+    },
+    {
+      "id": "103943071",
+      "date": "26-10-20 22:37",
+      "text": "原油跳水了",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-4?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103943071#103943071",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "1642bc3cfd894b2cdc5930b0dd1935d49e4c14936ca37213d3fc20ab3ae7ac92",
+      "classification": "外部市场事件短句",
+      "conclusion": "作者称“原油跳水了”，仅记录为作者的即时说法；未给来源、幅度、时间窗口或A股映射。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "不把原油价格变动当作独立核实事实或自动推导A股交易信号。"
+    },
+    {
+      "id": "103943193",
+      "date": "26-10-20 22:42",
+      "text": "我意思是，我不问了，女的我再问年龄不就不礼貌了",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-3?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103943193#103943193",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "612b4bebbd45160bf2e860bbfbc7379d06b7207857c11bc009a6ef55b1ddb54c",
+      "classification": "非交易互动",
+      "conclusion": "解释自己不再询问读者年龄，属于社交对话。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "无交易内容。"
+    },
+    {
+      "id": "103943208",
+      "date": "26-10-20 22:42",
+      "text": "节点越来越近了",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-3?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103943208#103943208",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "26ab3e56d41147d50fdd4b5f4d7b1b704d60d785231abca87678667e93f52022",
+      "classification": "节点时间表述",
+      "conclusion": "作者称“节点越来越近了”，未在本条定义节点类型、日期或标的。可放回10/20早盘“周五节点”的时间语境理解，但周五对应10/23只是日历推算，不是这条回复明确给出的新日期或量化规律。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "单句没有节点的可检验定义；不能单独产生个股筛选条件。"
+    },
+    {
+      "id": "103943398",
+      "date": "26-10-20 22:49",
+      "text": "你理解错啦",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-3?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103943398#103943398",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "5abc8066fbf81fefa82571594f63f1217f8e279ed49f1ee3585e4a9a461215fc",
+      "classification": "非交易对话",
+      "conclusion": "“你理解错啦”指向未提供的对话上下文，未含交易内容。",
+      "evidence": "📖 仅语料",
+      "skip_reason": "不推断其纠正的是哪项市场观点。"
+    },
+    {
+      "id": "103946904",
+      "date": "26-10-21 08:15",
+      "text": "【10.21圆宝早盘】\n关于指数，本周有两个剧本：\n1、无外力干预，那就自发性收出金针探底，对应的是抱团聚焦后的瓦解\n2、有外力干预，无金针探底，走震荡反转图形\n从最近的盘面来看，外力还是在一直干预，那后期指数慢慢震荡攀升的概率更大。\n关于应对，人性本贪，谁都知道目前是超跌区间，随时可能拔中阳，导致的结果就是都想抄到底部，一把回本。\n如果大部分人都是这个想法，那结果就是量化反人性。\n所以这两天不排除指数还有一次分时的急跌，抹灭急于抄底人心中的幻想后，大概率就差不多了。\n关于题材，现在所有题材都看作指数中阳前的过度题材，皆为量化主导，既然是量化，那深水就会有反复活跃机会。\n风向标个股：\n九阳：昨天已经有人拿出来群总24年的朋友圈当幌子说那个男人又回来了，客观上穿越三板不过岗，主观上这时候要往低位去看了。\n凡拓：今天要面对异动预警，空间有限。\n总之，节点越来越近了，时刻保持神经高度紧绷。综上，今日八字箴言是【临近周五，绷紧神经】～如果你也认可，那就把这八个字打在评论区提醒自己。",
+      "images": [],
+      "source": {
+        "post_id": "2vZYBKxSFEq",
+        "post_title": "新华之后，抱团何方",
+        "author_id": "12089754",
+        "reply_page": "https://m.tgb.cn/a/2vZYBKxSFEq-3?type=new",
+        "stable_reply_url": "https://www.tgb.cn/a/2vZYBKxSFEq/103946904#103946904",
+        "kind": "圆小二本人回复"
+      },
+      "reply_digest": "2d3937246048578fedc5868cb118ac38c938ecbde48e7a37d30867ec732f8e44",
+      "classification": "盘前情景推演与风向标观察",
+      "conclusion": "10/21早盘把指数分成无外力与有外力两种路径，并以作者所称近期干预推测震荡攀升概率较高；提示超跌抄底拥挤后仍可能出现分时急跌，再判断是否接近阶段尾声。题材暂作中阳前过渡、量化主导，深水处可能反复活跃。个股层面：九阳叙述三板不过岗及转看低位，凡拓当天面对异动预警、空间有限；皆是当日观察语境。",
+      "evidence": "📖 仅语料",
+      "limits": "“外力干预”“量化主导”及概率推断均为作者归因，未独立验证；“三板不过岗”语义需结合原帖语境，不抽象成通用上限；没有确定买卖点或节点票机械筛选公式。"
+    }
+  ],
+  "status": "文本审查完成；图片内容及整体状态由主任务/独立图片台账负责。",
+  "parent_integration_review": {
+    "source_attribution_correction": "103903868仅保留10/20本人内容；10/21两剧本归属103946904，避免跨回复混写。",
+    "image_reference": "reviews/2026-10-21-images.json",
+    "image_review_conclusion": "103939216已由独立图片台账及主线程目视复核，日期格存在重复10.19，不能无说明改记为10/20。"
+  }
+}

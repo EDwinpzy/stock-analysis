@@ -1,0 +1,898 @@
+<!doctype html><meta charset="utf-8"><title>节点票实际数据验证</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:42px auto;max-width:1400px;padding:0 24px;color:#18232d;line-height:1.7;background:#f6f8fa}h1,h2{color:#153b5b}table{border-collapse:collapse;width:100%;font-size:13px;background:white}th,td{border:1px solid #c9d3dc;padding:7px 9px;text-align:left}th{background:#e1edf5}p,li{font-size:15px}a{color:#1764a3}h2{margin-top:38px}</style><h1>节点票实际数据验证（2026-10-19）</h1>
+<p>核验时间：2026-10-19T18:44:39.676907+08:00。价格/涨停池截止：2026-10-19收盘。数据源：同花顺 hithink-finance 0.1.12 remote；OHLC均未复权。</p>
+<p>本报告只验证可由日线、涨停池直接核对的事实。节点日期由本次语料人工选取，9/24、9/28、9/29是人工挑选的描述性样本，不能当成随机对照或独立周期回测。未读取任何10/19之后的数据，未为了结果调整数值阈值。</p>
+<h2>统一价格与成交口径</h2>
+<p>信号T日收盘后才能确认；次一市场交易日T+1开盘为参考入价。T+3/5/10分别在T后的第3/5/10个市场交易日收盘退出，包含入场日。例：9/28信号→9/29开盘→10/8、10/12、10/19收盘。每笔10万元，买卖佣金0.025%且最低5元、过户费双边0.001%、印花税卖出0.05%。每只等权独立交易，不是组合资金曲线。</p>
+<p>主表排除ST、新股及次日开盘价达到涨停价的票；整日一字排除口径作为敏感性。无法由日线证明剩余股票的集合竞价排队成交、实际滑点和跌停收盘卖出成功，故这里是保守参考价格情景，不能称真实成交回测。T+1开盘至T+1收盘只算浮动盈亏，受A股T+1制度限制，不作为可交易收益。</p>
+<h2>本期全体候选分母</h2>
+<p>9/28涨停池35只，其中首板28只、二板3只，共31只低位候选；剔除2只ST后29只。29只中8只次日继续涨停，5只在本段连续走到至少3板，2只到6板。九阳/时代只是29只中的2只（6.9%），不能用两只事后赢家代替全体胜率。</p>
+<table>
+<thead>
+<tr>
+<th>信号日</th>
+<th style="text-align: right;">全部首/二板</th>
+<th style="text-align: right;">非ST/新股</th>
+<th style="text-align: right;">排次日开盘涨停后</th>
+<th>T+3净均值 / 中位数 / 胜率</th>
+<th>T+5净均值 / 中位数 / 胜率</th>
+<th>T+10净均值 / 中位数 / 胜率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-09-24</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">42</td>
+<td>-4.12% / -4.55% / 31.0% (n=42)</td>
+<td>-5.48% / -5.86% / 23.8% (n=42)</td>
+<td>-9.65% / -10.37% / 23.8% (n=42)</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">26</td>
+<td>+2.05% / -3.00% / 30.8% (n=26)</td>
+<td>+2.13% / -4.32% / 30.8% (n=26)</td>
+<td>-1.77% / -8.49% / 26.9% (n=26)</td>
+</tr>
+<tr>
+<td>2026-09-29</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">46</td>
+<td>+1.18% / -1.01% / 40.0% (n=45)</td>
+<td>+1.04% / -2.57% / 44.4% (n=45)</td>
+<td>未到期</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">49</td>
+<td>未到期</td>
+<td>未到期</td>
+<td>未到期</td>
+</tr>
+</tbody>
+</table>
+<p>9/29筛后46只中路畅科技缺少T+1开盘数据，收益分母45只。10/16信号截至10/19仅过一个交易日，无法验证T+3/5/10；56只候选11只晋级，其中5只10/19整日一字。</p>
+<p>敏感性：9/28仅排除整日一字时27只，T+3净均值+2.30%、中位-2.36%、胜率33.3%；T+5 +2.38%、中位-3.62%、胜率33.3%；T+10 -1.56%、中位-6.86%、胜率29.6%。正均值由少数强票抬高；主表更严格的开盘涨停排除口径不改变多数样本亏损的事实。</p>
+<p>不能给“策略已显著有效”的置信区间：几个信号日共享同一市场冲击，同一天的29只票不能当29个独立节点周期；还缺跨周期、事前固定的节点事件定义和同股同期随机/非节点配对。</p>
+<h2>9/28全部非ST候选（赢家与失败票同表）</h2>
+<p>连续最高板只统计从信号日起不间断的本段，截止10/19；后续最高只作结果，不参与入选。收益为未因开盘涨停排除前的理论参考，列“开盘涨停”者不得纳入主表。</p>
+<table>
+<thead>
+<tr>
+<th>股票</th>
+<th>T日板数/首封</th>
+<th style="text-align: right;">本段最高</th>
+<th style="text-align: right;">T+1开盘</th>
+<th>开盘涨停</th>
+<th style="text-align: right;">T+3净</th>
+<th style="text-align: right;">T+5净</th>
+<th style="text-align: right;">T+10净</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>九阳股份 002242.SZ</td>
+<td>1 / 09:31</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">11.05</td>
+<td>否</td>
+<td style="text-align: right;">+24.31%</td>
+<td style="text-align: right;">+50.43%</td>
+<td style="text-align: right;">+68.97%</td>
+</tr>
+<tr>
+<td>时代万恒 600241.SH</td>
+<td>1 / 10:08</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">8.84</td>
+<td>是（一字）</td>
+<td style="text-align: right;">+20.80%</td>
+<td style="text-align: right;">+46.23%</td>
+<td style="text-align: right;">+43.97%</td>
+</tr>
+<tr>
+<td>襄阳轴承 000678.SZ</td>
+<td>2 / 09:30</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">11.72</td>
+<td>是（一字）</td>
+<td style="text-align: right;">+4.33%</td>
+<td style="text-align: right;">-3.17%</td>
+<td style="text-align: right;">-5.98%</td>
+</tr>
+<tr>
+<td>深物业A 000011.SZ</td>
+<td>1 / 09:45</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">11.13</td>
+<td>是</td>
+<td style="text-align: right;">+8.78%</td>
+<td style="text-align: right;">+8.78%</td>
+<td style="text-align: right;">+3.76%</td>
+</tr>
+<tr>
+<td>善水科技 301190.SZ</td>
+<td>1 / 13:47</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">26</td>
+<td>否</td>
+<td style="text-align: right;">+51.85%</td>
+<td style="text-align: right;">+86.16%</td>
+<td style="text-align: right;">+106.71%</td>
+</tr>
+<tr>
+<td>中新赛克 002912.SZ</td>
+<td>1 / 09:30</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">27.55</td>
+<td>否</td>
+<td style="text-align: right;">-5.90%</td>
+<td style="text-align: right;">+8.17%</td>
+<td style="text-align: right;">-5.50%</td>
+</tr>
+<tr>
+<td>大业股份 603278.SH</td>
+<td>2 / 09:30</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">10.72</td>
+<td>否</td>
+<td style="text-align: right;">-4.85%</td>
+<td style="text-align: right;">-9.51%</td>
+<td style="text-align: right;">+1.58%</td>
+</tr>
+<tr>
+<td>浙江新能 600032.SH</td>
+<td>1 / 09:48</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7.68</td>
+<td>否</td>
+<td style="text-align: right;">+1.20%</td>
+<td style="text-align: right;">-3.09%</td>
+<td style="text-align: right;">+1.33%</td>
+</tr>
+<tr>
+<td>津药药业 600488.SH</td>
+<td>1 / 13:02</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6.76</td>
+<td>否</td>
+<td style="text-align: right;">-3.65%</td>
+<td style="text-align: right;">-8.82%</td>
+<td style="text-align: right;">-20.79%</td>
+</tr>
+<tr>
+<td>吉鑫科技 601218.SH</td>
+<td>2 / 14:26</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6.3</td>
+<td>否</td>
+<td style="text-align: right;">-5.65%</td>
+<td style="text-align: right;">-7.40%</td>
+<td style="text-align: right;">-19.13%</td>
+</tr>
+<tr>
+<td>博纳影业 001330.SZ</td>
+<td>1 / 09:25</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6.8</td>
+<td>否</td>
+<td style="text-align: right;">-6.86%</td>
+<td style="text-align: right;">+12.68%</td>
+<td style="text-align: right;">-6.86%</td>
+</tr>
+<tr>
+<td>会稽山 601579.SH</td>
+<td>1 / 09:30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">41.43</td>
+<td>否</td>
+<td style="text-align: right;">-4.51%</td>
+<td style="text-align: right;">-12.59%</td>
+<td style="text-align: right;">-35.50%</td>
+</tr>
+<tr>
+<td>跨境通 002640.SZ</td>
+<td>1 / 09:30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.05</td>
+<td>否</td>
+<td style="text-align: right;">-8.74%</td>
+<td style="text-align: right;">-12.68%</td>
+<td style="text-align: right;">-6.27%</td>
+</tr>
+<tr>
+<td>国新健康 000503.SZ</td>
+<td>1 / 09:31</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">7.31</td>
+<td>否</td>
+<td style="text-align: right;">+7.82%</td>
+<td style="text-align: right;">+7.41%</td>
+<td style="text-align: right;">+13.43%</td>
+</tr>
+<tr>
+<td>丽珠集团 000513.SZ</td>
+<td>1 / 09:32</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">31</td>
+<td>否</td>
+<td style="text-align: right;">-4.58%</td>
+<td style="text-align: right;">-1.84%</td>
+<td style="text-align: right;">-11.54%</td>
+</tr>
+<tr>
+<td>五方光电 002962.SZ</td>
+<td>1 / 09:34</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">14.23</td>
+<td>否</td>
+<td style="text-align: right;">+17.17%</td>
+<td style="text-align: right;">-5.02%</td>
+<td style="text-align: right;">-11.40%</td>
+</tr>
+<tr>
+<td>泰尔股份 002347.SZ</td>
+<td>1 / 09:36</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6.31</td>
+<td>否</td>
+<td style="text-align: right;">-0.26%</td>
+<td style="text-align: right;">-2.79%</td>
+<td style="text-align: right;">-4.85%</td>
+</tr>
+<tr>
+<td>众泰汽车 000980.SZ</td>
+<td>1 / 09:49</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.21</td>
+<td>否</td>
+<td style="text-align: right;">-2.36%</td>
+<td style="text-align: right;">-6.88%</td>
+<td style="text-align: right;">-17.28%</td>
+</tr>
+<tr>
+<td>深华发A 000020.SZ</td>
+<td>1 / 09:52</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">15</td>
+<td>否</td>
+<td style="text-align: right;">-2.30%</td>
+<td style="text-align: right;">-9.83%</td>
+<td style="text-align: right;">-17.35%</td>
+</tr>
+<tr>
+<td>新筑股份 002480.SZ</td>
+<td>1 / 09:52</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5.65</td>
+<td>否</td>
+<td style="text-align: right;">-3.64%</td>
+<td style="text-align: right;">+6.79%</td>
+<td style="text-align: right;">+6.97%</td>
+</tr>
+<tr>
+<td>江淮汽车 600418.SH</td>
+<td>1 / 10:22</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">25.69</td>
+<td>否</td>
+<td style="text-align: right;">-3.87%</td>
+<td style="text-align: right;">-14.26%</td>
+<td style="text-align: right;">-14.18%</td>
+</tr>
+<tr>
+<td>东瑞股份 001201.SZ</td>
+<td>1 / 10:54</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.29</td>
+<td>否</td>
+<td style="text-align: right;">-5.81%</td>
+<td style="text-align: right;">-11.69%</td>
+<td style="text-align: right;">-13.78%</td>
+</tr>
+<tr>
+<td>巨力索具 002342.SZ</td>
+<td>1 / 10:58</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8.83</td>
+<td>否</td>
+<td style="text-align: right;">-4.29%</td>
+<td style="text-align: right;">-17.98%</td>
+<td style="text-align: right;">-21.37%</td>
+</tr>
+<tr>
+<td>永信至诚 688244.SH</td>
+<td>1 / 11:04</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">19.18</td>
+<td>否</td>
+<td style="text-align: right;">+7.55%</td>
+<td style="text-align: right;">+12.35%</td>
+<td style="text-align: right;">-5.47%</td>
+</tr>
+<tr>
+<td>启明信息 002232.SZ</td>
+<td>1 / 11:06</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16.35</td>
+<td>否</td>
+<td style="text-align: right;">-1.69%</td>
+<td style="text-align: right;">-0.71%</td>
+<td style="text-align: right;">-4.38%</td>
+</tr>
+<tr>
+<td>道道全 002852.SZ</td>
+<td>1 / 13:45</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">8.8</td>
+<td>否</td>
+<td style="text-align: right;">-2.15%</td>
+<td style="text-align: right;">-3.62%</td>
+<td style="text-align: right;">-12.48%</td>
+</tr>
+<tr>
+<td>宏柏新材 605366.SH</td>
+<td>1 / 14:37</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9.56</td>
+<td>否</td>
+<td style="text-align: right;">+15.36%</td>
+<td style="text-align: right;">-6.48%</td>
+<td style="text-align: right;">-14.84%</td>
+</tr>
+<tr>
+<td>醋化股份 603968.SH</td>
+<td>1 / 14:48</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11.63</td>
+<td>否</td>
+<td style="text-align: right;">+5.65%</td>
+<td style="text-align: right;">+12.10%</td>
+<td style="text-align: right;">+8.14%</td>
+</tr>
+<tr>
+<td>通达创智 001368.SZ</td>
+<td>1 / 14:56</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">39.72</td>
+<td>否</td>
+<td style="text-align: right;">-6.54%</td>
+<td style="text-align: right;">-5.46%</td>
+<td style="text-align: right;">-10.11%</td>
+</tr>
+</tbody>
+</table>
+<h2>上证指数证据</h2>
+<p>成交量、成交额为上证指数接口自身口径，不代表两市成交额。涨跌幅及量额变化均较前一个市场交易日。</p>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th style="text-align: right;">收盘</th>
+<th style="text-align: right;">涨跌幅</th>
+<th style="text-align: right;">成交量（亿股）</th>
+<th style="text-align: right;">量较前日</th>
+<th style="text-align: right;">成交额（亿元）</th>
+<th style="text-align: right;">额较前日</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-09-24</td>
+<td style="text-align: right;">3888.37</td>
+<td style="text-align: right;">-1.22%</td>
+<td style="text-align: right;">438.53</td>
+<td style="text-align: right;">-6.08%</td>
+<td style="text-align: right;">7836.13</td>
+<td style="text-align: right;">-6.06%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td style="text-align: right;">3823.62</td>
+<td style="text-align: right;">-1.67%</td>
+<td style="text-align: right;">452.35</td>
+<td style="text-align: right;">+3.15%</td>
+<td style="text-align: right;">8045.44</td>
+<td style="text-align: right;">+2.67%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td style="text-align: right;">3797.24</td>
+<td style="text-align: right;">-0.43%</td>
+<td style="text-align: right;">461.45</td>
+<td style="text-align: right;">-13.77%</td>
+<td style="text-align: right;">7149.10</td>
+<td style="text-align: right;">-19.54%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td style="text-align: right;">3707.48</td>
+<td style="text-align: right;">-1.59%</td>
+<td style="text-align: right;">510.16</td>
+<td style="text-align: right;">+14.40%</td>
+<td style="text-align: right;">7743.92</td>
+<td style="text-align: right;">+16.89%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td style="text-align: right;">3716.28</td>
+<td style="text-align: right;">+0.24%</td>
+<td style="text-align: right;">472.63</td>
+<td style="text-align: right;">-7.36%</td>
+<td style="text-align: right;">7324.75</td>
+<td style="text-align: right;">-5.41%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td style="text-align: right;">3730.92</td>
+<td style="text-align: right;">+0.39%</td>
+<td style="text-align: right;">417.79</td>
+<td style="text-align: right;">-11.60%</td>
+<td style="text-align: right;">6870.10</td>
+<td style="text-align: right;">-6.21%</td>
+</tr>
+</tbody>
+</table>
+<p>10/15日内低点3674.82、收盘3707.48，存在从低点回升，但全日仍下跌，不能把“探底回升”写成收涨。10/19收涨但上证指数自身成交量/额较10/16均缩小，不能据此声称已满足“指数放量回暖”，两市口径仍需另核。</p>
+<h2>关键股票明确数值</h2>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>股票</th>
+<th>开/高/低/收</th>
+<th style="text-align: right;">较前有效K线收盘涨跌</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-09-24</td>
+<td>金健米业 600127.SH</td>
+<td>16.74 / 17.05 / 15.29 / 16.49</td>
+<td style="text-align: right;">-1.55%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>金健米业 600127.SH</td>
+<td>16.15 / 16.20 / 14.84 / 14.84</td>
+<td style="text-align: right;">-10.01%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>金健米业 600127.SH</td>
+<td>16.42 / 16.70 / 13.82 / 13.90</td>
+<td style="text-align: right;">-8.43%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>金健米业 600127.SH</td>
+<td>14.58 / 14.89 / 13.30 / 13.43</td>
+<td style="text-align: right;">-9.01%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>金健米业 600127.SH</td>
+<td>13.77 / 14.76 / 13.75 / 14.62</td>
+<td style="text-align: right;">+8.86%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>金健米业 600127.SH</td>
+<td>14.00 / 14.35 / 13.16 / 13.16</td>
+<td style="text-align: right;">-9.99%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>国芳集团 601086.SH</td>
+<td>17.20 / 17.88 / 15.32 / 15.32</td>
+<td style="text-align: right;">-9.99%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>国芳集团 601086.SH</td>
+<td>15.16 / 16.25 / 13.81 / 15.85</td>
+<td style="text-align: right;">+3.46%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>国芳集团 601086.SH</td>
+<td>15.30 / 15.53 / 13.45 / 13.45</td>
+<td style="text-align: right;">-9.97%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>国芳集团 601086.SH</td>
+<td>12.20 / 12.68 / 12.06 / 12.11</td>
+<td style="text-align: right;">-3.81%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>国芳集团 601086.SH</td>
+<td>12.29 / 12.68 / 12.09 / 12.14</td>
+<td style="text-align: right;">+0.25%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>国芳集团 601086.SH</td>
+<td>12.14 / 12.26 / 11.37 / 11.75</td>
+<td style="text-align: right;">-3.21%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>哈药股份 600664.SH</td>
+<td>8.65 / 9.08 / 8.14 / 8.14</td>
+<td style="text-align: right;">-9.96%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>哈药股份 600664.SH</td>
+<td>7.70 / 8.00 / 7.33 / 7.33</td>
+<td style="text-align: right;">-9.95%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>哈药股份 600664.SH</td>
+<td>6.65 / 6.65 / 6.65 / 6.65</td>
+<td style="text-align: right;">-10.01%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>哈药股份 600664.SH</td>
+<td>6.05 / 6.50 / 5.99 / 6.19</td>
+<td style="text-align: right;">+0.49%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>哈药股份 600664.SH</td>
+<td>6.26 / 6.77 / 6.19 / 6.32</td>
+<td style="text-align: right;">+2.10%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>哈药股份 600664.SH</td>
+<td>6.14 / 6.21 / 5.76 / 5.95</td>
+<td style="text-align: right;">-5.85%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>九阳股份 002242.SZ</td>
+<td>9.63 / 9.95 / 9.39 / 9.39</td>
+<td style="text-align: right;">-3.79%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>九阳股份 002242.SZ</td>
+<td>9.83 / 10.33 / 9.83 / 10.33</td>
+<td style="text-align: right;">+10.01%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>九阳股份 002242.SZ</td>
+<td>16.64 / 16.64 / 14.85 / 16.64</td>
+<td style="text-align: right;">+9.98%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>九阳股份 002242.SZ</td>
+<td>17.00 / 17.63 / 17.00 / 17.31</td>
+<td style="text-align: right;">-2.15%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>九阳股份 002242.SZ</td>
+<td>16.86 / 17.81 / 16.48 / 17.79</td>
+<td style="text-align: right;">+2.77%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>九阳股份 002242.SZ</td>
+<td>17.62 / 19.57 / 16.10 / 18.69</td>
+<td style="text-align: right;">+5.06%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>时代万恒 600241.SH</td>
+<td>7.27 / 7.35 / 7.20 / 7.31</td>
+<td style="text-align: right;">+0.00%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>时代万恒 600241.SH</td>
+<td>7.30 / 8.04 / 7.28 / 8.04</td>
+<td style="text-align: right;">+9.99%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>时代万恒 600241.SH</td>
+<td>12.48 / 12.94 / 12.13 / 12.94</td>
+<td style="text-align: right;">+10.03%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>时代万恒 600241.SH</td>
+<td>12.57 / 14.08 / 12.17 / 13.99</td>
+<td style="text-align: right;">+5.90%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>时代万恒 600241.SH</td>
+<td>13.43 / 14.19 / 12.65 / 14.15</td>
+<td style="text-align: right;">+1.14%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>时代万恒 600241.SH</td>
+<td>12.75 / 14.80 / 12.74 / 12.74</td>
+<td style="text-align: right;">-9.96%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>万丰奥威 002085.SZ</td>
+<td>9.50 / 9.69 / 9.43 / 9.44</td>
+<td style="text-align: right;">-0.84%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>万丰奥威 002085.SZ</td>
+<td>9.43 / 9.48 / 9.22 / 9.28</td>
+<td style="text-align: right;">-1.69%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>万丰奥威 002085.SZ</td>
+<td>9.28 / 9.41 / 9.21 / 9.27</td>
+<td style="text-align: right;">-0.11%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>万丰奥威 002085.SZ</td>
+<td>9.17 / 9.41 / 8.98 / 9.01</td>
+<td style="text-align: right;">-4.66%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>万丰奥威 002085.SZ</td>
+<td>9.21 / 9.91 / 9.21 / 9.91</td>
+<td style="text-align: right;">+9.99%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>万丰奥威 002085.SZ</td>
+<td>10.89 / 10.90 / 10.62 / 10.90</td>
+<td style="text-align: right;">+9.99%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>保隆科技 603197.SH</td>
+<td>29.30 / 29.75 / 29.08 / 29.36</td>
+<td style="text-align: right;">+0.20%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>保隆科技 603197.SH</td>
+<td>29.45 / 29.60 / 28.93 / 29.06</td>
+<td style="text-align: right;">-1.02%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>保隆科技 603197.SH</td>
+<td>28.49 / 28.79 / 28.26 / 28.38</td>
+<td style="text-align: right;">-0.49%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>保隆科技 603197.SH</td>
+<td>27.02 / 27.40 / 26.50 / 26.72</td>
+<td style="text-align: right;">-4.98%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>保隆科技 603197.SH</td>
+<td>27.28 / 29.39 / 27.28 / 29.39</td>
+<td style="text-align: right;">+9.99%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>保隆科技 603197.SH</td>
+<td>32.33 / 32.33 / 32.33 / 32.33</td>
+<td style="text-align: right;">+10.00%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>阳光乳业 001318.SZ</td>
+<td>11.66 / 11.76 / 11.61 / 11.63</td>
+<td style="text-align: right;">-0.60%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>阳光乳业 001318.SZ</td>
+<td>11.61 / 11.93 / 11.61 / 11.81</td>
+<td style="text-align: right;">+1.55%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>阳光乳业 001318.SZ</td>
+<td>13.09 / 13.20 / 12.65 / 12.75</td>
+<td style="text-align: right;">-5.06%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>阳光乳业 001318.SZ</td>
+<td>16.74 / 16.97 / 16.30 / 16.97</td>
+<td style="text-align: right;">+9.98%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>阳光乳业 001318.SZ</td>
+<td>16.97 / 17.01 / 15.27 / 15.27</td>
+<td style="text-align: right;">-10.02%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>阳光乳业 001318.SZ</td>
+<td>15.20 / 16.58 / 13.74 / 13.74</td>
+<td style="text-align: right;">-10.02%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>百洋股份 002696.SZ</td>
+<td>6.62 / 6.85 / 6.50 / 6.65</td>
+<td style="text-align: right;">+0.91%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>百洋股份 002696.SZ</td>
+<td>6.65 / 6.74 / 5.99 / 6.49</td>
+<td style="text-align: right;">-2.41%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>百洋股份 002696.SZ</td>
+<td>7.70 / 8.05 / 7.69 / 8.05</td>
+<td style="text-align: right;">+9.97%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>百洋股份 002696.SZ</td>
+<td>10.71 / 10.73 / 9.75 / 10.73</td>
+<td style="text-align: right;">+10.05%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>百洋股份 002696.SZ</td>
+<td>10.03 / 10.41 / 9.66 / 9.66</td>
+<td style="text-align: right;">-9.97%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>百洋股份 002696.SZ</td>
+<td>9.08 / 9.96 / 8.69 / 8.69</td>
+<td style="text-align: right;">-10.04%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>华正新材 603186.SH</td>
+<td>228.60 / 231.00 / 212.18 / 213.30</td>
+<td style="text-align: right;">-6.32%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>华正新材 603186.SH</td>
+<td>213.38 / 219.20 / 202.50 / 204.60</td>
+<td style="text-align: right;">-4.08%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>华正新材 603186.SH</td>
+<td>199.46 / 201.00 / 185.81 / 185.81</td>
+<td style="text-align: right;">-10.00%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>华正新材 603186.SH</td>
+<td>195.00 / 201.79 / 190.00 / 190.00</td>
+<td style="text-align: right;">-5.95%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>华正新材 603186.SH</td>
+<td>196.99 / 198.98 / 187.37 / 189.99</td>
+<td style="text-align: right;">-0.01%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>华正新材 603186.SH</td>
+<td>188.90 / 190.90 / 173.58 / 186.74</td>
+<td style="text-align: right;">-1.71%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>新华传媒 600825.SH</td>
+<td>7.77 / 7.77 / 7.77 / 7.77</td>
+<td style="text-align: right;">+10.06%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>新华传媒 600825.SH</td>
+<td>8.55 / 8.55 / 8.55 / 8.55</td>
+<td style="text-align: right;">+10.04%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>新华传媒 600825.SH</td>
+<td>13.78 / 13.78 / 13.78 / 13.78</td>
+<td style="text-align: right;">+9.98%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>新华传媒 600825.SH</td>
+<td>15.16 / 15.16 / 15.16 / 15.16</td>
+<td style="text-align: right;">+10.01%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>新华传媒 600825.SH</td>
+<td>15.00 / 15.78 / 14.13 / 15.58</td>
+<td style="text-align: right;">+2.77%</td>
+</tr>
+<tr>
+<td>2026-09-24</td>
+<td>新华文轩 601811.SH</td>
+<td>20.35 / 20.35 / 19.93 / 20.35</td>
+<td style="text-align: right;">+10.00%</td>
+</tr>
+<tr>
+<td>2026-09-28</td>
+<td>新华文轩 601811.SH</td>
+<td>22.00 / 22.39 / 18.33 / 18.52</td>
+<td style="text-align: right;">-8.99%</td>
+</tr>
+<tr>
+<td>2026-10-12</td>
+<td>新华文轩 601811.SH</td>
+<td>21.36 / 23.00 / 20.70 / 23.00</td>
+<td style="text-align: right;">+10.00%</td>
+</tr>
+<tr>
+<td>2026-10-15</td>
+<td>新华文轩 601811.SH</td>
+<td>22.73 / 25.58 / 22.63 / 25.58</td>
+<td style="text-align: right;">+10.02%</td>
+</tr>
+<tr>
+<td>2026-10-16</td>
+<td>新华文轩 601811.SH</td>
+<td>26.10 / 28.14 / 24.63 / 28.14</td>
+<td style="text-align: right;">+10.01%</td>
+</tr>
+<tr>
+<td>2026-10-19</td>
+<td>新华文轩 601811.SH</td>
+<td>25.44 / 27.91 / 25.33 / 25.33</td>
+<td style="text-align: right;">-9.99%</td>
+</tr>
+</tbody>
+</table>
+<h2>可验证事实与未验证条件</h2>
+<ul>
+<li>9/24金健高17.05、收16.49，国芳/哈药分别收跌9.99%/9.96%；9/28九阳与时代均首板，随后连续6板到10/12。支持“旧核心负反馈后出现低位新领涨”的个案时间关系，未证明完整因果或可预测性。</li>
+<li>10/12九阳开16.64/低14.85/收16.64，时代开12.48/低12.13/收12.94，日内有波动后收板；日线无法核验分时反复卡位、买盘主动性与换手承接质量。</li>
+<li>10/19时代跌停-9.97%，九阳+5.06%，即使同日启动、同样六连板也不能保证同时穿越。阳光/百洋10/16和10/19连续跌停，符合风险条件被触发的价格事实。</li>
+<li>10/16万丰首板09:44、保隆首板09:30，10/19均晋级二板；保隆10/19整日一字，不能按32.33假设所有人可买；万丰10/19开10.89/收10.90，后续持有结果尚未来。</li>
+<li>华正新材10/19收186.74、跌1.71%，不是涨停。</li>
+<li>首封时间只适合比较同组主动性，不能强设“09:40前”硬门槛：九阳09:31、时代10:08均六板；最早的博纳影业09:25当天首板却未连续晋级；善水13:47后续三板。封单大小、封板时间也不是充分条件。</li>
+<li>板块跟随、盘中弱转强、异动监管和两市放量确认不在本次日线完整验证范围。没有为这些条件编造阈值。</li>
+</ul>
+<h2>对旧回测数字的审计</h2>
+<p>旧《节点规则回测验证》的+3.00%、旧《全市场终版》的+1.83%使用信号日收盘入场，后续已修正；-0.21%/-0.56pp只是历史文档结论，本次未找到其5221只原始baostock目录，未重新复现。当前 scripts/rules.py 的 nodemark 定义为“任意≥3连板股断板日的首/二板”，不等于昨日真实龙头或作者的整套节点判定。不能拿它直接否定本次完整条件。</p>
+<p>另有可复现代码窗口问题：ashare_backtest.net_return(entry="next",hold=3)用ei=i+1、si=ei+hold，实际退出T+4，而market_return(3)用T至T+3收盘，时间错位；日线推导也未严格处理ST、停复牌、涨跌停价及可成交性。本次没有沿用旧脚本收益。</p>
+<p>新华传媒代码为600825（002264新华都是连通性探针，未纳入任何对照）。新华传媒10/13—15无K线及涨停池记录属于停牌，不得判作断板；10/16复牌11板。文轩为新华文轩601811：9/24五板、9/28断板-8.99%，和新华传媒不同。停牌公告由主任务另核： https://static.cninfo.com.cn/finalpage/2026-10-16/1225607741.PDF 。</p>
+<h2>复现与检查</h2>
+<p>运行 fetch_validation_data.py、validate_cohorts.py、build_validation_report.py。原始行情 prices/、涨停池 pools/、完整逐票结果 candidate_outcomes.csv、汇总 cohort_stats.json、指数表 index_evidence.csv、案例表 case_evidence.csv 均在此目录。仅该分析目录有写入，不修改采集状态、历史成功边界、安装缓存或共享插件。</p>
+<p>数据检查通过：175份个股价格响应、16日全量涨停池；OHLC区间关系、日期唯一、无10/19之后价格、池记录ID去重、31/29候选分母、九阳/时代六板与时代次日一字均核对。检查时间：2026-10-19T18:44:39.676907+08:00。</p>

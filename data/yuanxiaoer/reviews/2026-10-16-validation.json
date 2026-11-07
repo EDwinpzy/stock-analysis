@@ -1,0 +1,23 @@
+{
+  "validated_at": "2026-10-16T09:08:16.131965+08:00",
+  "collection_checked_at": "2026-10-16T08:55:13.230624+08:00",
+  "status": "partial_due_to_images",
+  "feed_pages": 23,
+  "feed_topics": 228,
+  "reviewed_main_posts": 2,
+  "reviewed_replies": 315,
+  "image_count": 33,
+  "readable_images": 30,
+  "unresolved_images": 3,
+  "id_hash_source_validation": "passed",
+  "pending_queue_regeneration": "matches_unchanged_state",
+  "state_unchanged": true,
+  "latest_complete_report_unchanged": true,
+  "last_successful_distillation": "2026-10-09T01:39:43.134329+08:00",
+  "remaining_pending_threads": 3,
+  "capture_tests": {
+    "passed": 17,
+    "failed": 0
+  },
+  "visual_verification": "passed: browser screenshot and rendered content inspected"
+}

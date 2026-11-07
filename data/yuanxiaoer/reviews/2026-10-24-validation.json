@@ -1,0 +1,55 @@
+{
+  "validated_at": "2026-10-24T23:17:57.837990+08:00",
+  "status": "checks_passed_distillation_partial",
+  "collection_checked_at": "2026-10-24T22:59:29.140008+08:00",
+  "feed_pages": 24,
+  "feed_topics": 231,
+  "collection_errors": [],
+  "new_main_posts": 2,
+  "new_author_replies_reviewed": 310,
+  "prior_pending_reply_hash_matches": 517,
+  "total_pending_text_covered": 827,
+  "unmatched_pending_text": [],
+  "state_and_latest_unchanged": {
+    "latest.md": "76dd1ce2b062fe86188537c1ae7966179873ee13acc8a8e85e4a81be1eb7abf9",
+    "distillation_state.json": "11421f5fd117f17a8590c41626d7c1eca1f658a2602175e70ccc1e27b216b5a6"
+  },
+  "pending_regenerated_matches": true,
+  "local_report_links_valid": true,
+  "image_review_file": "reviews/2026-10-24-images.json",
+  "image_review_status": "partial_new_images_reviewed_with_limits",
+  "tests": {
+    "command": "python -X utf8 -m unittest tests.test_yuanxiaoer_capture -v",
+    "passed": 17,
+    "failed": 0
+  },
+  "scope": "仅项目语料归档与审查；未修改代码、安装缓存、发布包或历史回测。",
+  "image_validation": {
+    "new_unique_attachments_reviewed": 50,
+    "source_url_sets_match": true,
+    "local_byte_hash_matches": 50,
+    "fresh_remote_hash_matches_reported": 50,
+    "new_partial_unreadable_images": 4,
+    "prior_unresolved_preserved": 6,
+    "total_unresolved_images": 10,
+    "prior_unresolved_source": "reviews/2026-10-21-images.json",
+    "all_unresolved_urls_remain_pending": true
+  },
+  "visual_verification": {
+    "viewports": [
+      1180,
+      390
+    ],
+    "page_overflow": false,
+    "desktop_full_page_and_mobile_top_visually_checked": true,
+    "screenshots": "reviews/2026-10-24-preview/"
+  },
+  "final_artifacts_sha256": {
+    "distillations/2026-10-24.md": "fc38e0e01dd9e9219ad2ab864c6701cfac63cc60aed5a28c537a37600525d0f4",
+    "latest_attempt.md": "a0f824bef04d01c74a38cbf4df67a9a16b9157fb2d54b994307f5213d556fe0e",
+    "reviews/2026-10-24-images.json": "c457ff8b944c100f1821b9f197ac2da6ff6040e617d6944b0573a6db8de372d9",
+    "reviews/2026-10-24-oct21-text.json": "34438b87f01a5965bf6adc0c5febeaa1b3f2787ed0b9fd595e6a6e55d5496911",
+    "reviews/2026-10-24-other-text.json": "580181591c448497de6acfd815a393f27597293814027046a71587c72a631721",
+    "reviews/2026-10-24-source-index.json": "5fbc154b2da058e214234510788384199ce5f76b2487298768b09b13f74aeca5"
+  }
+}

@@ -1,0 +1,283 @@
+{
+  "ok": true,
+  "command": "market.history",
+  "data": {
+    "item": [
+      {
+        "date_ms": 1788192000000,
+        "volume": 13432406,
+        "turnover": 113124754.82,
+        "open_price": 8.34,
+        "high_price": 8.51,
+        "low_price": 8.32,
+        "close_price": 8.44
+      },
+      {
+        "date_ms": 1788278400000,
+        "volume": 12023001,
+        "turnover": 98788717.17,
+        "open_price": 8.38,
+        "high_price": 8.38,
+        "low_price": 8.12,
+        "close_price": 8.25
+      },
+      {
+        "date_ms": 1788364800000,
+        "volume": 10690500,
+        "turnover": 87609161,
+        "open_price": 8.26,
+        "high_price": 8.34,
+        "low_price": 8.11,
+        "close_price": 8.13
+      },
+      {
+        "date_ms": 1788451200000,
+        "volume": 11985200,
+        "turnover": 97945765,
+        "open_price": 8.25,
+        "high_price": 8.35,
+        "low_price": 8.01,
+        "close_price": 8.08
+      },
+      {
+        "date_ms": 1788710400000,
+        "volume": 9253000,
+        "turnover": 75130790,
+        "open_price": 8.08,
+        "high_price": 8.2,
+        "low_price": 7.98,
+        "close_price": 8.13
+      },
+      {
+        "date_ms": 1788796800000,
+        "volume": 12689300,
+        "turnover": 103445951,
+        "open_price": 8.2,
+        "high_price": 8.25,
+        "low_price": 8.06,
+        "close_price": 8.18
+      },
+      {
+        "date_ms": 1788883200000,
+        "volume": 8404201,
+        "turnover": 68570116.23,
+        "open_price": 8.16,
+        "high_price": 8.24,
+        "low_price": 8.09,
+        "close_price": 8.18
+      },
+      {
+        "date_ms": 1788969600000,
+        "volume": 10732001,
+        "turnover": 87327939.14,
+        "open_price": 8.13,
+        "high_price": 8.24,
+        "low_price": 8.06,
+        "close_price": 8.09
+      },
+      {
+        "date_ms": 1789056000000,
+        "volume": 12640900,
+        "turnover": 99390865.97,
+        "open_price": 8.02,
+        "high_price": 8.11,
+        "low_price": 7.68,
+        "close_price": 7.86
+      },
+      {
+        "date_ms": 1789315200000,
+        "volume": 13030700,
+        "turnover": 104167800,
+        "open_price": 7.86,
+        "high_price": 8.1,
+        "low_price": 7.71,
+        "close_price": 8.04
+      },
+      {
+        "date_ms": 1789401600000,
+        "volume": 11965001,
+        "turnover": 96317363.13,
+        "open_price": 8.06,
+        "high_price": 8.18,
+        "low_price": 7.92,
+        "close_price": 7.98
+      },
+      {
+        "date_ms": 1789488000000,
+        "volume": 14027500,
+        "turnover": 112788962,
+        "open_price": 7.96,
+        "high_price": 8.17,
+        "low_price": 7.85,
+        "close_price": 8.09
+      },
+      {
+        "date_ms": 1789574400000,
+        "volume": 10354700,
+        "turnover": 82539538,
+        "open_price": 8.15,
+        "high_price": 8.15,
+        "low_price": 7.87,
+        "close_price": 7.95
+      },
+      {
+        "date_ms": 1789660800000,
+        "volume": 9182581,
+        "turnover": 73544225.05,
+        "open_price": 8.04,
+        "high_price": 8.08,
+        "low_price": 7.95,
+        "close_price": 7.99
+      },
+      {
+        "date_ms": 1789920000000,
+        "volume": 11859570,
+        "turnover": 94395473.3,
+        "open_price": 8,
+        "high_price": 8.03,
+        "low_price": 7.9,
+        "close_price": 7.94
+      },
+      {
+        "date_ms": 1790006400000,
+        "volume": 14089909,
+        "turnover": 111823403.55,
+        "open_price": 7.95,
+        "high_price": 8.03,
+        "low_price": 7.86,
+        "close_price": 7.88
+      },
+      {
+        "date_ms": 1790092800000,
+        "volume": 10382501,
+        "turnover": 80696540.78,
+        "open_price": 7.85,
+        "high_price": 7.89,
+        "low_price": 7.72,
+        "close_price": 7.75
+      },
+      {
+        "date_ms": 1790179200000,
+        "volume": 7855800,
+        "turnover": 60670311,
+        "open_price": 7.77,
+        "high_price": 7.82,
+        "low_price": 7.63,
+        "close_price": 7.66
+      },
+      {
+        "date_ms": 1790524800000,
+        "volume": 12611801,
+        "turnover": 94794421.38,
+        "open_price": 7.63,
+        "high_price": 7.65,
+        "low_price": 7.36,
+        "close_price": 7.56
+      },
+      {
+        "date_ms": 1790611200000,
+        "volume": 35782979,
+        "turnover": 288851158.66,
+        "open_price": 7.56,
+        "high_price": 8.32,
+        "low_price": 7.5,
+        "close_price": 8.32
+      },
+      {
+        "date_ms": 1790697600000,
+        "volume": 96526338,
+        "turnover": 827742062.44,
+        "open_price": 8.81,
+        "high_price": 9.07,
+        "low_price": 8.32,
+        "close_price": 8.48
+      },
+      {
+        "date_ms": 1791388800000,
+        "volume": 114852001,
+        "turnover": 1012445571.26,
+        "open_price": 8.24,
+        "high_price": 9.33,
+        "low_price": 8.24,
+        "close_price": 9.18
+      },
+      {
+        "date_ms": 1791475200000,
+        "volume": 95052520,
+        "turnover": 823446232.1,
+        "open_price": 8.85,
+        "high_price": 8.96,
+        "low_price": 8.36,
+        "close_price": 8.73
+      },
+      {
+        "date_ms": 1791734400000,
+        "volume": 74607700,
+        "turnover": 650225665.99,
+        "open_price": 8.59,
+        "high_price": 9.2,
+        "low_price": 8.42,
+        "close_price": 8.45
+      },
+      {
+        "date_ms": 1791820800000,
+        "volume": 66644911,
+        "turnover": 536265100.08,
+        "open_price": 8.18,
+        "high_price": 8.44,
+        "low_price": 7.65,
+        "close_price": 8.2
+      },
+      {
+        "date_ms": 1791907200000,
+        "volume": 90287216,
+        "turnover": 778932803.34,
+        "open_price": 8.3,
+        "high_price": 9.02,
+        "low_price": 8.2,
+        "close_price": 8.4
+      },
+      {
+        "date_ms": 1791993600000,
+        "volume": 63062800,
+        "turnover": 498168152,
+        "open_price": 7.8,
+        "high_price": 8.11,
+        "low_price": 7.69,
+        "close_price": 7.81
+      },
+      {
+        "date_ms": 1792080000000,
+        "volume": 58958548,
+        "turnover": 452440816.91,
+        "open_price": 7.93,
+        "high_price": 7.99,
+        "low_price": 7.38,
+        "close_price": 7.72
+      },
+      {
+        "date_ms": 1792339200000,
+        "volume": 39269000,
+        "turnover": 294026060,
+        "open_price": 7.62,
+        "high_price": 7.71,
+        "low_price": 7.23,
+        "close_price": 7.57
+      }
+    ],
+    "timestamp": 1792339200000,
+    "thscode": "600152.SH",
+    "interval": "1d",
+    "adjust": "none"
+  },
+  "meta": {
+    "source": "remote",
+    "request_id": "bf79ac6c448c4949aeb28da321f1643d",
+    "count": 29,
+    "truncated": false,
+    "schema_version": "1"
+  },
+  "requested_code": "600152.SH",
+  "requested_name": "维科技术",
+  "adjust": "none"
+}

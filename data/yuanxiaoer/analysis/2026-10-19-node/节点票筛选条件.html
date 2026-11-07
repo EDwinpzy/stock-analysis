@@ -1,0 +1,218 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>节点票筛选条件｜2026-10-19</title><style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f3f5f8;color:#202e42;font:16px/1.8 'Microsoft YaHei',sans-serif}main{max-width:1150px;margin:32px auto;background:white;padding:40px 46px;border:1px solid #dce3ec;border-radius:14px}h1{font-size:30px;line-height:1.45;color:#163756}h2{font-size:23px;margin-top:42px;padding-top:16px;border-top:2px solid #e0e7ef}a{color:#155d9c;text-decoration:none}a:hover{text-decoration:underline}p{margin:18px 0}table{width:100%;border-collapse:collapse;margin:24px 0;font-size:14px;line-height:1.65}th{background:#eaf1f8;color:#173958}th,td{padding:11px 10px;border:1px solid #dce3ec;vertical-align:top}tbody tr:nth-child(even){background:#f8fafc}strong{color:#163756}code{background:#edf2f7;padding:3px 5px;word-break:break-word}li{margin:7px 0}nav{display:flex;gap:20px;flex-wrap:wrap;border-bottom:1px solid #dde5ee;padding-bottom:18px}footer{font-size:13px;color:#64748b;margin-top:30px}@media(max-width:800px){main{margin:0;padding:24px 16px;border:0;border-radius:0}h1{font-size:25px}table{font-size:12px}th,td{padding:7px 5px}}@media print{body{background:white}main{border:0;margin:0;max-width:none;padding:0}nav{display:none}h2{break-after:avoid}tr{break-inside:avoid}}
+</style><main><nav><a href="#conditions">筛选条件</a><a href="#validation">完整候选池验证</a><a href="validation/validation_report.md">验证明细</a><a href="validation/candidate_outcomes.csv">下载候选CSV</a></nav><h1 id="_1">圆小二“节点票”：筛选条件与实际数据核验</h1>
+<p><strong>结论：先辨节点性质。高低切节点从低位新方向中找主动走强的股票；首次分歧节点观察原周期内部谁胜出；末期修复节点先防风险。日期、低位、首板，任何一项都不足以成为买点。</strong> 本次数据支持新旧领涨交替的若干案例，也显示“节点日首/二板全买”多数票亏损；尚未验证出一套有稳定超额收益的机械选股公式。</p>
+<p>核验范围：北京时间 <strong>2026年10月18–19日</strong>。作者主帖列表23/23页、229篇，最新主帖《新华之后，抱团何方》发布于10/18 19:25:05；两天共 <strong>1篇主帖、90条本人回复</strong>（18日10条、19日80条，分布在2个线程）。列表与回复采集核验：10/19 <strong>18:37:10</strong>；最新本人回复：<strong>18:10</strong>；行情复核：<strong>18:48:14</strong>，截止19日收盘。</p>
+<p>仅采用圆小二本人（12089754）表述，已借登录浏览器核对引用语境。10张附件逐张查看；两张浪型图小字不清，节点日历20–23日被遮挡，未猜测隐藏内容，未还原未公开的全年节点算法。全部90条审阅记录、来源与哈希见 <a href="source_review.json">source_review.json</a>。</p>
+<p><a id="conditions"></a></p>
+<h2 id="1">1. 可以直接使用的筛选顺序</h2>
+<p>下面是<strong>观察池→待确认→可研究交易</strong>的流程，具体低位候选筛选聚焦高低切型节点。首次分歧可以在原周期内部选强，并非必须另找低位新题材。📖 表示原文归纳而非已验证策略；“研究操作化”是为建立候选池提出的定义，不冒充作者的量化公式。</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>筛选条件</th>
+<th>如何落实</th>
+<th>性质与边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 先判节点性质</td>
+<td>旧周期核心走弱、内部中位股出现负反馈，或主升首次分歧</td>
+<td>分别登记旧核心、旧中位与新低位的价格、涨停/跌停和量额；区分“高低切”“首次分歧选强”“末期修复”</td>
+<td>📖 原文框架。末期修复以风险控制为先，不能一律进攻</td>
+</tr>
+<tr>
+<td>② 建完整低位池</td>
+<td>在分歧当日及紧邻交易日出现的新启动方向</td>
+<td>研究操作化：当天非ST、非新股的首板/二板全部入池；保留失败票，记录首封、题材、同批次身份</td>
+<td>首/二板用于低位情绪票研究，并非作者对所有容量/趋势票的硬性限制</td>
+</tr>
+<tr>
+<td>③ 找主动性</td>
+<td>旧方向分歧时，新方向率先走强并获得承接</td>
+<td>比较同一时段谁先转强、回落能否承接、同题材是否跟随；排除只跟旧核心反抽的中位票</td>
+<td>📖 低位+主动走强是重点；首封时间可参考，未发现可靠的固定时刻阈值</td>
+</tr>
+<tr>
+<td>④ 给股票分角色</td>
+<td>情绪先锋与容量观察标分别跟踪</td>
+<td>本次原文：保隆是情绪观察标，万丰是小容量观察标；看前者的情绪强度，也看后者的资金承接</td>
+<td>📖 角色来自作者当时定位；不能把容量票硬套成连板龙头</td>
+</tr>
+<tr>
+<td>⑤ 等反馈而非直接认定新周期</td>
+<td>新方向持续、旧周期退潮与指数回暖能相互印证</td>
+<td>当日/次日观察板块持续性和核心承接；同步检查指数与量能是否改善</td>
+<td>📖 放量共振是主线判断的重要确认，并非所有节点票首板必须当日放量；9/28上证仍跌1.67%</td>
+</tr>
+<tr>
+<td>⑥ 通过成交与失效检查</td>
+<td>有实际可成交机会，失效时有明确退出条件</td>
+<td>研究中排除次日开盘涨停；停牌不能当断板，不能假设一字板可买。候选转弱/板块不跟随则降级；A股当日新买不能当日卖</td>
+<td>执行约束；具体止损需按形态与买点制定，原文未给所有节点票通用百分比</td>
+</tr>
+</tbody>
+</table>
+<p><strong>高低切观察池公式：周期切换窗口 ∩ 低位新启动 ∩ 主动走强 ∩ 可确认的题材角色。</strong></p>
+<p><strong>进入交易研究还需：后续承接和持续性 + 与指数环境匹配 + 可成交 + 预先写下失效条件。</strong> 这组定性条件目前未被完整机械编码，证据等级为 <strong>📖 仅语料 / 待验证假设</strong>。</p>
+<p>日线筛选可先执行 <code>非ST且非新股 AND 当日连板数∈{1,2}</code>，其余以时间戳记录观察结论；不能把“次日晋级”“最终六板”或未来最高收益放进当天筛选。若使用次日收盘反馈确认，交易模拟必须推迟到再下一交易日；不能用次日收盘选出赢家、再回填次日开盘买入。</p>
+<p><strong>否决或降级：</strong> 纯日历到日即买；仅有个股反抽、没有新方向；旧周期中位跟风；周期衰竭时把修复当主升；仅靠卡异动、公告消息或封单大小；涨停排队无法证实成交。没有公开证据支持把“244”“2万亿”“09:40前封板”设成节点票的普适必选门槛。</p>
+<h2 id="2">2. 他在这两天怎样推理</h2>
+<table>
+<thead>
+<tr>
+<th>时间与来源</th>
+<th>本人表述的含义</th>
+<th>能够提炼的判断</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq">10/18主帖</a></td>
+<td>周期临近尾端；若周一周期龙断板，关注低位分歧中主动走强方向；万丰、保隆先作观察</td>
+<td>先提出条件剧本，先观察候选，未确认已诞生新主线</td>
+</tr>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq/103863577#103863577">10/19 09:27，103863577</a></td>
+<td>新华开板节点，估计巨震，观察为主</td>
+<td>开板可以是风险窗口，不等于进攻指令</td>
+</tr>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq/103868749#103868749">10:31，103868749</a></td>
+<td>高位拥挤；分别推演新华仍能承接、与新华断后群体轮动退两种情景</td>
+<td>先用核心与流动性辨别轮动性质；不能看到盘中拉升就当新机会</td>
+</tr>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq/103870823#103870823">10:56，103870823</a></td>
+<td>卖善水后没新买股票，只做ETF，股票可以等</td>
+<td>作者行为自述是等待，不是节点日满仓；未验证真实成交</td>
+</tr>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq/103881738#103881738">14:58，103881738</a></td>
+<td>以指数和周期构建大框架，留意异常强势能否遇上放量回暖</td>
+<td>把个股主动性与市场环境结合，不单凭图形</td>
+</tr>
+<tr>
+<td><a href="https://www.tgb.cn/a/2vZYBKxSFEq/103883622#103883622">15:21，103883622</a></td>
+<td>用9/24、9/28、10/12、10/15串联退出、接棒、首次分歧、末期修复；承认事后解释</td>
+<td>节点性质由当天和后续反馈确定；盘后解释不证明事前预测有效</td>
+</tr>
+</tbody>
+</table>
+<p>15:21的《10.19圆宝收评》是<strong>回复</strong>，不是第二篇主帖。对“高抛”等简短用语已结合浏览器引文检查：它在讨论平台屏蔽用词，不能当成卖出指令；“你得买上新华”也是与读者互动的调侃。18:09的代词指PCB，不能误认为ETF或银行。</p>
+<p>女娲方法提炼出的思维链是：<strong>先分周期位置→列互斥剧本→看价格与承接反馈→选择角色→条件失效则等待/退出</strong>。这是本次观察到的推理方法，尚不是可稳定复制的预测模型。</p>
+<p><a id="validation"></a></p>
+<h2 id="3">3. 实际数据验证：完整候选池也包含大量失败票</h2>
+<p>数据来自同花顺 <code>hithink-finance</code>：16个交易日全量涨停池、175份个股日K响应。四个信号日共186条候选记录，保留原始数据与脚本。以下为<strong>人工选日的描述性核验</strong>，未证明因果、未做独立周期显著性检验。</p>
+<p>统一口径：T日收盘信号，T+1开盘参考价买入，T+3/5/10收盘参考价退出（按T后的市场交易日计，包含入场日）。排ST、新股及T+1开盘涨停；每笔10万元，佣金双边0.025%且最低5元、过户费双边0.001%、卖出印花税0.05%。未计滑点和实际排队约束，因此“净收益”是<strong>含上述费用的参考情景</strong>，并非真实成交。</p>
+<table>
+<thead>
+<tr>
+<th>信号日</th>
+<th style="text-align: right;">首/二板完整分母</th>
+<th style="text-align: right;">参考收益样本数</th>
+<th style="text-align: right;">T+3净均值</th>
+<th style="text-align: right;">T+5净均值</th>
+<th style="text-align: right;">T+5中位数</th>
+<th style="text-align: right;">T+5胜率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9/24</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">-4.12%</td>
+<td style="text-align: right;">-5.48%</td>
+<td style="text-align: right;">-5.86%</td>
+<td style="text-align: right;">23.8%</td>
+</tr>
+<tr>
+<td>9/28</td>
+<td style="text-align: right;">31；排ST后29</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">+2.05%</td>
+<td style="text-align: right;">+2.13%</td>
+<td style="text-align: right;">-4.32%</td>
+<td style="text-align: right;">30.8%</td>
+</tr>
+<tr>
+<td>9/29</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">45¹</td>
+<td style="text-align: right;">+1.18%</td>
+<td style="text-align: right;">+1.04%</td>
+<td style="text-align: right;">-2.57%</td>
+<td style="text-align: right;">44.4%</td>
+</tr>
+<tr>
+<td>10/16</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">尚未形成持有期样本</td>
+<td style="text-align: right;">未到期</td>
+<td style="text-align: right;">未到期</td>
+<td style="text-align: right;">未到期</td>
+<td style="text-align: right;">未到期</td>
+</tr>
+</tbody>
+</table>
+<p>¹ 9/29排开盘涨停后46只，路畅科技缺少次日开盘，收益分母45只，未补猜价格。10/16排开盘涨停后49只，但截至10/19只有首个入场日，不能拿当日价差当可兑现收益。</p>
+<p><strong>9/28：29只非ST候选中，8只次日涨停，5只本段连板达到3板，达到6板的只有九阳、时代两只（2/29）。</strong> 这只能描述事后结果，不能证明当天已能选中这两只。更严格的26只可研究样本，T+5有18只亏损；T+10净均值-1.77%、中位数-8.49%。</p>
+<table>
+<thead>
+<tr>
+<th>案例</th>
+<th>实际价格/结果</th>
+<th>对筛选条件的检验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>九阳股份002242</td>
+<td>9/28首板；9/29开11.05，10/12收16.64，T+5净+50.43%</td>
+<td>有成功接棒案例，但这是完整分母里的少数赢家</td>
+</tr>
+<tr>
+<td>时代万恒600241</td>
+<td>9/28首板；9/29整日一字8.84，后来六板</td>
+<td>有持续性，不能把不可保证买到的一字票收益算进可交易样本</td>
+</tr>
+<tr>
+<td>善水科技301190</td>
+<td>9/28首封13:47；9/29开26，10/12收48.45，T+5净+86.16%</td>
+<td>晚封也能走强，均值被少数极端正收益抬高；20cm与10cm票不能直接比较板数强弱</td>
+</tr>
+<tr>
+<td>巨力/江淮/跨境通/会稽山</td>
+<td>同在9/28候选池，T+5净分别-17.98%/-14.26%/-12.68%/-12.59%</td>
+<td>“同日低位涨停”不足以筛出节点龙；早封也非充分条件</td>
+</tr>
+<tr>
+<td>万丰奥威002085</td>
+<td>10/16首板，10/19二板；19日开10.89、收10.90</td>
+<td>⚠️ 初步支持观察方向获得后续反馈；次日高开已反映预期，后续收益尚未验证</td>
+</tr>
+<tr>
+<td>保隆科技603197</td>
+<td>10/16首板，10/19整日一字32.33</td>
+<td>⚠️ 支持情绪观察角色与“可能无参与机会”的判断，不等于可成交盈利</td>
+</tr>
+</tbody>
+</table>
+<p>9/28上证跌1.67%；10/19上证涨0.39%，但该指数成交额较16日<strong>下降6.21%</strong>。所以不能把19日写成已经确认“放量共振”的新主线日；这里仅为上证口径，未冒充两市量能。原文10:31所说盘中边际放量，也不能替代收盘结果。</p>
+<p>10/19时代收跌9.96%，九阳却涨5.06%，说明同批次核心也会分化；阳光、百洋连续两个交易日跌停，支持旧中位负反馈的风险描述。但18日假设的“周一一字按死”并未按字面发生，两只19日均有日内波动，必须区分风险方向与精确剧本。</p>
+<h2 id="4">4. 核对出的定义差异与边界</h2>
+<p><strong>9/24不能直接编码成“新华传媒断板日”。</strong> 18日主帖末段将924称为新华、文轩的“单波断”；19日收评又以金健、国芳、哈药的退出解释该节点。实际9/24新华传媒仍四板、新华文轩五板；9/28文轩断板，新华传媒继续连板。按字面理解，前一表述与逐日行情不吻合，原文没有解释“单波断”的另一种定义，须保留为待解释差异，不能替作者拼成统一规则。作者周期归组也不能直接当成交易所连续涨停数。</p>
+<p>“新华”在本次指<strong>新华传媒600825</strong>；“文轩”是新华文轩601811。新华传媒10/13–15为停牌，16日复牌11板；缺K线不属于断板。见<a href="https://static.cninfo.com.cn/finalpage/2026-10-16/1225607741.PDF">公司停复牌公告</a>。作者称16日为周期第9天，是他的周期锚点，不等于第9个涨停。</p>
+<p><strong>244单独处理。</strong> 18日19:45回复103855366明确说自己现在几乎不用244，并区分突破与未萌的失效条件。旧帖里对读者244筛选的肯定，不能变成“所有节点票必须符合244”。本次没有用均线形态替代周期确认，也没有验证244收益。</p>
+<p>历史插件对“节点标作为买点”列出-0.21%、超额-0.56pp，本次没有覆盖或升级它的标签。但当前旧代码将节点代理为“任意≥3板股断板”，与作者整套周期定义不同，且发现旧收益/基准持有窗口错位；原始全市场数据未能复现，因此该旧数值不能直接代表本次完整方法。完整审计见<a href="validation/validation_report.md">验证报告</a>。</p>
+<p>尚缺：事前固定的节点识别算法、独立多周期样本、盘中主动承接/板块联动验证、滑点与涨跌停成交模拟、同口径市场/行业基准。短期未复权价格也未独立核验除权除息影响。<strong>可交付的是一套有出处的筛选流程和反例检验；暂不能宣称已筛出稳定赚钱公式。</strong></p>
+<h2 id="5">5. 证据文件与状态</h2>
+<ul>
+<li><a href="source_review.json">两天原文与逐条审阅记录</a>：1篇主帖、90条本人跟帖、10张图及哈希。</li>
+<li><a href="validation/validation_report.md">完整数据验证报告</a>：9/28全部29只非ST候选、失败案例、指数/个股数值、成本与缺失说明。</li>
+<li><a href="validation/candidate_outcomes.csv">186条候选结果CSV</a>、<a href="validation/">原始行情与涨停池</a>、<a href="image_manifest.json">图像清单</a>：支持复核和复现。</li>
+</ul>
+<p>本次结果保存在项目分析目录，未修改安装缓存或发布插件；历史待处理队列与全库成功边界仍保留，<code>latest.md</code>及<code>distillation_state.json</code>未推进。当前专题覆盖完成不代表历史所有帖子、低清/遮挡图片均已完成蒸馏。</p><footer>公开语料与截至2026-10-19收盘的参考价格研究 · 生成于本地项目</footer></main></html>

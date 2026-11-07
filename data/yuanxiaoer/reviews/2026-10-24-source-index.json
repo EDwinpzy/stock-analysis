@@ -1,0 +1,554 @@
+{
+  "checked_at": "2026-10-24T23:00:42.154319+08:00",
+  "author_id": 12089754,
+  "feed_pages": 24,
+  "feed_topics": 231,
+  "installed_index_id_hits": 191,
+  "not_in_installed_index": 40,
+  "classification_counts": {
+    "旧语料提及、尚无单篇记录": 11,
+    "无法判定": 25,
+    "已逐篇收录于项目增量库": 2,
+    "新发现": 2
+  },
+  "scope": "项目增量来源索引，保留安装包不变；非整体成功状态。历史映射缺口不等于从未读过。",
+  "items": [
+    {
+      "id": "2w9IMFgvOXY",
+      "title": "此刻荣光，正当其时",
+      "date": "2026-10-24 16:19:42",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2w9IMFgvOXY",
+      "classification": "新发现",
+      "status": "text_reviewed_images_reviewed_with_unresolved_limits",
+      "author_id": 12089754,
+      "body_sha256": "3bccf83c074f2fff39656796b614a6b034ff3b6a3952bceeff37631780303fba",
+      "report": "distillations/2026-10-24.md",
+      "images_review": "reviews/2026-10-24-images.json"
+    },
+    {
+      "id": "2w4D49x1a3b",
+      "title": "圆始圆终，皆为周期",
+      "date": "2026-10-21 14:41:40",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2w4D49x1a3b",
+      "classification": "新发现",
+      "status": "text_reviewed_images_reviewed_with_unresolved_limits",
+      "author_id": 12089754,
+      "body_sha256": "8e9236f4e34e5ccbae8759c62a6488ddf30b147b829c7be5322c0b4490b63127",
+      "report": "distillations/2026-10-24.md",
+      "images_review": "reviews/2026-10-24-images.json"
+    },
+    {
+      "id": "2vZYBKxSFEq",
+      "title": "新华之后，抱团何方",
+      "date": "2026-10-18 19:25:05",
+      "project_record_mentions": true,
+      "source": "https://m.tgb.cn/a/2vZYBKxSFEq",
+      "classification": "已逐篇收录于项目增量库",
+      "status": "prior_partial_review_preserved"
+    },
+    {
+      "id": "2vTaemOb3Ig",
+      "title": "[红包]心中无码，手中有道",
+      "date": "2026-10-14 16:54:29",
+      "project_record_mentions": true,
+      "source": "https://m.tgb.cn/a/2vTaemOb3Ig",
+      "classification": "已逐篇收录于项目增量库",
+      "status": "prior_partial_review_preserved"
+    },
+    {
+      "id": "2uymVwK54lX",
+      "title": "双冰回暖，月末寻向",
+      "date": "2026-08-25 19:40:53",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2uymVwK54lX",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 113,
+          "match": "exact_id",
+          "excerpt": "| 13f 缩量轮动/抱团 | 2026-08-01 ~ 09-25 | 老抱团与科技拉锯，缩量 | \"抱团未散，科技待变\"（`2vfgpZhSoHW`）；\"月末定调，九月换挡\"（`2uGGrkUkB1R`）；\"放量割裂，缩圈加速\"（`2s5IPxHoihY`，2026-05-25 为同名早前帖，此处引用 8 月同类表述\"缩量寻向\"\"左侧试错\"——见 `2uymVwK54lX`、`2uBJvs6KDYI`） | `2uGGrkUkB1R"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 114,
+          "match": "exact_id",
+          "excerpt": "| 13g 创新药抱团接棒 | 2026-07-21 ~ 09-25 | **创新药/医药**从\"科技调整期反向避险\"升级为独立抱团主线（哈药/百花/圣阳/康龙/誉衡/汉森） | 7/21\"从反指走向顺势…这条线暂时还没有结束\"（`2tC1UrTdkw1`）；8/25\"创新药越来越像前面商业航天走过的路径…现在已经算第三轮强化\"（`2uymVwK54lX`）；8/27 哈药被资金重新反推成总龙（`2uBJvs6KDYI`） | `2tC"
+        }
+      ]
+    },
+    {
+      "id": "2ulbwdaWQ3n",
+      "title": "高温再临，临界将至",
+      "date": "2026-08-17 21:02:22",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2ulbwdaWQ3n",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2uewoYN9VF1",
+      "title": "逼近四千，保持清醒",
+      "date": "2026-08-13 20:41:22",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2uewoYN9VF1",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2tZEQYQwFFd",
+      "title": "趋势未明，试错先行",
+      "date": "2026-08-04 21:45:33",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2tZEQYQwFFd",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2ty0qvSw24Z",
+      "title": "这些年，我经历过的恐慌（深夜长文）",
+      "date": "2026-07-19 05:54:29",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2ty0qvSw24Z",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2t6K6RLURul",
+      "title": "量化时代，节奏为王",
+      "date": "2026-07-02 19:40:48",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2t6K6RLURul",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "圆小二交易体系V2.0.md",
+          "line": 185,
+          "match": "title_only",
+          "excerpt": "出处：**2iGHT2PRGcw｜《退潮期连续负反馈，谁能穿越成新龙？》**和多篇早盘复盘将“核心低吸、等回流”作为有前提的试错。**2s7m80SdPGs｜《量化时代，节奏为王》**：“趋势……上升趋势转为下跌趋势，先止跌，再横盘，再选择方向，所以别一看到跌就想着抄底。”**2scMPFXSipx｜《主线抱团，周期真相》**将主升首次分歧视为机会，但强调要看板块与指数是否结束。"
+        },
+        {
+          "asset": "research/圆小二交易体系V2.0.md",
+          "line": 185,
+          "match": "title_only",
+          "excerpt": "出处：**2iGHT2PRGcw｜《退潮期连续负反馈，谁能穿越成新龙？》**和多篇早盘复盘将“核心低吸、等回流”作为有前提的试错。**2s7m80SdPGs｜《量化时代，节奏为王》**：“趋势……上升趋势转为下跌趋势，先止跌，再横盘，再选择方向，所以别一看到跌就想着抄底。”**2scMPFXSipx｜《主线抱团，周期真相》**将主升首次分歧视为机会，但强调要看板块与指数是否结束。"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 96,
+          "match": "exact_id",
+          "excerpt": "- **海外链（2026-07-02）**：明确\"海外链已经进入退潮，后面就不用再硬看了\"（`2t6K6RLURul`）。"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 97,
+          "match": "exact_id",
+          "excerpt": "- **光纤/PCB（2026-07）**：6 月加速后\"光纤，现在板块都快走到破位边缘\"（`2t6K6RLURul`）；\"当前盘面已经进入多细分共振衰减阶段\"（`2tdouDHFR9v`）。"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 140,
+          "match": "exact_id",
+          "excerpt": "| 2026-07-02 | `2t6K6RLURul` | 海外链退潮 | \"海外链已经进入退潮，后面就不用再硬看了\" | 短线定性退潮 |"
+        }
+      ]
+    },
+    {
+      "id": "2sTgKkI9Wfg",
+      "title": "饭已喂到，看你选择",
+      "date": "2026-06-24 16:51:01",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2sTgKkI9Wfg",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2sRZC6222kE",
+      "title": "科技分歧，金融借光",
+      "date": "2026-06-23 22:23:40",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2sRZC6222kE",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2sQbwl46AEy",
+      "title": "圆来如此，强弱有度",
+      "date": "2026-06-22 20:15:05",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2sQbwl46AEy",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 230,
+          "match": "exact_id",
+          "excerpt": "| **临界月末，不接加速** | 他 6 月下旬起的固定纪律 | \"这里继续维持早盘的八字箴言——【临界月末，不接加速】\"（`2sQbwl46AEy`，2026-06-22） |"
+        }
+      ]
+    },
+    {
+      "id": "2skHrc5Rxug",
+      "title": "[红包]站在光里，躲进电里",
+      "date": "2026-06-03 20:58:20",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2skHrc5Rxug",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2s7m80SdPGs",
+      "title": "量化时代，节奏为王",
+      "date": "2026-05-26 20:01:16",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2s7m80SdPGs",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "圆小二交易体系V2.0.md",
+          "line": 185,
+          "match": "exact_id",
+          "excerpt": "出处：**2iGHT2PRGcw｜《退潮期连续负反馈，谁能穿越成新龙？》**和多篇早盘复盘将“核心低吸、等回流”作为有前提的试错。**2s7m80SdPGs｜《量化时代，节奏为王》**：“趋势……上升趋势转为下跌趋势，先止跌，再横盘，再选择方向，所以别一看到跌就想着抄底。”**2scMPFXSipx｜《主线抱团，周期真相》**将主升首次分歧视为机会，但强调要看板块与指数是否结束。"
+        },
+        {
+          "asset": "research/圆小二交易体系V2.0.md",
+          "line": 185,
+          "match": "exact_id",
+          "excerpt": "出处：**2iGHT2PRGcw｜《退潮期连续负反馈，谁能穿越成新龙？》**和多篇早盘复盘将“核心低吸、等回流”作为有前提的试错。**2s7m80SdPGs｜《量化时代，节奏为王》**：“趋势……上升趋势转为下跌趋势，先止跌，再横盘，再选择方向，所以别一看到跌就想着抄底。”**2scMPFXSipx｜《主线抱团，周期真相》**将主升首次分歧视为机会，但强调要看板块与指数是否结束。"
+        }
+      ]
+    },
+    {
+      "id": "2s5IPxHoihY",
+      "title": "[红包]放量割裂，缩圈加速",
+      "date": "2026-05-25 20:23:44",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2s5IPxHoihY",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 113,
+          "match": "exact_id",
+          "excerpt": "| 13f 缩量轮动/抱团 | 2026-08-01 ~ 09-25 | 老抱团与科技拉锯，缩量 | \"抱团未散，科技待变\"（`2vfgpZhSoHW`）；\"月末定调，九月换挡\"（`2uGGrkUkB1R`）；\"放量割裂，缩圈加速\"（`2s5IPxHoihY`，2026-05-25 为同名早前帖，此处引用 8 月同类表述\"缩量寻向\"\"左侧试错\"——见 `2uymVwK54lX`、`2uBJvs6KDYI`） | `2uGGrkUkB1R"
+        }
+      ]
+    },
+    {
+      "id": "2rYRaq0mXX8",
+      "title": "大局预判，沙溢感知",
+      "date": "2026-05-21 17:07:10",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2rYRaq0mXX8",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 139,
+          "match": "exact_id",
+          "excerpt": "| 2026-05-21 | `2rYRaq0mXX8` | 一九行情示警 | \"行情一九化，先进制程模仿前期光通信进入到极速拥挤路段\"；\"指数没崩你账户先崩\" | 极致拥挤 |"
+        }
+      ]
+    },
+    {
+      "id": "2rNmzAsrZWb",
+      "title": "[红包]补涨尽头&nbsp;冰点未至（明晚8点直播）",
+      "date": "2026-05-14 18:55:23",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2rNmzAsrZWb",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2rLMi8tUEK8",
+      "title": "[红包]人人低吸，才最危险",
+      "date": "2026-05-13 20:00:04",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2rLMi8tUEK8",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "圆小二交易体系V2.0.md",
+          "line": 9,
+          "match": "exact_id",
+          "excerpt": "“低吸 96 vs 打板 20”不适用于上述主贴词面统计：在当前文件中，低吸是 85 篇/134 处，打板是 20 篇/27 处。96 若来自买入事件抽取，则需要经过逐条人工标注后才能当作事件数；这份规则稿不把它当成已核实结论。低吸主题的反复强调可由 2mWPEi0IVDd 的“从我开始在淘股吧写文开始，就没有讲过让你们追高的，全部都是低吸行为”以及 2rLMi8tUEK8 的分类表述交叉验证。"
+        },
+        {
+          "asset": "research/圆小二交易体系V2.0.md",
+          "line": 9,
+          "match": "exact_id",
+          "excerpt": "“低吸 96 vs 打板 20”不适用于上述主贴词面统计：在当前文件中，低吸是 85 篇/134 处，打板是 20 篇/27 处。96 若来自买入事件抽取，则需要经过逐条人工标注后才能当作事件数；这份规则稿不把它当成已核实结论。低吸主题的反复强调可由 2mWPEi0IVDd 的“从我开始在淘股吧写文开始，就没有讲过让你们追高的，全部都是低吸行为”以及 2rLMi8tUEK8 的分类表述交叉验证。"
+        }
+      ]
+    },
+    {
+      "id": "2rqtu7zMwsh",
+      "title": "[红包]观山悟市，量化知行",
+      "date": "2026-04-30 23:57:10",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2rqtu7zMwsh",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 71,
+          "match": "exact_id",
+          "excerpt": "  - 同帖他还给出\"先进制程/科技\"贯穿全年的一句总结，并自称\"开年就讲过很多遍\"（\"先进制程我从开年就讲过很多很多很多遍了..算了\"见 tid `2rqtu7zMwsh`，2026-04-30）。"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 204,
+          "match": "exact_id",
+          "excerpt": "12. **2026-04-30 `2rqtu7zMwsh`——承认\"先进制程我从开年就讲过很多遍\"，但要接受震荡**"
+        }
+      ]
+    },
+    {
+      "id": "2rlfwLnDb0a",
+      "title": "[红包]前瞻华强，量化双连",
+      "date": "2026-04-27 20:23:50",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2rlfwLnDb0a",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2r4H5WpH2rj",
+      "title": "[红包]圣阳七板平津，量化搅乱人心",
+      "date": "2026-04-17 21:00:18",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2r4H5WpH2rj",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2qWzVtTv8mH",
+      "title": "川普去清海雷了，A股的坑谁来填？",
+      "date": "2026-04-12 23:39:08",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2qWzVtTv8mH",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2qL3lkuXIqo",
+      "title": "【圆辅导.研究生课程】下跌时为自己加一层保护色（如何更好的对冲风险）",
+      "date": "2026-04-06 00:59:31",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2qL3lkuXIqo",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2qcfy42SfVf",
+      "title": "[红包]悲观者正确，乐观者前行（预言未来的黄金买点）",
+      "date": "2026-03-16 01:44:07",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2qcfy42SfVf",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2pJIaT65vJ3",
+      "title": "[红包]圆宝评论区有黄金屋（已开全年视角）",
+      "date": "2026-02-26 21:04:08",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pJIaT65vJ3",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2pHcXEtQnVW",
+      "title": "2.25圆宝早盘：量化点兵，越算越精",
+      "date": "2026-02-25 08:52:08",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pHcXEtQnVW",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2pEtQXnM0tt",
+      "title": "[红包]开年定局，马年首枪谁执牛耳？（AI应用.机器人.算力.先进制程）",
+      "date": "2026-02-23 17:25:42",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pEtQXnM0tt",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 56,
+          "match": "exact_id",
+          "excerpt": "| 12 | 2026-01-01 ~ 2026-02-28 | **商业航天为主 + 科技/机器人/算力多线**（春信预埋、太空光伏） | 1 月\"高潮泼水、冰点给信心\"；2 月\"节前佛系\"；年初定调 AI应用/机器人/算力/先进制程 | 机器人遭\"天牢\"；黄毛地缘风暴；太空光伏定调 | `2oql1fpy4fD`《市场上只有两种票，一种是商业航天，另外一种也是商业航天》、`2oRmhkzZvLS`《解码太空光伏的前世今生…》、`2p"
+        }
+      ]
+    },
+    {
+      "id": "2pspCQK24b5",
+      "title": "[红包]圆宝贺新春，兄弟共长虹！（新春福利来了）",
+      "date": "2026-02-16 10:55:17",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pspCQK24b5",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2pmNdsK4Djx",
+      "title": "[红包]2.13圆宝早盘：春信预埋，鸿运当开！（春节粉丝福利，必看）",
+      "date": "2026-02-13 01:39:46",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pmNdsK4Djx",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2pfJDKVUt1J",
+      "title": "[红包][投票]深度剖析量化本质，看透规则迭代与市场适应性",
+      "date": "2026-02-08 19:36:29",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2pfJDKVUt1J",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2p7v0BkCicr",
+      "title": "[红包]怕输？怕输就回家找妈妈炒碗鸡蛋饭吃",
+      "date": "2026-02-03 20:30:53",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2p7v0BkCicr",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2oRmhkzZvLS",
+      "title": "[红包]解码太空光伏的前世今生，老黄落地定调下周风口",
+      "date": "2026-01-25 03:07:02",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2oRmhkzZvLS",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 56,
+          "match": "exact_id",
+          "excerpt": "| 12 | 2026-01-01 ~ 2026-02-28 | **商业航天为主 + 科技/机器人/算力多线**（春信预埋、太空光伏） | 1 月\"高潮泼水、冰点给信心\"；2 月\"节前佛系\"；年初定调 AI应用/机器人/算力/先进制程 | 机器人遭\"天牢\"；黄毛地缘风暴；太空光伏定调 | `2oql1fpy4fD`《市场上只有两种票，一种是商业航天，另外一种也是商业航天》、`2oRmhkzZvLS`《解码太空光伏的前世今生…》、`2p"
+        },
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 87,
+          "match": "exact_id",
+          "excerpt": "| 2026-01-25 | 商业航天 → 太空光伏/SAF 新细分 | 《解码太空光伏的前世今生，老黄落地定调下周风口》（`2oRmhkzZvLS`） |"
+        }
+      ]
+    },
+    {
+      "id": "2oyEy0oGzp9",
+      "title": "高潮时我给你泼水，冰点时我再给你信心。",
+      "date": "2026-01-13 20:38:10",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2oyEy0oGzp9",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2oql1fpy4fD",
+      "title": "市场上只有两种票，一种是商业航天，另外一种也是商业航天",
+      "date": "2026-01-08 20:24:03",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2oql1fpy4fD",
+      "classification": "旧语料提及、尚无单篇记录",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": [
+        {
+          "asset": "research/圆小二题材演进时间线.md",
+          "line": 56,
+          "match": "exact_id",
+          "excerpt": "| 12 | 2026-01-01 ~ 2026-02-28 | **商业航天为主 + 科技/机器人/算力多线**（春信预埋、太空光伏） | 1 月\"高潮泼水、冰点给信心\"；2 月\"节前佛系\"；年初定调 AI应用/机器人/算力/先进制程 | 机器人遭\"天牢\"；黄毛地缘风暴；太空光伏定调 | `2oql1fpy4fD`《市场上只有两种票，一种是商业航天，另外一种也是商业航天》、`2oRmhkzZvLS`《解码太空光伏的前世今生…》、`2p"
+        }
+      ]
+    },
+    {
+      "id": "2omYG1cGPrP",
+      "title": "924冲锋号，4000点以上老股民的话就是耳旁风？",
+      "date": "2026-01-06 19:48:35",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2omYG1cGPrP",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2o7W8mvCIvp",
+      "title": "商业航天演绎高潮，明日谁是吹哨人？",
+      "date": "2025-12-28 18:18:55",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2o7W8mvCIvp",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2n74zfE84wo",
+      "title": "[红包]难不难？休假即将结束，back&nbsp;soon。（心理按摩）",
+      "date": "2025-11-20 21:17:47",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2n74zfE84wo",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2kiM6Mr508u",
+      "title": "[红包]海立中大东方飞龙辩证山河，一语成谶。",
+      "date": "2025-08-07 20:56:06",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2kiM6Mr508u",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    },
+    {
+      "id": "2irovZGi4kx",
+      "title": "[红包]量能定六月，题材谁称王，盘前计划",
+      "date": "2025-05-30 08:31:17",
+      "project_record_mentions": false,
+      "source": "https://m.tgb.cn/a/2irovZGi4kx",
+      "classification": "无法判定",
+      "status": "legacy_mapping_gap_not_distilled_this_run",
+      "legacy_matches": []
+    }
+  ],
+  "feed_snapshot": "raw/2026-10-24/author-feed.json",
+  "profile_snapshot": "raw/2026-10-24/author-homepage.html"
+}

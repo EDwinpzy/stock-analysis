@@ -1,0 +1,505 @@
+{
+  "reviewed_at": "2026-10-16T09:00:00.296770+08:00",
+  "status": "partial",
+  "total_images": 33,
+  "readable_images": 30,
+  "unresolved_images": 3,
+  "items": [
+    {
+      "number": 1,
+      "post_id": "2vJb8Ncpins",
+      "reply_id": "103558883",
+      "url": "https://image.tgb.cn/img/2026/10/09/0jti0e0bl95f.jpg_760w.png",
+      "group_sha256": "ce3793a224f4369a3b25dfc4924f441b4bb1d2075580ed4e2a94e193d0fa6437",
+      "size": [
+        760,
+        1689
+      ],
+      "bytes_sha256": "3dbf1701f4721a258adf6bcadb50e1c6ec5917eb8b4065b6f11ab219dc209d2b",
+      "review_status": "reviewed",
+      "conclusion": "粉丝互动与打赏统计截图；非交易内容，不采纳其中第三方个人信息。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/01.png"
+    },
+    {
+      "number": 2,
+      "post_id": "2vJb8Ncpins",
+      "reply_id": "103553783",
+      "url": "https://image.tgb.cn/img/2026/10/09/gvpgdtd2nfvn.jpg_760w.png",
+      "group_sha256": "34e76a5db877884e57524a9c8f009bd8cf12b93cef2f68474b043c4b6859a7d2",
+      "size": [
+        760,
+        778
+      ],
+      "bytes_sha256": "824ae018c2bc688f2cfdaaf2dc18d62cf4be9fd8984701229e071fc2cfc40a2f",
+      "review_status": "reviewed",
+      "conclusion": "宁德时代分时截图，显示300.46、+4.78%和B标记；结合本人文字，仅作价格先于情绪的例证，不证明成交或账户归属。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/02.png"
+    },
+    {
+      "number": 3,
+      "post_id": "2vJb8Ncpins",
+      "reply_id": "103551240",
+      "url": "https://image.tgb.cn/img/2026/10/09/32but3496unf.jpg_760w.png",
+      "group_sha256": "8f0cfdfb813e79d1b1958b0e10238160b5a0267d115824318e30c4ea00a1e9ec",
+      "size": [
+        760,
+        632
+      ],
+      "bytes_sha256": "c6bfbbdc505dbbfec431bf3967d287e605c8b557f4591c4b0350f8e7d81cc571",
+      "review_status": "reviewed",
+      "conclusion": "市场宣传新闻截图，无新增可执行交易条件；不把截图中的第三方观点当作者已验证结论。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/03.png"
+    },
+    {
+      "number": 4,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/tukog8mjlyrg.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        760,
+        570
+      ],
+      "bytes_sha256": "74d95319e8ae976d048df0e6bb8fb7b40c12b1b11c19b0b405edb7979a413191",
+      "review_status": "reviewed",
+      "conclusion": "作者周期标识图；非独立交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/04.png"
+    },
+    {
+      "number": 5,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/ce6a0g0e5gvn.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        760,
+        57
+      ],
+      "bytes_sha256": "dbea9286b18b11f22afa535544e8243371471a7fa487cb33360b9ced6b4a4118",
+      "review_status": "reviewed",
+      "conclusion": "10月8日、9日作者情绪表，可见温度59.3、77.1，支持正文对两日温度变化的自述；公式及数据未独立验证。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/05.png"
+    },
+    {
+      "number": 6,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/2ycngcrcu3ig.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        760,
+        279
+      ],
+      "bytes_sha256": "0d61427a4d99670676eec08f1457c5a975c8fa014471ae38ca316ecefac799bd",
+      "review_status": "reviewed",
+      "conclusion": "创业板分时及2026-10-09 10:16本人提示进入超卖区间的截图；历史观察，不能扩展为当下买点或已验证指标。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/06.png"
+    },
+    {
+      "number": 7,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/6zz8mhj3hggv.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        760,
+        232
+      ],
+      "bytes_sha256": "a56436be6291b9f4faaec166a7c92444b50a9f0ff4c7c83047b6fe54fa2ee8c3",
+      "review_status": "reviewed",
+      "conclusion": "近岸蛋白分时与本人旧回复：科技若止跌会削弱非科技抱团，判断需等科技止跌信号；历史条件解释，未验证资金意图。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/07.png"
+    },
+    {
+      "number": 8,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/t4eu9ddh8vog.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        531,
+        325
+      ],
+      "bytes_sha256": "5fd9c62c9c9ae30f6695ac0a3d68d58150ab1735c3d8e17f8b63dd57a4db0b4f",
+      "review_status": "reviewed",
+      "conclusion": "推油读者名单；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/08.png"
+    },
+    {
+      "number": 9,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/10/dlfakkkkze3g.png_760w.png",
+      "group_sha256": "a9830bf5ed3ceab370c0965019c4d4fdb27899106515c6828588f8d9f424c3fe",
+      "size": [
+        717,
+        101
+      ],
+      "bytes_sha256": "466bd8c4113ec79d64608f1337c593dbe5f00067a0d4b5d931673adab27c0fcd",
+      "review_status": "reviewed",
+      "conclusion": "打赏统计；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/09.png"
+    },
+    {
+      "number": 10,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103719067",
+      "url": "https://image.tgb.cn/img/2026/10/14/x15xusn55kwn.jpg_760w.png",
+      "group_sha256": "1fea94dc1921620b493fddc44c323d23c81d67562e96e4c2ebb8503864e172c5",
+      "size": [
+        760,
+        689
+      ],
+      "bytes_sha256": "b1be25befa7d9866c26650f9c72860285fedcb749249cf4769c2ce75aeaa65d5",
+      "review_status": "reviewed",
+      "conclusion": "券商登录失败提示；与作者无法及时操作的自述有关，不证明成交和具体标的。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/10.png"
+    },
+    {
+      "number": 11,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103612655",
+      "url": "https://image.tgb.cn/img/2026/10/12/mlguqmkc3tiv.jpg_760w.png",
+      "group_sha256": "d55e989c8c97af6db317a878be526fd1d1947671b1d6aea4e1f793c50f528551",
+      "size": [
+        760,
+        750
+      ],
+      "bytes_sha256": "8979dd936d57ffe56191528ee81e6aeadc6cb93545a8d53263aadd5238023dcd",
+      "review_status": "reviewed",
+      "conclusion": "领湃科技分时截图，显示31.38、+8.58%和S标记；原文字义不足，不能仅凭标记归纳为本人确定卖出记录。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/11.png"
+    },
+    {
+      "number": 12,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103607695",
+      "url": "https://image.tgb.cn/img/2026/10/11/u4y33fdxg3ch.png_760w.png",
+      "group_sha256": "d1261908c64bf227c98ab1e4db91ab8a60bfefa418e6059459427fa08c366eb7",
+      "size": [
+        760,
+        793
+      ],
+      "bytes_sha256": "3d975ee4488183b655217a3b8f0f04ca9b1bf738e98e9d368531f3ffc8c16551",
+      "review_status": "partial_unreadable",
+      "conclusion": "早盘文档截图大面积人为打码。可辨标题10.11，发布回复称10.12早盘，日期存在不一致；无法核验隐藏的指数、方向与买卖条件，保留待处理，不恢复或猜测。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/12.png"
+    },
+    {
+      "number": 13,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103604382",
+      "url": "https://image.tgb.cn/img/2026/10/11/5opwricztmdh.png_760w.png",
+      "group_sha256": "fc66d81aaa44a6fe70bf5828d7067aecc123e508ad7a74449c405d06096d91eb",
+      "size": [
+        760,
+        278
+      ],
+      "bytes_sha256": "ba4722238ff9864cd4fef04662feb4a975ccc3f72809b9b40920cc30178958ca",
+      "review_status": "reviewed",
+      "conclusion": "点赞及打赏统计截图；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/13.png"
+    },
+    {
+      "number": 14,
+      "post_id": "2vMJS1Nt1JK",
+      "reply_id": "103600627",
+      "url": "https://image.tgb.cn/img/2026/10/11/x0sov30r5uah.jpg_760w.png",
+      "group_sha256": "1277c0a37c0199f02d3a0e1951d34da4a8acf4d38ae007f51ede6d106b03a2c4",
+      "size": [
+        760,
+        1013
+      ],
+      "bytes_sha256": "717a598829be7a3b1f5c1f61a3491271c48e70a6bbd193cb40660054242b6af7",
+      "review_status": "reviewed",
+      "conclusion": "用餐照片；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/14.png"
+    },
+    {
+      "number": 15,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/u5lgrdolqdhk.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        570
+      ],
+      "bytes_sha256": "3e07ac37b79c38be1d3d8c87dddafd2b378faf0ac65903b3b3968b48f244684f",
+      "review_status": "reviewed",
+      "conclusion": "作者周期标识图；非独立交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/15.png"
+    },
+    {
+      "number": 16,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/xiozgtqs1jok.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        478
+      ],
+      "bytes_sha256": "e2f1dded002ec55b04d1217e326ab608e970365615f53d99f38d2fb798cee238",
+      "review_status": "reviewed",
+      "conclusion": "10月14日07:55本人早盘截图：指数有反弹预期但反转节点未到，波段趋势仍等待；电池若低开则观察今明两天回流、聚焦抱团。补充正文的条件与时点，均属作者观点。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/16.png"
+    },
+    {
+      "number": 17,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/j56cr3qjh9kw.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        687,
+        196
+      ],
+      "bytes_sha256": "4537a770ac289a0ee7a2f318da4bb3a6c59f78d0ab878e8950fa82d1f0a73671",
+      "review_status": "reviewed",
+      "conclusion": "领湃科技分时先冲高后回落，作为正文的历史案例；图不能单独证明量化交易的因果机制。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/17.png"
+    },
+    {
+      "number": 18,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/l92t66voujok.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        115
+      ],
+      "bytes_sha256": "00949bfddf49dc9f8bfcdf6e36279aa5aba634a115b5f7686d45252be808371f",
+      "review_status": "reviewed",
+      "conclusion": "本人传媒早盘片段：周五前回流预案，龙版与文轩的相对新旧比较；属于当时情景，不泛化为二波必然规律。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/18.png"
+    },
+    {
+      "number": 19,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/h2v75yiaq92k.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        528,
+        165
+      ],
+      "bytes_sha256": "8112b15c35587852274f5f47006f919795ab516c1e8ed5fc518f05681709e535",
+      "review_status": "reviewed",
+      "conclusion": "新华文轩K线与报价截图；补充正文案例，不能单独确认买卖执行。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/19.png"
+    },
+    {
+      "number": 20,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/83xszs252zuk.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        552,
+        88
+      ],
+      "bytes_sha256": "af2c617a1512ae5f02f4c1c00734a8eb2e6589526d03e4c496e321a9e250d6ed",
+      "review_status": "reviewed",
+      "conclusion": "本人10月14日13:05征集举手截图，呼应心态实验；没有股票代码或买卖条件。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/20.png"
+    },
+    {
+      "number": 21,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/t1te42fp612k.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        96
+      ],
+      "bytes_sha256": "195494d9cc863d4eae8c6d4b3d4795f8ba574535766f61b246f18e14af283380",
+      "review_status": "reviewed",
+      "conclusion": "读者light淘股回复截图；第三方观点，仅记为正文引用材料，不提炼为作者本人新增规则。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/21.png"
+    },
+    {
+      "number": 22,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/r9li1i479kwn.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        393
+      ],
+      "bytes_sha256": "0db9307db50e1a64b927f751893e2f3890a06d5f1e190312bf6b63fd393deafb",
+      "review_status": "reviewed",
+      "conclusion": "推油读者名单；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/22.png"
+    },
+    {
+      "number": 23,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": null,
+      "url": "https://image.tgb.cn/img/2026/10/14/b3rzp7e73qok.png_760w.png",
+      "group_sha256": "4ec4dace5a766397c9c5d4c07f9d8f3de897df8c8ff92b8787b5f79f8c08df48",
+      "size": [
+        760,
+        152
+      ],
+      "bytes_sha256": "0cc5af63ad085082cc57640f73b4a83e1d6f14a40729fdcd3c0f4620a4d31f70",
+      "review_status": "reviewed",
+      "conclusion": "打赏统计；非交易内容。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/23.png"
+    },
+    {
+      "number": 24,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103789499",
+      "url": "https://image.tgb.cn/img/2026/10/15/oc6169loalwn.png_760w.png",
+      "group_sha256": "4d03aca677864c76b9f276d0b1fafa41da8e5b7701eec7a1a6991e73637a79a1",
+      "size": [
+        609,
+        166
+      ],
+      "bytes_sha256": "6b5501bfad6c770c0b095c11f5d48d4abbead45f8bd36ba1a3eb3c9401a25502",
+      "review_status": "reviewed",
+      "conclusion": "作者2026-08-22旧帖标题天气多变、少谈格局；是旧内容提示，不构成当日新增通用规则。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/24.png"
+    },
+    {
+      "number": 25,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103786470",
+      "url": "https://image.tgb.cn/img/2026/10/15/ip9lhd7qynxl.png_760w.png",
+      "group_sha256": "852fe0077e7c1ed9feeb2f4e2a3d4c8dc21489e05555820754686c2b0dfd0b39",
+      "size": [
+        603,
+        440
+      ],
+      "bytes_sha256": "cb2e6497f952e65e493e0ce4bae88cc393eb3aef6049877b35e9f4088b5b8d7b",
+      "review_status": "reviewed",
+      "conclusion": "PCB总市值排序截图：较大市值品种多下跌；结合下一张涨幅排序图理解作者抱团观察，不把排列当成资金流证明。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/25.png"
+    },
+    {
+      "number": 26,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103786470",
+      "url": "https://image.tgb.cn/img/2026/10/15/tg4nr01mn7lw.png_760w.png",
+      "group_sha256": "852fe0077e7c1ed9feeb2f4e2a3d4c8dc21489e05555820754686c2b0dfd0b39",
+      "size": [
+        624,
+        498
+      ],
+      "bytes_sha256": "2dc2200aa73efda9fdfb8e04ef8ebd99a03ba849357d3edf846908fdbf805fbd",
+      "review_status": "reviewed",
+      "conclusion": "PCB涨幅排序截图：上涨品种与大市值品种分布不同；支持作者所指的局部抱团观察，不是逐股推荐。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/26.png"
+    },
+    {
+      "number": 27,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103786003",
+      "url": "https://image.tgb.cn/img/2026/10/15/ju7ghceetrwl.png_760w.png",
+      "group_sha256": "6fd60e2ff785b5dd0ab2aa20de509509e312fd05d8934984baf05a52123c35da",
+      "size": [
+        760,
+        223
+      ],
+      "bytes_sha256": "ba84cbcfa17477c28015d888f1640f0e873ecacc7fb51ae8d9bc2ea865fce8d7",
+      "review_status": "reviewed",
+      "conclusion": "8月12日至16日旧情绪表，可见成交量约4956、4773、4775、5915、5912；年份不明，为作者历史对比，不能当2026年当日数据。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/27.png"
+    },
+    {
+      "number": 28,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103785358",
+      "url": "https://image.tgb.cn/img/2026/10/15/gs843kswtd2l.png_760w.png",
+      "group_sha256": "da8024717fdf009381b3b8abad939eaa1817ec17aa60aef7cda0e973c16e25b3",
+      "size": [
+        760,
+        35
+      ],
+      "bytes_sha256": "bcd7cf662309f5775e490f99d6afdbc7a0ba2e547363d84fb36bb9336a86d8ad",
+      "review_status": "partial_unreadable",
+      "conclusion": "10月13日至15日情绪表，仅760×35像素。部分数字与最右侧交易思路无法可靠辨读；本人文字温度48已单独保存，图中独有内容仍待核验。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/28.png"
+    },
+    {
+      "number": 29,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103764976",
+      "url": "https://image.tgb.cn/img/2026/10/15/wb0yh9sgyiil.png_760w.png",
+      "group_sha256": "8b80fe02c42dc302dfc02140b934f56c9309ca0aebbffd9a88d83d462de93ec9",
+      "size": [
+        760,
+        760
+      ],
+      "bytes_sha256": "a88c75d8f0ead37600533da986c959cd74d8faec3b3436bbaa24df85fd4a9317",
+      "review_status": "reviewed",
+      "conclusion": "量化砸盘主题讽刺漫画；情绪表达，不是对具体机构或程序行为的事实证据。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/29.png"
+    },
+    {
+      "number": 30,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103759674",
+      "url": "https://image.tgb.cn/img/2026/10/15/e6t45d6at7el.jpg_760w.png",
+      "group_sha256": "67bd26376c73c7d2b300fab6664e50e319c73d0ad4ae0d320510f3c9224d051c",
+      "size": [
+        164,
+        152
+      ],
+      "bytes_sha256": "7cb5b84068dc7956b6d3f7d4b1b3ad61fe34b5bb722544b0d5368d1d436da788",
+      "review_status": "reviewed",
+      "conclusion": "羊字图片，可能指向文中生肖题材；没有标的或触发条件，不推导为买入指令。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/30.png"
+    },
+    {
+      "number": 31,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103742501",
+      "url": "https://image.tgb.cn/img/2026/10/15/kjntmmwjpqsl.png_760w.png",
+      "group_sha256": "57f91f2a9f382935256e3fd7a8d6b711e97b1f568bf2a9f8d889842dccb26c05",
+      "size": [
+        656,
+        236
+      ],
+      "bytes_sha256": "f61ba1d19917ce0b0b6420362ad5487762179fa41406aa8956f45fc068eb381e",
+      "review_status": "reviewed",
+      "conclusion": "第三方彭博AI煤炭新闻摘要；作者仅贴图，没有独立表达交易条件，不当作本人验证后的供需事实或交易建议。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/31.png"
+    },
+    {
+      "number": 32,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103742497",
+      "url": "https://image.tgb.cn/img/2026/10/15/cdb7rj2fwl3l.png_760w.png",
+      "group_sha256": "36f22299827ffe5bca19a6a2db09a4bb9449e34134fc366c9111b95d87e710bb",
+      "size": [
+        760,
+        69
+      ],
+      "bytes_sha256": "8605afa2dd58c6e369a9ec4390ca9294d61fef1bfedf9a4905f2959bd059a26e",
+      "review_status": "partial_unreadable",
+      "conclusion": "9月25日至10月14日作者情绪表，仅760×69像素；部分交易思路小字无法核验。本人文字60以上已保存，不猜测模糊栏目，保留待处理。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/32.png"
+    },
+    {
+      "number": 33,
+      "post_id": "2vTaemOb3Ig",
+      "reply_id": "103742476",
+      "url": "https://image.tgb.cn/img/2026/10/15/sab9vwryboml.png_760w.png",
+      "group_sha256": "9311bb8f8900fe0b4d919db8bcef36ef6d33cb3743f0a07a338bdf4e09746d37",
+      "size": [
+        485,
+        352
+      ],
+      "bytes_sha256": "868eae70e108197321fb3a78306b5de708521227d461cd3eeb8cb4f84b3b4500",
+      "review_status": "reviewed",
+      "conclusion": "美国股票行情截图；本人未附A股交易条件，不推导跨市场结论。",
+      "local_evidence": "data/yuanxiaoer/raw/2026-10-16/image-review/33.png"
+    }
+  ],
+  "note": "全部33张已视觉查看，30张可完成内容审查，3张含打码或低分辨率缺口。没有更新成功状态。"
+}

@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-10-24T23:33:49.501288+08:00",
+  "status": "success_no_new_content",
+  "feed_pages": 24,
+  "feed_topics": 231,
+  "feed_complete": true,
+  "latest_post_date": "2026-10-24 16:19:42",
+  "changes": [],
+  "errors": [],
+  "archive_content_comparison": "all post bodies, author reply IDs, dates, text and image URL arrays unchanged from pre-heartbeat snapshot",
+  "pending_queue_matches_regeneration": true,
+  "pending_items_unchanged": true,
+  "remaining_unresolved_images": 10,
+  "success_boundary_unchanged": {
+    "latest.md": "76dd1ce2b062fe86188537c1ae7966179873ee13acc8a8e85e4a81be1eb7abf9",
+    "distillation_state.json": "11421f5fd117f17a8590c41626d7c1eca1f658a2602175e70ccc1e27b216b5a6"
+  },
+  "previous_distillation_validation": "reviews/2026-10-24-validation.json",
+  "collection_snapshot": "raw/2026-10-24/collection-233349.json",
+  "notification": "quiet: no new content or change in unresolved evidence"
+}

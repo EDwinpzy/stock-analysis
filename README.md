@@ -24,7 +24,7 @@ Python 项目，并提供当初约定的 `EmotionEngine` 接口。
 │   ├── score_adjust.py            # 个股评分的环境权重调整
 │   └── display.py                 # 温度等级标签、每日状态文本
 ├── data/
-│   ├── panel_history.csv          # 真实历史面板，400 个交易日（2025-01-21 ~ 2026-09-14）
+│   ├── panel_history.csv          # 真实历史面板，405 个交易日（2025-01-21 ~ 2026-10-30）
 │   └── input_template.csv         # 输入字段模板
 ├── docs/
 │   ├── README.md                  # 文档导航与维护约定
@@ -473,7 +473,7 @@ engine.adjust_stock_score(72.0, {"ice_repair": 1.0}, state=state)
 
 | 用例 | 校验内容 |
 |---|---|
-| `test_panel_shape` | 自带真实面板 400 行、日期区间 |
+| `test_panel_shape` | 自带真实面板 405 行、日期区间 |
 | `test_frozen_parameters_match_config` | `core.py` 常量与 `model_config.json` 一致 |
 | `test_golden_temperatures` | 2026-09 六个交易日的 S / J / 阶段回归 |
 | `test_no_lookahead` | 截断面板（120/250/320/380 日）不改变历史结果 |
@@ -487,7 +487,7 @@ engine.adjust_stock_score(72.0, {"ice_repair": 1.0}, state=state)
 
 两条口径测试最关键：
 
-- **与冻结实现完全一致**：`emotion/core.py` 跑 400 天面板，与完整包
+- **与冻结实现完全一致**：`emotion/core.py` 跑 405 天面板，与完整包
   `reference_impl.py` 的全部 22 个数值列最大绝对差为 **0.0**，六阶段、
   动能标签、接缝标签、修复确认全部一致。改坏公式会立刻红灯。
 - **无未来函数**：`t` 日结果只依赖 `t-1` 及更早数据，面板截断后历史数值

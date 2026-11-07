@@ -1,0 +1,163 @@
+{
+  "ok": true,
+  "command": "index.history",
+  "data": {
+    "item": [
+      {
+        "date_ms": 1789660800000,
+        "volume": 48571251000,
+        "turnover": 994169450000,
+        "open_price": 3891.96,
+        "high_price": 3919.67,
+        "low_price": 3888.5,
+        "close_price": 3911.87
+      },
+      {
+        "date_ms": 1789920000000,
+        "volume": 50235488000,
+        "turnover": 946819120000,
+        "open_price": 3920.27,
+        "high_price": 3950.94,
+        "low_price": 3918.13,
+        "close_price": 3949.91
+      },
+      {
+        "date_ms": 1790006400000,
+        "volume": 50614837000,
+        "turnover": 1007995610000,
+        "open_price": 3963.81,
+        "high_price": 3967.68,
+        "low_price": 3945.42,
+        "close_price": 3952.13
+      },
+      {
+        "date_ms": 1790092800000,
+        "volume": 46691393000,
+        "turnover": 834132860000,
+        "open_price": 3951.37,
+        "high_price": 3951.52,
+        "low_price": 3934.46,
+        "close_price": 3936.52
+      },
+      {
+        "date_ms": 1790179200000,
+        "volume": 43853041000,
+        "turnover": 783613000000,
+        "open_price": 3925.32,
+        "high_price": 3930.5,
+        "low_price": 3888.37,
+        "close_price": 3888.37
+      },
+      {
+        "date_ms": 1790524800000,
+        "volume": 45235068000,
+        "turnover": 804543700000,
+        "open_price": 3878.41,
+        "high_price": 3878.41,
+        "low_price": 3806.67,
+        "close_price": 3823.62
+      },
+      {
+        "date_ms": 1790611200000,
+        "volume": 39947339000,
+        "turnover": 661704290000,
+        "open_price": 3816.15,
+        "high_price": 3843.84,
+        "low_price": 3810.81,
+        "close_price": 3830.45
+      },
+      {
+        "date_ms": 1790697600000,
+        "volume": 41456025000,
+        "turnover": 679398990000,
+        "open_price": 3839.25,
+        "high_price": 3851.22,
+        "low_price": 3833.09,
+        "close_price": 3842.19
+      },
+      {
+        "date_ms": 1791388800000,
+        "volume": 48220169000,
+        "turnover": 811183100000,
+        "open_price": 3838.98,
+        "high_price": 3864.12,
+        "low_price": 3795.37,
+        "close_price": 3811.9
+      },
+      {
+        "date_ms": 1791475200000,
+        "volume": 53514992000,
+        "turnover": 888561200000,
+        "open_price": 3804.09,
+        "high_price": 3824.71,
+        "low_price": 3754.14,
+        "close_price": 3813.79
+      },
+      {
+        "date_ms": 1791734400000,
+        "volume": 46144898000,
+        "turnover": 714909910000,
+        "open_price": 3806.98,
+        "high_price": 3828.22,
+        "low_price": 3791,
+        "close_price": 3797.24
+      },
+      {
+        "date_ms": 1791820800000,
+        "volume": 48330591000,
+        "turnover": 779302290000,
+        "open_price": 3760.8,
+        "high_price": 3822.11,
+        "low_price": 3741.53,
+        "close_price": 3800.86
+      },
+      {
+        "date_ms": 1791907200000,
+        "volume": 44596255000,
+        "turnover": 662491840000,
+        "open_price": 3790.63,
+        "high_price": 3811.81,
+        "low_price": 3761.96,
+        "close_price": 3767.23
+      },
+      {
+        "date_ms": 1791993600000,
+        "volume": 51016319000,
+        "turnover": 774391970000,
+        "open_price": 3710.7,
+        "high_price": 3724.56,
+        "low_price": 3674.82,
+        "close_price": 3707.48
+      },
+      {
+        "date_ms": 1792080000000,
+        "volume": 47263216000,
+        "turnover": 732475190000,
+        "open_price": 3723.8,
+        "high_price": 3750.77,
+        "low_price": 3681.28,
+        "close_price": 3716.28
+      },
+      {
+        "date_ms": 1792339200000,
+        "volume": 41779125000,
+        "turnover": 687009730000,
+        "open_price": 3694.12,
+        "high_price": 3743.8,
+        "low_price": 3692.29,
+        "close_price": 3730.92
+      }
+    ],
+    "timestamp": 1792339200000,
+    "thscode": "000001.SH",
+    "interval": "1d",
+    "adjust": null
+  },
+  "meta": {
+    "source": "remote",
+    "request_id": "65c32f2397014d369cf4390b2055a48d",
+    "count": 16,
+    "truncated": false,
+    "schema_version": "1"
+  }
+}

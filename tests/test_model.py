@@ -36,9 +36,9 @@ def engine() -> EmotionEngine:
 
 def test_panel_shape(engine: EmotionEngine) -> None:
     history = engine.history
-    assert len(history) == 400
+    assert len(history) == 405
     assert str(history["date"].iloc[0].date()) == "2025-01-21"
-    assert str(history["date"].iloc[-1].date()) == "2026-09-14"
+    assert str(history["date"].iloc[-1].date()) == "2026-10-30"
 
 
 def test_frozen_parameters_match_config() -> None:

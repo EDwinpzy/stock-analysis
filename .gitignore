@@ -7,3 +7,20 @@ venv/
 data/_*.log*
 data/_proxy_backup_*.json
 data/yuanxiaoer/raw/
+
+# Local working copies, runtime snapshots and generated delivery artifacts
+/work/
+/error.log
+/pelican-bicycle-animation.html
+/data/_calendar.json
+/data/_market_panel.csv
+/data/_state_*.json
+/data/panel_history.bak_*.csv
+/报告/Muse产物/
+/报告/Muse对比/
+/报告/每日简报/2026-10-19交付/
+/报告/每日简报/_验收/20*/
+/报告/每日简报/2026-10-10*
+/报告/每日简报/2026-10-13*
+/报告/每日简报/2026-10-14*
+*.tmp.html

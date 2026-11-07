@@ -1,0 +1,166 @@
+{
+  "ok": true,
+  "command": "market.history",
+  "data": {
+    "item": [
+      {
+        "date_ms": 1788192000000,
+        "volume": 15714388,
+        "turnover": 82973119.9,
+        "open_price": 5.16,
+        "high_price": 5.32,
+        "low_price": 5.14,
+        "close_price": 5.3
+      },
+      {
+        "date_ms": 1788278400000,
+        "volume": 9985800,
+        "turnover": 52318490,
+        "open_price": 5.25,
+        "high_price": 5.3,
+        "low_price": 5.19,
+        "close_price": 5.25
+      },
+      {
+        "date_ms": 1788364800000,
+        "volume": 20451533,
+        "turnover": 109201957.18,
+        "open_price": 5.44,
+        "high_price": 5.53,
+        "low_price": 5.18,
+        "close_price": 5.18
+      },
+      {
+        "date_ms": 1788451200000,
+        "volume": 18582535,
+        "turnover": 99010384.19,
+        "open_price": 5.25,
+        "high_price": 5.42,
+        "low_price": 5.18,
+        "close_price": 5.31
+      },
+      {
+        "date_ms": 1789920000000,
+        "volume": 2486960,
+        "turnover": 14523846.4,
+        "open_price": 5.84,
+        "high_price": 5.84,
+        "low_price": 5.84,
+        "close_price": 5.84
+      },
+      {
+        "date_ms": 1790006400000,
+        "volume": 3486600,
+        "turnover": 22383972,
+        "open_price": 6.42,
+        "high_price": 6.42,
+        "low_price": 6.42,
+        "close_price": 6.42
+      },
+      {
+        "date_ms": 1790092800000,
+        "volume": 4579800,
+        "turnover": 32333388,
+        "open_price": 7.06,
+        "high_price": 7.06,
+        "low_price": 7.06,
+        "close_price": 7.06
+      },
+      {
+        "date_ms": 1790179200000,
+        "volume": 5985192,
+        "turnover": 46504941.84,
+        "open_price": 7.77,
+        "high_price": 7.77,
+        "low_price": 7.77,
+        "close_price": 7.77
+      },
+      {
+        "date_ms": 1790524800000,
+        "volume": 5027541,
+        "turnover": 42985475.55,
+        "open_price": 8.55,
+        "high_price": 8.55,
+        "low_price": 8.55,
+        "close_price": 8.55
+      },
+      {
+        "date_ms": 1790611200000,
+        "volume": 15651467,
+        "turnover": 147280304.47,
+        "open_price": 9.41,
+        "high_price": 9.41,
+        "low_price": 9.41,
+        "close_price": 9.41
+      },
+      {
+        "date_ms": 1790697600000,
+        "volume": 13985532,
+        "turnover": 144750256.2,
+        "open_price": 10.35,
+        "high_price": 10.35,
+        "low_price": 10.35,
+        "close_price": 10.35
+      },
+      {
+        "date_ms": 1791388800000,
+        "volume": 5647458,
+        "turnover": 64324546.62,
+        "open_price": 11.39,
+        "high_price": 11.39,
+        "low_price": 11.39,
+        "close_price": 11.39
+      },
+      {
+        "date_ms": 1791475200000,
+        "volume": 49929048,
+        "turnover": 625610971.44,
+        "open_price": 12.53,
+        "high_price": 12.53,
+        "low_price": 12.53,
+        "close_price": 12.53
+      },
+      {
+        "date_ms": 1791734400000,
+        "volume": 35347182,
+        "turnover": 487084167.96,
+        "open_price": 13.78,
+        "high_price": 13.78,
+        "low_price": 13.78,
+        "close_price": 13.78
+      },
+      {
+        "date_ms": 1792080000000,
+        "volume": 16307402,
+        "turnover": 247220214.32,
+        "open_price": 15.16,
+        "high_price": 15.16,
+        "low_price": 15.16,
+        "close_price": 15.16
+      },
+      {
+        "date_ms": 1792339200000,
+        "volume": 267627957,
+        "turnover": 3996045887.58,
+        "open_price": 15,
+        "high_price": 15.78,
+        "low_price": 14.13,
+        "close_price": 15.58
+      }
+    ],
+    "timestamp": 1792339200000,
+    "thscode": "600825.SH",
+    "interval": "1d",
+    "adjust": "none"
+  },
+  "meta": {
+    "source": "remote",
+    "request_id": "c08bab74fec144bebebaf175808f6369",
+    "count": 16,
+    "truncated": false,
+    "schema_version": "1"
+  },
+  "requested_code": "600825.SH",
+  "requested_name": "新华传媒",
+  "adjust": "none"
+}
