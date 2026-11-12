@@ -213,6 +213,20 @@ def test_cloud_stock_report_labels_sources_and_big_order_scope():
     assert "-23.05%" in report
 
 
+def test_cloud_stock_report_labels_thsdk_big_order_fallback():
+    data = stock_fixture()
+    data["runtime"] = {"source": "cloud"}
+    data["big_orders_source"] = "thsdk"
+    data["big_orders"] = [{"总金额": 1000000, "成交方向": "1"}]
+
+    report = build_stock_report(data)
+
+    assert "同花顺 thsdk" in report
+    assert "逐笔大单成交（游客或固定账号）" in report
+    assert "大单样本 1 条" in report
+    assert "大单日汇总" not in report
+
+
 def test_cloud_stock_report_labels_eastmoney_holder_fallback():
     data = stock_fixture()
     data["runtime"] = {"source": "cloud"}

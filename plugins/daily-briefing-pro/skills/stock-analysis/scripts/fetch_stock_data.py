@@ -1094,6 +1094,7 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
         resp = ths.big_order_flow(thscode)
         bdf = resp.df
         scope = getattr(resp, "scope", "")
+        result["big_orders_source"] = getattr(resp, "source", "") or ""
         if scope:
             result["big_orders_scope"] = scope
             result["big_orders_note"] = (
@@ -1124,6 +1125,7 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
         result["big_orders"] = []
         result["big_orders_columns"] = []
         result["big_orders_direction_legend"] = _BIG_ORDER_DIR_MAP
+        result["big_orders_source"] = "error"
         print(f"  大单流向异常: {e}", file=sys.stderr)
     
     time.sleep(_API_DELAY)

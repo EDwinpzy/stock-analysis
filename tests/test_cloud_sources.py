@@ -550,6 +550,39 @@ def test_big_order_flow_is_marked_as_daily_aggregate():
     assert result.main_net_inflow == pytest.approx(17049508.63)
 
 
+def test_big_order_flow_falls_back_to_thsdk(monkeypatch):
+    def responder(skill, query, limit):
+        return payload()
+
+    def fake_thsdk(self, thscode):
+        rows = [
+            {
+                "时间": 1794449213,
+                "成交方向": "1",
+                "成交量": 300,
+                "总金额": 417900,
+                "委托买入价": "",
+                "委托卖出价": "",
+                "成交方向码": "1",
+            }
+        ]
+        return cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(rows),
+            error="",
+            scope="tick",
+            source="thsdk",
+        )
+
+    monkeypatch.setattr(CloudStockAdapter, "_ths_big_order_flow", fake_thsdk)
+    adapter = make_adapter(FakeWencai(responder), FakeMarket())
+    result = adapter.big_order_flow("USZA000001")
+
+    assert result.source == "thsdk"
+    assert result.scope == "tick"
+    assert len(result.df) == 1
+    assert result.df.iloc[0]["成交方向"] == "1"
+
+
 def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
     market = FakeMarket()
 

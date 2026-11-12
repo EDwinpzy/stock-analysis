@@ -1587,6 +1587,9 @@ class CloudStockAdapter:
             limit=5,
         )
         if result.df.empty:
+            fallback = self._ths_big_order_flow(thscode)
+            if not fallback.df.empty:
+                return fallback
             return result
         row = result.df.iloc[0].to_dict()
         buy_amount_key = _first_key(row, "大单买入额[")
@@ -1594,6 +1597,9 @@ class CloudStockAdapter:
         buy_volume_key = _first_key(row, "大单买入量[")
         sell_volume_key = _first_key(row, "大单卖出量[")
         if not buy_amount_key or not sell_amount_key:
+            fallback = self._ths_big_order_flow(thscode)
+            if not fallback.df.empty:
+                return fallback
             return _empty("问财未返回今日大单买入/卖出金额")
         period = re.search(r"\[(\d{8})\]", buy_amount_key)
         trade_date = period.group(1) if period else datetime.now(CN_TZ).strftime("%Y%m%d")
@@ -1629,6 +1635,51 @@ class CloudStockAdapter:
             scope="daily_aggregate",
             source="wencai",
             main_net_inflow=main_net_inflow,
+        )
+
+    def _ths_big_order_flow(self, thscode: str) -> SimpleNamespace:
+        try:
+            with mq.ThsClient() as client:
+                payload = client.capital_flow(thscode, count=200)
+        except Exception as exc:
+            return _empty(f"thsdk 大单流向查询失败：{exc}")
+        rows = [dict(row) for row in payload.get("items") or [] if isinstance(row, dict)]
+        if not rows:
+            return _empty("thsdk 未返回大单成交")
+        rows.sort(key=lambda row: float(row.get("时间") or 0))
+        big_rows = [
+            row
+            for row in rows
+            if str(row.get("成交方向码")) in {"1", "-1", "4", "-4"}
+        ]
+        if big_rows:
+            rows = big_rows[-20:]
+        else:
+            rows = rows[-20:]
+        unique_rows = []
+        seen = set()
+        for row in rows:
+            key = (
+                row.get("时间"),
+                row.get("成交方向码"),
+                row.get("成交量"),
+                row.get("总金额"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_rows.append(row)
+        rows = unique_rows[-20:]
+        for row in rows:
+            code = row.get("成交方向码")
+            if code not in (None, ""):
+                row["成交方向"] = str(code)
+        columns = list(payload.get("columns") or rows[0].keys())
+        return SimpleNamespace(
+            df=pd.DataFrame(rows, columns=columns),
+            error="",
+            scope="tick",
+            source="thsdk",
         )
 
     def _news_items(self, code: str) -> list[dict[str, Any]]:
