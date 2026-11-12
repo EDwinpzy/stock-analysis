@@ -291,47 +291,102 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
         if "IndustryAnalysis" in url:
             return {
                 "gzbj": [
-                    {"CORRE_SECURITY_CODE": "600519"},
-                    {"CORRE_SECURITY_CODE": "000858"},
+                    {
+                        "CORRE_SECURITY_CODE": "600519",
+                        "CORRE_SECURITY_NAME": "贵州茅台",
+                        "PE_TTM": 21.34,
+                        "PB_MRQ": 7.17,
+                    },
+                    {
+                        "CORRE_SECURITY_CODE": "000858",
+                        "CORRE_SECURITY_NAME": "五粮液",
+                        "PE_TTM": 21.7,
+                        "PB_MRQ": 2.37,
+                    },
                     {"CORRE_SECURITY_CODE": "行业平均"},
                 ],
-                "czxbj": [
-                    {"CORRE_SECURITY_CODE": "000568"},
+                "dbfxbj": [
+                    {"CORRE_SECURITY_CODE": "600519", "ROE_AVG": 32.53},
+                    {"CORRE_SECURITY_CODE": "000858", "ROE_AVG": 8.09},
+                ],
+                "gsgm": [
+                    {
+                        "CORRE_SECURITY_CODE": "600519",
+                        "CORRE_SECURITY_NAME": "贵州茅台",
+                        "TOTAL_CAP": 1752989429082.3,
+                        "TOTAL_OPERATEINCOME": 133283652508.95,
+                        "NETPROFIT": 66717143218.04,
+                    }
+                ],
+                "gsgm_zsz": [
+                    {
+                        "CORRE_SECURITY_CODE": "000858",
+                        "CORRE_SECURITY_NAME": "五粮液",
+                        "TOTAL_CAP": 280989603481.95,
+                        "TOTAL_OPERATEINCOME": 32858473964.34,
+                        "NETPROFIT": 9969286777.24,
+                    }
                 ],
             }
         if "ulist.np" in url:
-            return {
-                "data": {
-                    "diff": [
-                        {
-                            "f12": "000858",
-                            "f14": "五 粮 液",
-                            "f9": 21.7,
-                            "f23": 2.37,
-                            "f20": 280989603481.95,
-                            "f37": 8.09,
-                            "f49": 77.54,
-                            "f40": 40528509770.23,
-                            "f45": 9317000000.0,
-                            "f2": 72.39,
-                            "f3": -2.51,
-                        },
-                        {
-                            "f12": "600519",
-                            "f14": "贵州茅台",
-                            "f9": 21.34,
-                            "f23": 7.17,
-                            "f20": 1752989400000.0,
-                            "f37": 32.53,
-                            "f49": 91.18,
-                            "f40": 133283652508.95,
-                            "f45": 64467425981.95,
-                            "f2": 1402.3,
-                            "f3": -2.55,
-                        },
-                    ]
+            raise RuntimeError("simulated ulist disconnect")
+        if "stock/get" in url:
+            if "secid=1.600519" in url:
+                return {
+                    "data": {
+                        "f43": 140230,
+                        "f57": "600519",
+                        "f58": "贵州茅台",
+                        "f116": 1752989400000.0,
+                        "f117": 1752989400000.0,
+                        "f162": 2134,
+                        "f167": 717,
+                        "f170": -255,
+                    }
                 }
+            if "secid=0.000858" in url:
+                return {
+                    "data": {
+                        "f43": 7239,
+                        "f57": "000858",
+                        "f58": "五 粮 液",
+                        "f116": 280989603481.95,
+                        "f117": 280989603481.95,
+                        "f162": 2170,
+                        "f167": 237,
+                        "f170": -251,
+                    }
+                }
+            raise AssertionError(url)
+        if "NewFinanceAnalysis" in url:
+            annual = {
+                "600519": {
+                    "REPORT_DATE": "2025-12-31 00:00:00",
+                    "REPORT_YEAR": "2025",
+                    "REPORT_TYPE": "年报",
+                    "TOTALOPERATEREVE": 172054171890.91,
+                    "PARENTNETPROFIT": 82320067101.68,
+                    "XSMLL": 91.1795516835,
+                    "XSJLL": 50.5278865155,
+                    "ROEJQ": 32.53,
+                    "TOTALOPERATEREVETZ": -1.200097176919,
+                    "PARENTNETPROFITTZ": -4.532254817158,
+                },
+                "000858": {
+                    "REPORT_DATE": "2025-12-31 00:00:00",
+                    "REPORT_YEAR": "2025",
+                    "REPORT_TYPE": "年报",
+                    "TOTALOPERATEREVE": 40528509770.23,
+                    "PARENTNETPROFIT": 8954257202.51,
+                    "XSMLL": 77.5418415205,
+                    "XSJLL": 22.9890347252,
+                    "ROEJQ": 6.89,
+                    "TOTALOPERATEREVETZ": -54.551804064166,
+                    "PARENTNETPROFITTZ": -71.888962986,
+                },
             }
+            code = "600519" if "SH600519" in url else "000858"
+            return {"data": [annual[code]]}
         raise AssertionError(url)
 
     monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
@@ -346,9 +401,10 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
     assert rows[0]["股票简称"] == "贵州茅台"
     assert rows[1]["股票简称"] == "五粮液"
     assert rows[1]["市盈率(pe)"] == pytest.approx(21.7)
-    assert rows[1]["销售净利率"] == pytest.approx(
-        9317000000.0 / 40528509770.23 * 100
-    )
+    assert rows[1]["销售毛利率"] == pytest.approx(77.5418415205)
+    assert rows[1]["销售净利率"] == pytest.approx(22.9890347252)
+    assert rows[1]["净资产收益率"] == pytest.approx(6.89)
+    assert rows[1]["营业收入同比"] == pytest.approx(-54.551804064166)
     assert adapter.peers_source == "eastmoney"
     assert adapter.peers_error == ""
 

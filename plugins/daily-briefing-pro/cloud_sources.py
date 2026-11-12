@@ -47,6 +47,7 @@ EASTMONEY_INDUSTRY_URL = (
     "IndustryAnalysis/PageAjax"
 )
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
+EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 EASTMONEY_QUOTE_REFERER = "https://quote.eastmoney.com/"
 EASTMONEY_FINANCE_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
@@ -228,6 +229,37 @@ def _eastmoney_secid(code: str) -> str:
     return f"{'1' if prefix == 'SH' else '0'}.{code}"
 
 
+def _scaled_quote_number(value: Any) -> float | None:
+    number = _number(value)
+    return number / 100 if number is not None else None
+
+
+def _eastmoney_stock_quote(code: str) -> dict[str, Any]:
+    """Fetch one quote through the endpoint that remains available when ulist fails."""
+
+    payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_STOCK_URL}?secid={_eastmoney_secid(code)}"
+        "&fields=f43,f57,f58,f116,f117,f162,f167,f170",
+        referer=EASTMONEY_QUOTE_REFERER,
+    )
+    data = (payload or {}).get("data") if isinstance(payload, dict) else None
+    if not isinstance(data, dict):
+        return {}
+    quote_code = _text(data.get("f57"))
+    if not re.fullmatch(r"\d{6}", quote_code):
+        quote_code = code
+    return {
+        "f2": _scaled_quote_number(data.get("f43")),
+        "f3": _scaled_quote_number(data.get("f170")),
+        "f9": _scaled_quote_number(data.get("f162")),
+        "f12": quote_code,
+        "f14": re.sub(r"\s+", "", _text(data.get("f58"))),
+        "f20": _number(data.get("f116")),
+        "f21": _number(data.get("f117")),
+        "f23": _scaled_quote_number(data.get("f167")),
+    }
+
+
 def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]:
     """Fetch current quote and valuation fields keyed by six-digit code."""
 
@@ -238,21 +270,38 @@ def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]
             unique.append(text)
     fields = "f2,f3,f9,f12,f14,f20,f21,f23,f25"
     output: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
     for start in range(0, len(unique), 40):
         chunk = unique[start : start + 40]
         secids = ",".join(_eastmoney_secid(code) for code in chunk)
-        payload = _fetch_eastmoney_json(
-            f"{EASTMONEY_QUOTE_URL}?fltt=2&invt=2&fields={fields}&secids={secids}",
-            referer=EASTMONEY_QUOTE_REFERER,
-        )
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_QUOTE_URL}?fltt=2&invt=2&fields={fields}&secids={secids}",
+                referer=EASTMONEY_QUOTE_REFERER,
+            )
+        except Exception as exc:
+            errors.append(f"批量行情请求失败：{exc}")
+            continue
         for item in ((payload or {}).get("data") or {}).get("diff") or []:
             if not isinstance(item, dict):
                 continue
             code = _text(item.get("f12"))
             if re.fullmatch(r"\d{6}", code):
                 output[code] = item
+    for code in unique:
+        current = output.get(code) or {}
+        if _number(current.get("f9")) is not None and _number(current.get("f23")) is not None:
+            continue
+        try:
+            quote = _eastmoney_stock_quote(code)
+        except Exception as exc:
+            errors.append(f"{code} 单只行情请求失败：{exc}")
+            continue
+        if quote:
+            output[code] = {**current, **quote}
     if not output:
-        raise ValueError("东方财富行情未返回数据")
+        detail = "；".join(errors[:3])
+        raise ValueError("东方财富行情未返回数据" + (f"（{detail}）" if detail else ""))
     return output
 
 
@@ -723,49 +772,83 @@ class CloudStockAdapter:
         if not isinstance(payload, dict):
             return _empty("东方财富同业名单返回结构无效")
 
-        codes: list[str] = []
-        for key in ("gzbj", "czxbj", "gsgm_zsz"):
+        def index_rows(key: str) -> dict[str, dict[str, Any]]:
+            indexed: dict[str, dict[str, Any]] = {}
             for item in payload.get(key) or []:
                 if not isinstance(item, dict):
                     continue
                 code = _text(item.get("CORRE_SECURITY_CODE"))
-                if re.fullmatch(r"\d{6}", code) and code not in codes:
-                    codes.append(code)
+                if re.fullmatch(r"\d{6}", code):
+                    indexed.setdefault(code, item)
+            return indexed
+
+        valuation_rows = index_rows("gzbj")
+        ratio_rows = index_rows("dbfxbj")
+        size_rows: dict[str, dict[str, Any]] = {}
+        for key in ("gsgm", "gsgm_zsz", "gsgm_ltsz", "gsgm_yysr", "gsgm_jlr"):
+            for code, item in index_rows(key).items():
+                size_rows.setdefault(code, item)
+
+        codes: list[str] = []
+        for code in (self._stock_code, *valuation_rows, *size_rows):
+            if code not in codes:
+                codes.append(code)
         if self._stock_code not in codes:
             codes.insert(0, self._stock_code)
         if not codes:
             return _empty("东方财富未返回同业股票代码")
 
-        secids = ",".join(_eastmoney_secid(code) for code in codes[:40])
-        fields = "f2,f3,f9,f12,f14,f20,f21,f23,f37,f40,f41,f45,f46,f49"
         try:
-            quotes = _fetch_eastmoney_json(
-                f"{EASTMONEY_QUOTE_URL}?fltt=2&invt=2&fields={fields}&secids={secids}",
-                referer=EASTMONEY_QUOTE_REFERER,
-            )
+            quotes = _eastmoney_quote_snapshot(codes)
         except Exception as exc:
-            return _empty(f"东方财富同业行情请求失败：{exc}")
-        diff = ((quotes or {}).get("data") or {}).get("diff") or []
+            quotes = {}
+            quote_error = str(exc)
+        else:
+            quote_error = ""
 
-        rows: list[dict[str, Any]] = []
-        for item in diff:
-            if not isinstance(item, dict):
+        rows_by_code: dict[str, dict[str, Any]] = {}
+        for code in codes:
+            quote = quotes.get(code) or {}
+            valuation = valuation_rows.get(code) or {}
+            size = size_rows.get(code) or {}
+            ratio = ratio_rows.get(code) or {}
+            name = re.sub(
+                r"\s+",
+                "",
+                _coalesce(
+                    _text(quote.get("f14")),
+                    _text(valuation.get("CORRE_SECURITY_NAME")),
+                    _text(size.get("CORRE_SECURITY_NAME")),
+                    _text(size.get("SECURITY_NAME_ABBR")),
+                    "",
+                ),
+            )
+            if not name:
                 continue
-            code = _text(item.get("f12"))
-            name = re.sub(r"\s+", "", _text(item.get("f14")))
-            if not re.fullmatch(r"\d{6}", code) or not name:
-                continue
-            revenue = _number(item.get("f40"))
-            profit = _number(item.get("f45"))
+            revenue = _number(size.get("TOTAL_OPERATEINCOME"))
+            profit = _number(size.get("NETPROFIT"))
             row = {
                 "股票代码": f"{code}.{_eastmoney_market_prefix(code)}",
                 "股票简称": name,
-                "市盈率(pe)": _number(item.get("f9")),
-                "市净率(pb)": _number(item.get("f23")),
-                "总市值": _number(item.get("f20")),
-                "流通市值": _number(item.get("f21")),
-                "净资产收益率": _number(item.get("f37")),
-                "销售毛利率": _number(item.get("f49")),
+                "市盈率(pe)": _coalesce(
+                    _number(quote.get("f9")),
+                    _number(valuation.get("PE_TTM")),
+                    _number(valuation.get("PE")),
+                ),
+                "市净率(pb)": _coalesce(
+                    _number(quote.get("f23")),
+                    _number(valuation.get("PB_MRQ")),
+                    _number(valuation.get("PB")),
+                ),
+                "总市值": _coalesce(
+                    _number(quote.get("f20")),
+                    _number(size.get("TOTAL_CAP")),
+                ),
+                "流通市值": _coalesce(
+                    _number(quote.get("f21")),
+                    _number(size.get("FREECAP")),
+                ),
+                "净资产收益率": _number(ratio.get("ROE_AVG")),
                 "营业收入": revenue,
                 "净利润": profit,
                 "销售净利率": (
@@ -773,13 +856,11 @@ class CloudStockAdapter:
                     if profit is not None and revenue not in (None, 0)
                     else None
                 ),
-                "营业收入同比": _number(item.get("f41")),
-                "净利润同比": _number(item.get("f46")),
-                "最新价": _number(item.get("f2")),
-                "最新涨跌幅": _number(item.get("f3")),
+                "最新价": _number(quote.get("f2")),
+                "最新涨跌幅": _number(quote.get("f3")),
                 "数据来源": "东方财富F10/行情",
             }
-            rows.append(
+            rows_by_code[code] = (
                 {
                     key: value
                     for key, value in row.items()
@@ -787,8 +868,57 @@ class CloudStockAdapter:
                 }
             )
 
+        if not rows_by_code:
+            detail = f"（{quote_error}）" if quote_error else ""
+            return _empty(f"东方财富未返回同业行情数据{detail}")
+
+        ordered_codes = sorted(
+            rows_by_code,
+            key=lambda code: (
+                _number(rows_by_code[code].get("总市值")) or 0,
+                _text(rows_by_code[code].get("股票代码")),
+            ),
+            reverse=True,
+        )
+        annual_errors: list[str] = []
+        target_year = max(1, datetime.now(CN_TZ).year - 1)
+        for code in ordered_codes[:6]:
+            try:
+                annual = _eastmoney_annual_financials(code, target_year)
+            except Exception as exc:
+                annual_errors.append(f"{code} 年度财务请求失败：{exc}")
+                continue
+            row = rows_by_code[code]
+            revenue = _number(annual.get("TOTALOPERATEREVE"))
+            profit = _number(annual.get("PARENTNETPROFIT"))
+            annual_values = {
+                "营业收入": revenue,
+                "净利润": profit,
+                "销售毛利率": _number(annual.get("XSMLL")),
+                "销售净利率": _coalesce(
+                    _number(annual.get("XSJLL")),
+                    (
+                        profit / revenue * 100
+                        if profit is not None and revenue not in (None, 0)
+                        else None
+                    ),
+                ),
+                "净资产收益率": _number(annual.get("ROEJQ")),
+                "营业收入同比": _number(annual.get("TOTALOPERATEREVETZ")),
+                "净利润同比": _number(annual.get("PARENTNETPROFITTZ")),
+            }
+            row.update(
+                {
+                    key: value
+                    for key, value in annual_values.items()
+                    if value not in (None, "")
+                }
+            )
+
+        rows = [rows_by_code[code] for code in ordered_codes]
         if not rows:
-            return _empty("东方财富未返回同业行情数据")
+            detail = "；".join(annual_errors[:2])
+            return _empty("东方财富未返回同业行情数据" + (f"（{detail}）" if detail else ""))
         rows.sort(
             key=lambda row: (
                 _number(row.get("总市值")) or 0,
