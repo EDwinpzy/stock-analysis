@@ -61,7 +61,9 @@ def inspect_html(path: Path) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="云端个股/行业报告渲染门禁")
-    parser.add_argument("--report", required=True)
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--report")
+    target.add_argument("--report-dir")
     parser.add_argument("--shots", required=True)
     parser.add_argument("--json", required=True)
     parser.add_argument("--sections", type=int, required=True)
@@ -69,7 +71,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--label", default="report")
     args = parser.parse_args(argv)
 
-    report = Path(args.report).resolve()
+    if args.report:
+        report = Path(args.report).resolve()
+    else:
+        candidates = sorted(
+            Path(args.report_dir).resolve().glob("*.html"),
+            key=lambda path: path.stat().st_mtime,
+        )
+        if not candidates:
+            raise SystemExit(f"报告目录没有 HTML：{args.report_dir}")
+        report = candidates[-1]
     shots = Path(args.shots).resolve()
     result_path = Path(args.json).resolve()
     shots.mkdir(parents=True, exist_ok=True)

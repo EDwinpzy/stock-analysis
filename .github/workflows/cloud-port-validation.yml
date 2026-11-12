@@ -63,8 +63,8 @@ jobs:
 
       - name: Prepare artifact directories
         run: |
-          mkdir -p artifacts/data artifacts/reports artifacts/visuals
-          chmod 777 artifacts/data artifacts/reports artifacts/visuals
+          mkdir -p artifacts/data artifacts/reports/stock artifacts/reports/industry artifacts/visuals
+          chmod 777 artifacts/data artifacts/reports artifacts/reports/stock artifacts/reports/industry artifacts/visuals
 
       - name: Probe credentials and data channels
         run: |
@@ -103,7 +103,7 @@ jobs:
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
             --volume "$PWD/artifacts/data:/runtime/data" \
-            --volume "$PWD/artifacts/reports:/runtime/reports" \
+            --volume "$PWD/artifacts/reports/stock:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
             --output-dir /runtime/data/stock-analysis \
@@ -117,7 +117,7 @@ jobs:
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
             --volume "$PWD/artifacts/data:/runtime/data" \
-            --volume "$PWD/artifacts/reports:/runtime/reports" \
+            --volume "$PWD/artifacts/reports/industry:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
             --output-dir /runtime/data/industry-analysis \
@@ -131,7 +131,7 @@ jobs:
             --volume "$PWD/artifacts/visuals:/runtime/visuals" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
-            --report "/runtime/reports/贵州茅台-600519-个股分析.html" \
+            --report-dir /runtime/reports/stock \
             --sections 10 --tables 25 --label stock \
             --shots /runtime/visuals \
             --json /runtime/visuals/stock-visual-result.json
@@ -140,7 +140,7 @@ jobs:
             --volume "$PWD/artifacts/visuals:/runtime/visuals" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
-            --report "/runtime/reports/白酒-行业分析.html" \
+            --report-dir /runtime/reports/industry \
             --sections 8 --tables 14 --label industry \
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
@@ -152,3 +152,117 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: artifacts/
+
+  arm64-reports:
+    needs: python-tests
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 150
+    env:
+      IMAGE: daily-briefing-pro:3.23.19-cloud-arm64-ci
+      FUYAO_API_KEY: ${{ secrets.FUYAO_API_KEY }}
+      IWENCAI_API_KEY: ${{ secrets.IWENCAI_API_KEY }}
+    steps:
+      - name: Check out the task branch
+        uses: actions/checkout@v4
+
+      - name: Build the formal ARM64 image
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --platform linux/arm64 \
+            -f plugins/daily-briefing-pro/deploy/cloud/Dockerfile \
+            -t "$IMAGE" \
+            plugins/daily-briefing-pro
+          docker image inspect "$IMAGE" --format '{{.Architecture}} {{.Os}} {{.Id}}'
+
+      - name: Prepare artifact directories
+        run: |
+          mkdir -p artifacts-arm64/data artifacts-arm64/reports/stock artifacts-arm64/reports/industry artifacts-arm64/visuals
+          chmod 777 artifacts-arm64/data artifacts-arm64/reports artifacts-arm64/reports/stock artifacts-arm64/reports/industry artifacts-arm64/visuals
+
+      - name: Probe credentials and data channels
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts-arm64/data:/runtime/data" \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py doctor --probe \
+            | tee artifacts-arm64/doctor.json
+
+      - name: Query live market data
+        run: |
+          set -euo pipefail
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            realtime 600519 --mode cloud --compact \
+            | tee artifacts-arm64/market-realtime.json
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            candle 600519 --mode cloud --count 3 --compact \
+            | tee artifacts-arm64/market-candle.json
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            sector --target 白酒 --mode cloud --compact \
+            | tee artifacts-arm64/market-sector.json
+
+      - name: Generate and gate the stock report
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts-arm64/data:/runtime/data" \
+            --volume "$PWD/artifacts-arm64/reports/stock:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
+            --output-dir /runtime/data/stock-analysis \
+            | tee artifacts-arm64/stock-report-result.json
+
+      - name: Generate and gate the industry report
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts-arm64/data:/runtime/data" \
+            --volume "$PWD/artifacts-arm64/reports/industry:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
+            --output-dir /runtime/data/industry-analysis \
+            | tee artifacts-arm64/industry-report-result.json
+
+      - name: Render desktop and mobile report screenshots
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts-arm64/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report-dir /runtime/reports/stock \
+            --sections 10 --tables 25 --label stock \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/stock-visual-result.json
+          docker run --rm \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts-arm64/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report-dir /runtime/reports/industry \
+            --sections 8 --tables 14 --label industry \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/industry-visual-result.json
+
+      - name: Upload ARM64 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-port-evidence-arm64
+          if-no-files-found: error
+          retention-days: 14
+          path: artifacts-arm64/
