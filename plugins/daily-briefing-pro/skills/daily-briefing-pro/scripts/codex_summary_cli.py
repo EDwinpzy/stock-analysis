@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -199,7 +200,7 @@ def call_api_text(
     last_error = ''
     for model in _model_candidates(config):
         payload['model'] = model
-        for attempt in range(3):
+        for attempt in range(4):
             try:
                 from network_config import httpx_client_kwargs
 
@@ -210,8 +211,8 @@ def call_api_text(
                 response = httpx.post(url, headers=headers, json=payload, **client_kwargs)
             except httpx.HTTPError:
                 last_error = 'AI summary request failed'
-                if attempt < 2:
-                    time.sleep(0.5 * (attempt + 1))
+                if attempt < 3:
+                    time.sleep(min(2 ** (attempt + 1), 15) + random.uniform(0, 0.5))
                     continue
                 break
             if response.status_code in (401, 403):
@@ -223,8 +224,17 @@ def call_api_text(
                 break
             if response.status_code == 429 or response.status_code >= 500:
                 last_error = f'AI summary endpoint returned HTTP {response.status_code}'
-                if attempt < 2:
-                    time.sleep(0.5 * (attempt + 1))
+                if attempt < 3:
+                    delay = min(2 ** (attempt + 1), 15) + random.uniform(0, 0.5)
+                    if response.status_code == 530:
+                        delay = max(delay, 5)
+                    response_headers = getattr(response, 'headers', None) or {}
+                    retry_after = response_headers.get('Retry-After')
+                    try:
+                        delay = max(delay, min(float(retry_after), 30))
+                    except (TypeError, ValueError):
+                        pass
+                    time.sleep(delay)
                     continue
                 break
             if response.status_code != 200:

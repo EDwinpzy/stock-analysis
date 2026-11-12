@@ -146,6 +146,32 @@ class ApiSummaryTests(unittest.TestCase):
                 cli.call_api_text('输入')
         self.assertNotIn('private upstream response', str(result.exception))
 
+    def test_transient_530_is_retried_before_success(self):
+        responses = [
+            SimpleNamespace(status_code=530, text='origin unavailable', headers={}),
+            SimpleNamespace(status_code=530, text='origin unavailable', headers={}),
+            SimpleNamespace(
+                status_code=200,
+                json=lambda: {'choices': [{'message': {'content': '恢复'}}]},
+            ),
+        ]
+        with patch.dict(
+            os.environ,
+            {
+                'DAILY_BRIEFING_AI_API_KEY': 'test-key',
+                'DAILY_BRIEFING_AI_BASE_URL': 'https://summary.example/v1',
+                'DAILY_BRIEFING_AI_MODEL': 'summary-model',
+            },
+            clear=False,
+        ), patch.object(cli.httpx, 'post', side_effect=responses) as post, \
+                patch.object(cli.time, 'sleep') as sleep:
+            answer = cli.call_api_text('输入')
+
+        self.assertEqual(answer, '恢复')
+        self.assertEqual(post.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertGreaterEqual(sleep.call_args_list[0].args[0], 5)
+
     def test_missing_api_key_is_unavailable(self):
         self.assertFalse(cli.semantic_summary_available())
 
