@@ -231,17 +231,17 @@ class CloudDeployContractTests(unittest.TestCase):
 
         self.assertNotIn("run --rm --no-build", readme)
 
-    def test_seed_script_is_available_and_dry_run_by_default(self):
-        seed = (PLUGIN_ROOT / "deploy" / "cloud" / "seed-data.ps1").read_text(encoding="utf-8")
-        self.assertIn("[switch]$Apply", seed)
-        self.assertIn("if ($Apply)", seed)
-        self.assertIn("runtime_seed.py", seed)
-        self.assertIn("[string]$DestinationDataDir = ''", seed)
-        self.assertIn("$MyInvocation.MyCommand.Path", seed)
-        self.assertNotIn(
-            "[string]$DestinationDataDir = (Join-Path $PSScriptRoot",
-            seed,
-        )
+    def test_runtime_seed_is_cross_platform_and_dry_run_by_default(self):
+        seed = (
+            PLUGIN_ROOT
+            / "skills"
+            / "daily-briefing-pro"
+            / "scripts"
+            / "runtime_seed.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('parser.add_argument("--apply", action="store_true"', seed)
+        self.assertIn("if args.apply:", seed)
+        self.assertIn('"applied": bool(args.apply)', seed)
 
 
 if __name__ == "__main__":

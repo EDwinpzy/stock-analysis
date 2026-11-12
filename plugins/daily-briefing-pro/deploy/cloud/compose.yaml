@@ -34,6 +34,9 @@ services:
       DOUYIN_TRANSCRIPT_PROVIDER: auto
       DOUYIN_ASR_BASE_URL: ${DOUYIN_ASR_BASE_URL:-}
       DOUYIN_ASR_MODEL: ${DOUYIN_ASR_MODEL:-}
+      STT_AI_BASE_URL: ${STT_AI_BASE_URL:-https://api.stt.ai}
+      STT_AI_MODEL: ${STT_AI_MODEL:-whisper-large-v3-turbo}
+      STT_AI_LANGUAGE: ${STT_AI_LANGUAGE:-zh}
       DOUYIN_MAX_CONCURRENT: "1"
       TGB_COOKIE_PATH: /run/secrets/tgb_cookies.json
       DOUYIN_COOKIE_PATH: /run/secrets/douyin_cookies.json
@@ -50,6 +53,7 @@ services:
       - openai_api_key
       - siliconflow_api_key
       - groq_api_key
+      - stt_ai_api_key
       - douyin_asr_api_key
       - ima_openapi_clientid
       - ima_openapi_apikey
@@ -80,6 +84,8 @@ secrets:
     file: ./secrets/siliconflow_api_key
   groq_api_key:
     file: ./secrets/groq_api_key
+  stt_ai_api_key:
+    file: ./secrets/stt_ai_api_key
   douyin_asr_api_key:
     file: ./secrets/douyin_asr_api_key
   ima_openapi_clientid:

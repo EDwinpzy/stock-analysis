@@ -61,6 +61,7 @@ TRANSCRIPTION_KEY_BY_PROVIDER = {
     "groq": "GROQ_API_KEY",
     "openai": "OPENAI_API_KEY",
     "siliconflow": "SILICONFLOW_API_KEY",
+    "sttai": "STT_AI_API_KEY",
 }
 
 
@@ -471,7 +472,9 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
 
 
 ASR_CONFIG_HINT = (
-    "配置 GROQ_API_KEY、SILICONFLOW_API_KEY、OPENAI_API_KEY 之一，"
+    "内置 STT.ai 匿名接口可直接使用（3 次/日/IP）；"
+    "如需更高额度，可配置 STT_AI_API_KEY、GROQ_API_KEY、"
+    "SILICONFLOW_API_KEY 或 OPENAI_API_KEY，"
     "或同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
 )
 
@@ -484,10 +487,11 @@ def _configured_asr_providers(env: Mapping[str, str]) -> list[str]:
     ):
         configured.append("cloud")
     for name, key_name in TRANSCRIPTION_KEY_BY_PROVIDER.items():
-        if name == "cloud":
+        if name in {"cloud", "sttai"}:
             continue
         if str(env.get(key_name) or "").strip():
             configured.append(name)
+    configured.append("sttai")
     return configured
 
 
@@ -507,18 +511,22 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "transcription",
             "抖音转录",
             f"未知的 DOUYIN_TRANSCRIPT_PROVIDER={provider}",
-            "改为 auto、cloud、groq、openai 或 siliconflow",
+            "改为 auto、cloud、groq、openai、siliconflow 或 sttai",
         )
 
     configured = _configured_asr_providers(env)
     if provider == "auto":
-        if configured:
-            return _ok("transcription", "抖音转录", f"API Key 可用: {', '.join(configured)}")
-        return _error(
+        if configured == ["sttai"]:
+            return _warning(
+                "transcription",
+                "抖音转录",
+                "使用内置 STT.ai 匿名接口；额度为 3 次/日/IP",
+                "如需稳定批量转录，请配置 STT_AI_API_KEY 或其他云端 ASR Key",
+            )
+        return _ok(
             "transcription",
             "抖音转录",
-            "未配置任何云端 ASR Key",
-            ASR_CONFIG_HINT,
+            f"云端 ASR 可用: {', '.join(configured)}",
         )
 
     if provider == "cloud":
@@ -534,6 +542,15 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "抖音转录",
             f"DOUYIN_TRANSCRIPT_PROVIDER=cloud，但缺少 " + "、".join(missing),
             "同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL",
+        )
+    if provider == "sttai":
+        if str(env.get("STT_AI_API_KEY") or "").strip():
+            return _ok("transcription", "抖音转录", "STT.ai API Key 可用")
+        return _warning(
+            "transcription",
+            "抖音转录",
+            "STT.ai 匿名接口可用；额度为 3 次/日/IP",
+            "配置 STT_AI_API_KEY 可提升额度",
         )
     key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
     if str(env.get(key_name) or "").strip():
@@ -611,7 +628,7 @@ def _check_panel(data_dir: Path, trade_date: str) -> Check:
             "sentiment_panel",
             "情绪模型历史面板",
             f"{rows} 行，截至 {latest}；目标交易日为 {trade_date}，采集阶段需增量回补",
-            "若云端无法访问开盘啦历史接口，先运行 seed-data.ps1 同步本机面板",
+            "若云端无法访问开盘啦历史接口，先用 runtime_seed.py 导入已有的云端面板备份",
         )
     if latest and latest > trade_date:
         return _warning(

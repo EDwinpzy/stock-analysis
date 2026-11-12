@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -34,24 +33,6 @@ MAX_CONCURRENCY = 2
 
 # akshare 的 sector_type 取值带"资金流"后缀
 SECTOR_TYPE_ARGS = {"行业": "行业资金流", "概念": "概念资金流"}
-
-
-def _configure_proxy() -> None:
-    """把 Windows 注册表里的系统代理同步到环境变量，供 requests/akshare 使用。"""
-    if os.environ.get("HTTPS_PROXY"):
-        return
-    try:
-        import winreg
-
-        key_path = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-            server, _ = winreg.QueryValueEx(key, "ProxyServer")
-    except (ImportError, OSError):
-        return
-    if not server:
-        return
-    os.environ["HTTP_PROXY"] = f"http://{server}"
-    os.environ["HTTPS_PROXY"] = f"http://{server}"
 
 
 def _retry(fn, label: str):
@@ -168,7 +149,6 @@ def main() -> int:
         except (AttributeError, ValueError):
             pass
 
-    _configure_proxy()
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     types = ["行业", "概念"] if args.sector_type == "both" else [args.sector_type]

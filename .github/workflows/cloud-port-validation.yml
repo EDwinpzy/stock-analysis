@@ -63,6 +63,7 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      STT_AI_API_KEY: ${{ secrets.STT_AI_API_KEY }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -83,7 +84,7 @@ jobs:
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
             DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
-            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY; do
+            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY STT_AI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"
@@ -325,12 +326,11 @@ jobs:
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
 
-      - name: Require a cloud ASR key
+      - name: Report the cloud ASR route
         run: |
           set -euo pipefail
           docker run --rm --env-file "$RUNNER_TEMP/briefing.env" "$IMAGE" \
-            python -c "import os,sys; generic=all(os.environ.get(k,'').strip() for k in ('DOUYIN_ASR_BASE_URL','DOUYIN_ASR_API_KEY','DOUYIN_ASR_MODEL')); native=[k for k in ('GROQ_API_KEY','SILICONFLOW_API_KEY','OPENAI_API_KEY') if os.environ.get(k,'').strip()]; print('ASR generic=%s native=%s' % (generic, native)); sys.exit(0 if generic or native else 1)" \
-            || { echo "No cloud ASR credential: set GROQ_API_KEY, SILICONFLOW_API_KEY, OPENAI_API_KEY, or all three DOUYIN_ASR_* secrets." >&2; exit 1; }
+            python -c "import os; generic=all(os.environ.get(k,'').strip() for k in ('DOUYIN_ASR_BASE_URL','DOUYIN_ASR_API_KEY','DOUYIN_ASR_MODEL')); native=[k for k in ('GROQ_API_KEY','SILICONFLOW_API_KEY','OPENAI_API_KEY','STT_AI_API_KEY') if os.environ.get(k,'').strip()]; print('ASR generic=%s native=%s sttai=anonymous' % (generic, native))"
 
       - name: Generate the live scheduled briefing with real audio transcription
         run: |
@@ -391,6 +391,7 @@ jobs:
               "groq-whisper",
               "openai-asr",
               "siliconflow-sensevoice",
+              "sttai-whisper",
           }
           for blogger in douyin.get("bloggers", []):
               for video in blogger.get("videos", []):
@@ -456,6 +457,7 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      STT_AI_API_KEY: ${{ secrets.STT_AI_API_KEY }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -476,7 +478,7 @@ jobs:
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
             DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
-            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY; do
+            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY STT_AI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"

@@ -231,7 +231,7 @@ class PreflightCheckTests(unittest.TestCase):
         self.assertEqual(ready.state, "ok")
         self.assertIn("cloud", ready.detail)
 
-    def test_auto_without_cloud_keys_is_an_error(self):
+    def test_auto_without_cloud_keys_uses_sttai_anonymous(self):
         check = preflight._check_transcription(
             {
                 "DOUYIN_TRANSCRIPT_PROVIDER": "auto",
@@ -239,8 +239,28 @@ class PreflightCheckTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(check.state, "error")
-        self.assertIn("GROQ_API_KEY", check.fix)
+        self.assertEqual(check.state, "warning")
+        self.assertIn("STT.ai", check.detail)
+        self.assertIn("STT_AI_API_KEY", check.fix)
+
+    def test_explicit_sttai_without_key_is_a_warning(self):
+        check = preflight._check_transcription(
+            {"DOUYIN_TRANSCRIPT_PROVIDER": "sttai"}
+        )
+
+        self.assertEqual(check.state, "warning")
+        self.assertIn("3 次/日/IP", check.detail)
+
+    def test_explicit_sttai_with_key_is_ok(self):
+        check = preflight._check_transcription(
+            {
+                "DOUYIN_TRANSCRIPT_PROVIDER": "sttai",
+                "STT_AI_API_KEY": "configured",
+            }
+        )
+
+        self.assertEqual(check.state, "ok")
+        self.assertIn("STT.ai", check.detail)
 
     def test_resume_mode_skips_collection_only_credentials(self):
         with tempfile.TemporaryDirectory() as temp:

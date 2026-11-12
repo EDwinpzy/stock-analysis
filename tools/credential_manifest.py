@@ -406,6 +406,14 @@ def evaluate_complete_env_groups(
     )
     if partial:
         detail += "。不完整组合：" + "；".join(partial)
+    if item.get("anonymous_available"):
+        result["state"] = "warn"
+        result["detail"] = (
+            "未配置带 Key 的组合；可使用内置匿名云 API："
+            + str(item.get("anonymous_label") or "anonymous")
+            + f"。{detail}"
+        )
+        return result
     result["detail"] = detail
     return result
 
@@ -506,6 +514,12 @@ def apply_github_state(
         ]
         if any(group and all(name in github_names for name in group) for group in groups):
             result["detail"] = f"{result['detail']}；GitHub Secret 至少一组完整"
+        elif item.get("anonymous_available"):
+            result["state"] = "warn"
+            result["detail"] = (
+                f"{result['detail']}；GitHub Secret 无 Key 组合，"
+                "云端将使用内置匿名 ASR 接口（3 次/日/IP）"
+            )
         else:
             required = bool(result.get("required"))
             result["state"] = "fail" if required else (

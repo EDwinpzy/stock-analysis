@@ -331,6 +331,21 @@ def test_cloud_asr_github_group_requires_one_complete_secret_set():
     assert "没有完整组合" in partial["detail"]
 
 
+def test_cloud_asr_anonymous_fallback_is_a_warning():
+    item = _cloud_asr_group_item()
+    item["anonymous_available"] = True
+    item["anonymous_label"] = "STT.ai anonymous (3/day/IP)"
+
+    no_key = cm.evaluate_complete_env_groups(item, {}, {})
+    assert no_key["state"] == "warn"
+    assert "STT.ai anonymous" in no_key["detail"]
+
+    github = dict(no_key)
+    cm.apply_github_state(github, set(), item)
+    assert github["state"] == "warn"
+    assert "匿名 ASR" in github["detail"]
+
+
 def test_cookie_github_payload_round_trips(tmp_path):
     path = tmp_path / "cookie.json"
     _write_cookies(path, "2026-11-13T05:27:54.588Z")

@@ -10,11 +10,11 @@
 4. 语音转文字 (原生字幕优先；无字幕时调用云端 ASR API，不在本机或容器内跑模型)
 
 用法:
-    python analyze_douyin.py <抖音分享链接> [--provider auto|groq|openai|siliconflow|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
+    python analyze_douyin.py <抖音分享链接> [--provider auto|groq|openai|siliconflow|sttai|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
 
 说明:
-    --provider auto（默认）会优先使用抖音原生字幕；没有字幕时优先使用显式配置的
-    通用 OpenAI-compatible ASR，然后按 Groq → OpenAI → SiliconFlow 顺序尝试。
+    --provider auto（默认）会优先使用抖音原生字幕；没有字幕时先使用显式配置的
+    通用 OpenAI-compatible / Groq / OpenAI / SiliconFlow，最后回退到 STT.ai。
     通用 ASR 必须同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、
     DOUYIN_ASR_MODEL；文本 Relay 不能当作音频接口使用。
 """
@@ -86,7 +86,7 @@ MOBILE_HEADERS = {
 DESKTOP_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 # 多种语音转文字 API 配置
-# auto 优先级：通用 ASR > Groq > OpenAI > SiliconFlow
+# auto 优先级：已配置的付费/Key 通道 > STT.ai 零 Key 兜底
 
 TRANSCRIPT_PROVIDERS = {
     'groq': {
@@ -112,6 +112,12 @@ TRANSCRIPT_PROVIDERS = {
         'model': '',
         'env_key': 'DOUYIN_ASR_API_KEY',
         'description': 'OpenAI Compatible 云端 ASR'
+    },
+    'sttai': {
+        'api_base': 'https://api.stt.ai/v1/transcribe',
+        'model': 'whisper-large-v3-turbo',
+        'env_key': 'STT_AI_API_KEY',
+        'description': 'STT.ai Whisper（匿名 3 次/日/IP，可选 Key）'
     }
 }
 
@@ -838,6 +844,70 @@ def extract_text_from_audio_siliconflow(audio_path: Path, api_key: str) -> str:
             return result.get('text', '')
 
 
+def _normalize_sttai_text(text: str) -> str:
+    """Join spaces inserted between Chinese characters without damaging English."""
+    compact = " ".join(str(text or "").split())
+    return re.sub(
+        r"(?<=[\u4e00-\u9fff,，。！？、；：])\s+(?=[\u4e00-\u9fff])",
+        "",
+        compact,
+    )
+
+
+def extract_text_from_audio_sttai(audio_path: Path, api_key: str = "") -> str:
+    """Transcribe through STT.ai; anonymous mode needs no API key."""
+    import httpx
+
+    base_url = (
+        os.environ.get("STT_AI_BASE_URL", "").strip()
+        or "https://api.stt.ai"
+    ).rstrip("/")
+    if base_url.endswith("/transcribe"):
+        api_base = base_url
+    elif base_url.endswith("/v1"):
+        api_base = f"{base_url}/transcribe"
+    else:
+        api_base = f"{base_url}/v1/transcribe"
+    model = (
+        os.environ.get("STT_AI_MODEL", "").strip()
+        or "whisper-large-v3-turbo"
+    )
+    language = (
+        os.environ.get("STT_AI_LANGUAGE", "").strip()
+        or "zh"
+    )
+    key = (api_key or os.environ.get("STT_AI_API_KEY", "")).strip()
+    headers = {"Authorization": f"Bearer {key}"} if key else {}
+
+    with open(audio_path, "rb") as handle:
+        files = {
+            "file": (audio_path.name, handle, "audio/mpeg"),
+            "model": (None, model),
+            "language": (None, language),
+        }
+        timeout = httpx.Timeout(300.0)
+        with httpx.Client(**httpx_client_kwargs(timeout=timeout)) as client:
+            response = client.post(api_base, files=files, headers=headers)
+            if response.status_code == 429:
+                raise RuntimeError(
+                    "STT.ai 匿名额度已用尽（3 次/日/IP）；"
+                    "请配置 STT_AI_API_KEY 提升额度"
+                )
+            response.raise_for_status()
+            result = response.json()
+            text = _normalize_sttai_text(
+                str(
+                    result.get("text")
+                    or result.get("transcript")
+                    or result.get("result")
+                    or ""
+                )
+            )
+            if not text:
+                raise RuntimeError("STT.ai 返回空转录")
+            return text
+
+
 def cloud_asr_config(api_key: str = "") -> tuple[str, str, str] | None:
     """Return a fully explicit generic ASR config without using text-relay defaults."""
 
@@ -899,16 +969,18 @@ def extract_text_from_audio_cloud(
 
 
 ASR_CONFIG_HINT = (
-    "请配置 GROQ_API_KEY、SILICONFLOW_API_KEY、OPENAI_API_KEY 之一，"
-    "或同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
+    "STT.ai 匿名云端接口可作为零 Key 兜底（3 次/日/IP）；"
+    "若要提高额度，可配置 STT_AI_API_KEY、GROQ_API_KEY、SILICONFLOW_API_KEY、"
+    "OPENAI_API_KEY 之一，或同时配置 DOUYIN_ASR_BASE_URL、"
+    "DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
 )
 
 
 def _provider_has_credentials(provider: str, api_key: str = "") -> bool:
+    if provider == "sttai":
+        return True
     if provider == "cloud":
         return cloud_asr_config(api_key=api_key or "") is not None
-    if api_key:
-        return True
     env_key = TRANSCRIPT_PROVIDERS[provider].get("env_key")
     return bool(env_key and os.environ.get(str(env_key), "").strip())
 
@@ -924,7 +996,7 @@ def extract_text_from_audio(
     
     Args:
         audio_path: 音频文件路径
-        provider: 指定服务 ('cloud', 'groq', 'openai', 'siliconflow', 'auto')
+        provider: 指定服务 ('cloud', 'groq', 'openai', 'siliconflow', 'sttai', 'auto')
         api_key: API密钥 (可选，某些服务需要)
     
     Returns:
@@ -936,19 +1008,19 @@ def extract_text_from_audio(
     if provider in {'local', 'whisper', 'faster-whisper', 'openai-whisper'}:
         raise ValueError(f"本地 ASR 已移除，抖音转录只走云端 API；{ASR_CONFIG_HINT}")
 
-    # 自动模式：只按已配置的云端 API 顺序尝试，不做任何本地推理。
+    # 自动模式：先使用显式配置的有额度保障通道，最后走 STT.ai 零 Key 兜底。
     if provider == 'auto':
         providers_order = [
             name for name in ('cloud', 'groq', 'openai', 'siliconflow')
             if _provider_has_credentials(name, api_key)
         ]
-        if not providers_order:
-            raise RuntimeError(f"未配置任何云端 ASR；{ASR_CONFIG_HINT}")
+        providers_order.append('sttai')
     elif provider in TRANSCRIPT_PROVIDERS:
         providers_order = [provider]
     else:
         raise ValueError(
-            f"未知的转录服务 {provider}；可选 auto、cloud、groq、openai、siliconflow"
+            f"未知的转录服务 {provider}；可选 auto、cloud、groq、openai、"
+            "siliconflow、sttai"
         )
     
     errors = []
@@ -980,6 +1052,14 @@ def extract_text_from_audio(
                     print(f"  [转录] 使用 SiliconFlow SenseVoice...", file=sys.stderr)
                     text = extract_text_from_audio_siliconflow(audio_path, key)
                     return (text, "siliconflow-sensevoice") if return_source else text
+
+            elif prov == 'sttai':
+                print(f"  [转录] 使用 STT.ai Whisper...", file=sys.stderr)
+                # --api-key belongs to the selected paid provider in auto mode;
+                # never reuse a text-relay key as an STT.ai credential.
+                stt_key = (api_key or '') if provider == 'sttai' else ''
+                text = extract_text_from_audio_sttai(audio_path, api_key=stt_key)
+                return (text, "sttai-whisper") if return_source else text
 
         except Exception as e:
             errors.append(f"{prov}: {str(e)[:50]}")
@@ -1190,8 +1270,8 @@ async def main():
     parser = argparse.ArgumentParser(description="抖音视频内容解析工具 - 多API转录支持")
     parser.add_argument("url", help="抖音分享链接或视频链接")
     parser.add_argument("--provider", default="auto", 
-                        choices=['auto', 'cloud', 'groq', 'openai', 'siliconflow'],
-                        help="云端转录服务 (auto 优先通用 ASR，再尝试 Groq/OpenAI/SiliconFlow)")
+                        choices=['auto', 'cloud', 'groq', 'openai', 'siliconflow', 'sttai'],
+                        help="云端转录服务 (auto 先用已配置的 Key 通道，再回退 STT.ai)")
     parser.add_argument("--api-key", default="", help="API Key (可选，自动从环境变量读取)")
     parser.add_argument("--keep-files", action="store_true", help="保留下载的视频和音频文件")
     parser.add_argument("--output-dir", default="", help="输出目录 (保留文件到此目录)")

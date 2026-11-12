@@ -7,7 +7,7 @@ umask 077
 mkdir -p secrets runtime/data runtime/models runtime/reports verification
 
 for file in \
-    deepseek_api_key openai_api_key siliconflow_api_key groq_api_key douyin_asr_api_key \
+    deepseek_api_key openai_api_key siliconflow_api_key groq_api_key stt_ai_api_key douyin_asr_api_key \
     ima_openapi_clientid ima_openapi_apikey hithink_finance_api_key fuyao_api_key iwencai_api_key \
     ths_username ths_password ths_mac \
     tgb_cookies.json douyin_cookies.json xueqiu_cookies.json ths_selfstock.json

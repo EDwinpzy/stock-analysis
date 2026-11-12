@@ -85,18 +85,19 @@ Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完
 
 ## 当前审计（2026-11-12）
 
-- 工作流当前引用 19 个 Secret 名称；其中 13 个已存在，6 个 ASR 相关 Secret 未配置。
+- 工作流当前引用 20 个 Secret 名称；其中 13 个已存在，7 个 ASR 相关 Secret 未配置。
 - 本机配置已经包含两组 Relay 变量；它们当前使用同一个 Key，避免只改一边造成不一致。
 - 淘股吧 Cookie 在 2026-11-13 13:27（北京时间）前后过期，属于近期必须替换项。
-- 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 与音频 ASR 必须分开配置。
+- 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 与音频 ASR 必须分开配置，音频通道不能复用文本 Relay。
 - 用户提供的百度 Cookie（`BDUSS`、`BAIDUID_BFESS`、`BAIDU_WISE_UID` 等）未被本项目任何采集链路读取，因此不纳入可执行清单；不要把它们混入淘股吧、抖音或雪球 Cookie 文件。
 - `DOUYIN_AI_BASE_URL`、`DOUYIN_AI_API_KEY`、`DOUYIN_AI_MODEL` 是代码未读取的旧变量，保留只会造成漂移。
 - 文本 AI Relay 不支持 `/audio/transcriptions`；`DOUYIN_ASR_*` 必须指向真正的音频接口。
-- **当前没有配置任何 ASR Key**：`GROQ_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_API_KEY` 均为空，
-  `DOUYIN_ASR_*` 三项也未配置。抖音视频若没有原生字幕，转录会直接失败；需要先补其中一个 Key。
+- **当前没有配置带额度的 ASR Key**：`GROQ_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_API_KEY`、
+  `STT_AI_API_KEY` 均为空，`DOUYIN_ASR_*` 三项也未配置。无字幕视频会回退到 STT.ai 匿名接口，
+  但该接口约 `3 次/日/IP`，不适合 GitHub 共享 Runner 的稳定批量任务；建议补一个 Key。
 - 问财现在不是启动硬依赖；无 Key 或额度耗尽时，报告会使用东方财富、腾讯和同花顺补数并标明来源。
-- 本地 Whisper / faster-whisper 已从代码、依赖和镜像中移除；预检与定时任务在缺少云端 ASR Key 时直接失败，
-  不会降级到本机模型，也不会用标题冒充转录。
+- 本地 Whisper / faster-whisper 已从代码、依赖和镜像中移除；抖音转录只调用云端音频 API。
+  没有带 Key 的通道时使用 STT.ai 匿名兜底，但额度有限，不会降级到本机模型，也不会用标题冒充转录。
 - 当前 `thsdk` 是游客态；只有配置 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 才是固定账号。
 - 当前未配置 `THS_SELFSTOCK_PATH`，因此自选股/分组接口属于可选不可用状态。
 - 自托管 Compose 的 `secrets/` 目录目前只有 `fuyao_api_key`；如果实际启用 Compose，需要按

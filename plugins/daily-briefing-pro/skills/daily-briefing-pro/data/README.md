@@ -9,8 +9,8 @@ Cookie 和缓存继续留在同一持久目录。本文中的 `data/` 文件名�
 云端模式（`DAILY_BRIEFING_CLOUD=1`）与本地共用同一份长期文件白名单：干净环境会把
 安装包内 `data/` 的历史基线按“缺失才补”迁入持久目录，已有云端数据优先保留。
 因此首次云端运行至少具备面板、节点/轮动历史和 AI 缓存基线；采集阶段再增量补齐
-当日数据。需要把本机较新的快照刷新到已有云端目录时，仍使用
-`deploy/cloud/seed-data.ps1 -Apply -RefreshExisting`。
+当日数据。需要把已经放在云端的导出目录合并到现有数据目录时，使用跨平台
+`python -X utf8 scripts/runtime_seed.py --source-dir <导出目录> --destination-dir <数据目录> --apply`。
 
 ## 采集脚本写出的当日快照
 

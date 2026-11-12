@@ -244,12 +244,63 @@ class CloudTranscriptionTests(unittest.TestCase):
                     Path("unused.mp3"), provider="local"
                 )
 
-    def test_auto_without_cloud_credentials_fails_with_config_hint(self):
-        with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesRegex(RuntimeError, "GROQ_API_KEY"):
-                analyze_douyin.extract_text_from_audio(
-                    Path("unused.mp3"), provider="auto"
-                )
+    def test_auto_without_cloud_credentials_uses_sttai_anonymous(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            return_value="匿名转录",
+        ) as sttai:
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "匿名转录")
+        self.assertEqual(source, "sttai-whisper")
+        sttai.assert_called_once()
+
+    def test_auto_does_not_reuse_text_relay_credentials_for_audio(self):
+        environment = {
+            "DAILY_BRIEFING_AI_BASE_URL": "https://text.example/v1",
+            "DAILY_BRIEFING_AI_API_KEY": "text-only-key",
+            "DEEPSEEK_BASE_URL": "https://text.example/v1",
+            "DEEPSEEK_API_KEY": "text-only-key",
+        }
+        with patch.dict(os.environ, environment, clear=True), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_cloud",
+            side_effect=AssertionError("text relay must not be used as ASR"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            return_value="匿名转录",
+        ) as sttai:
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                api_key="text-only-key",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "匿名转录")
+        self.assertEqual(source, "sttai-whisper")
+        self.assertEqual(sttai.call_args.kwargs["api_key"], "")
+
+    def test_explicit_sttai_provider_records_source(self):
+        with patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            return_value="指定 STT.ai",
+        ):
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="sttai",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "指定 STT.ai")
+        self.assertEqual(source, "sttai-whisper")
 
     def test_auto_records_cloud_asr_as_transcript_source(self):
         with patch.dict(
@@ -292,6 +343,86 @@ class CloudTranscriptionTests(unittest.TestCase):
 
         self.assertEqual(text, "groq 转录")
         self.assertEqual(source, "groq-whisper")
+
+
+class SttAiTranscriptionTests(unittest.TestCase):
+    class _Response:
+        def __init__(self, status_code=200, payload=None):
+            self.status_code = status_code
+            self._payload = payload or {"text": "白酒板块反弹"}
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise RuntimeError(f"HTTP {self.status_code}")
+
+        def json(self):
+            return self._payload
+
+    def test_file_upload_and_anonymous_headers(self):
+        captured = {}
+
+        class Client:
+            def __init__(self, **kwargs):
+                captured["client_kwargs"] = kwargs
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def post(self, url, files, headers):
+                captured.update(url=url, files=files, headers=headers)
+                return SttAiTranscriptionTests._Response()
+
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "sample.mp3"
+            audio.write_bytes(b"audio")
+            with patch.dict(
+                os.environ,
+                {
+                    "STT_AI_BASE_URL": "https://stt.example",
+                    "STT_AI_MODEL": "whisper-large-v3-turbo",
+                    "STT_AI_LANGUAGE": "zh",
+                },
+                clear=True,
+            ), patch("httpx.Client", Client):
+                text = analyze_douyin.extract_text_from_audio_sttai(audio)
+
+        self.assertEqual(text, "白酒板块反弹")
+        self.assertEqual(captured["url"], "https://stt.example/v1/transcribe")
+        self.assertEqual(captured["files"]["model"], (None, "whisper-large-v3-turbo"))
+        self.assertEqual(captured["files"]["language"], (None, "zh"))
+        self.assertEqual(captured["headers"], {})
+
+    def test_anonymous_quota_error_is_actionable(self):
+        class Client:
+            def __init__(self, **kwargs):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def post(self, url, files, headers):
+                return SttAiTranscriptionTests._Response(status_code=429)
+
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "sample.mp3"
+            audio.write_bytes(b"audio")
+            with patch.dict(os.environ, {}, clear=True), patch("httpx.Client", Client):
+                with self.assertRaisesRegex(RuntimeError, "匿名额度已用尽"):
+                    analyze_douyin.extract_text_from_audio_sttai(audio)
+
+    def test_chinese_spaces_are_normalized_without_joining_english_words(self):
+        self.assertEqual(
+            analyze_douyin._normalize_sttai_text(
+                "今天 白酒 板块 反弹, watch volume"
+            ),
+            "今天白酒板块反弹, watch volume",
+        )
 
 
 class DouyinSubtitleTests(unittest.TestCase):
@@ -582,12 +713,19 @@ class GenericCloudAsrTests(unittest.TestCase):
             analyze_douyin,
             "extract_text_from_audio_cloud",
             side_effect=AssertionError("incomplete ASR config must not be used"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            return_value="匿名转录",
         ):
-            with self.assertRaisesRegex(RuntimeError, "GROQ_API_KEY"):
-                analyze_douyin.extract_text_from_audio(
-                    Path("unused.mp3"),
-                    provider="auto",
-                )
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "匿名转录")
+        self.assertEqual(source, "sttai-whisper")
 
     def test_text_relay_credentials_are_not_reused_as_audio_asr(self):
         with patch.dict(
@@ -602,12 +740,19 @@ class GenericCloudAsrTests(unittest.TestCase):
             analyze_douyin,
             "extract_text_from_audio_cloud",
             side_effect=AssertionError("text relay must not be used for audio"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            return_value="匿名转录",
         ):
-            with self.assertRaisesRegex(RuntimeError, "未配置任何云端 ASR"):
-                analyze_douyin.extract_text_from_audio(
-                    Path("unused.mp3"),
-                    provider="auto",
-                )
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "匿名转录")
+        self.assertEqual(source, "sttai-whisper")
 
 
 if __name__ == "__main__":

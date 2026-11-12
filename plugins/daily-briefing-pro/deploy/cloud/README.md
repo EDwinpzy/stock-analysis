@@ -110,6 +110,7 @@ Recognized secret files:
 | `secrets/openai_api_key` | AI summaries / transcription fallback |
 | `secrets/siliconflow_api_key` | Douyin transcription |
 | `secrets/groq_api_key` | Douyin transcription |
+| `secrets/stt_ai_api_key` | Optional STT.ai key; anonymous STT.ai works without this file but is limited to about 3 requests/day/IP |
 | `secrets/douyin_asr_api_key` | Generic OpenAI-compatible Douyin ASR; `DOUYIN_ASR_BASE_URL` and `DOUYIN_ASR_MODEL` must also be set |
 | `secrets/ima_openapi_clientid`, `secrets/ima_openapi_apikey` | IMA research search |
 | `secrets/hithink_finance_api_key` | Optional override for the official Tonghuashun finance data CLI |
@@ -127,22 +128,24 @@ The Compose file explicitly maps cookie secrets to `/run/secrets/*.json`; do not
 
 ## Seed durable local history
 
-A clean cloud volume does not inherit the Windows runtime at `~/.codex/daily-briefing-pro/data`. Compose sets `DAILY_BRIEFING_CLOUD=1`. Missing durable files are seeded automatically from the installed package's `data/` baseline, using the same allowlist as local migration: sentiment panel/history, node-cycle and rotation history, AI summary caches, transcript cache, and stock caches. Existing cloud files always win, and the seeder never copies `*_today.json`, cookies, login state, `.env`, or delivery snapshots. This is why a clean task starts with usable history instead of an empty panel.
+A clean cloud volume starts empty. Compose sets `DAILY_BRIEFING_CLOUD=1`. Missing durable files are seeded automatically from the installed package's `data/` baseline: sentiment panel/history, node-cycle and rotation history, AI summary caches, transcript cache, and stock caches. Existing cloud files always win, and the seeder never copies `*_today.json`, cookies, login state, `.env`, or delivery snapshots.
 
-To copy a newer Windows snapshot into an existing cloud volume, or to refresh files that already exist, use the explicit seed utility:
+To merge an exported history directory that is already present on the cloud host, run the cross-platform seeder. It previews by default:
 
-Preview first, then apply:
+```sh
+python -X utf8 scripts/runtime_seed.py \
+  --source-dir /path/to/exported-data \
+  --destination-dir /runtime/data
 
-```powershell
-pwsh -NoProfile -File .\seed-data.ps1
-pwsh -NoProfile -File .\seed-data.ps1 -Apply -RefreshExisting
+python -X utf8 scripts/runtime_seed.py \
+  --source-dir /path/to/exported-data \
+  --destination-dir /runtime/data \
+  --apply --refresh-existing
 ```
 
-The default source is `$HOME\.codex\daily-briefing-pro\data`; the default destination is `deploy/cloud/runtime/data`. Replaced files are backed up beside the target. The same allowlist controls both paths, so installation snapshots cannot overwrite live cloud history.
+`--refresh-existing` protects a newer destination by comparing timestamps. If files crossed machines in a way that makes timestamps unreliable, inspect the preview and use `--force`; replaced files are backed up beside the target. No desktop program or Windows path is required.
 
-`-RefreshExisting` still protects a newer destination by comparing file timestamps. If the files crossed machines in a way that makes timestamps unreliable, inspect the preview and use `-Force` to replace differing files; every replaced file is backed up beside the target.
-
-The script resolves its own directory at runtime, so it works with both PowerShell 7 (`pwsh`) and Windows PowerShell 5.1.
+The same allowlist controls automatic package seeding and explicit imports, so installation snapshots cannot overwrite live cloud history.
 
 ## Install the rotation model
 
@@ -180,16 +183,17 @@ sudo docker compose -f compose.yaml run --rm briefing \
   python scripts/run_all.py --date 2026-10-19 --preflight-only
 ```
 
-The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary API credentials, the configured Douyin cloud ASR key, TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
+The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary API credentials, the configured Douyin cloud ASR route, TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
 
 Compose sets `DOUYIN_TRANSCRIPT_PROVIDER=auto`. A generic ASR is used only
 when all of `DOUYIN_ASR_BASE_URL`, `DOUYIN_ASR_API_KEY` and
-`DOUYIN_ASR_MODEL` are set. It is tried before Groq/OpenAI/SiliconFlow. There
-is no local model fallback: the image contains no Whisper weights, torch,
-CTranslate2 or faster-whisper. Preflight fails when no cloud ASR credential is
-configured, and the scheduled-briefing gate refuses to start without one. The
-text AI Relay is never treated as an audio endpoint. A missing key cannot
-bypass the real-transcription requirement or allow title-only substitutes.
+`DOUYIN_ASR_MODEL` are set. Configured generic/Groq/OpenAI/SiliconFlow
+channels are tried before the zero-key STT.ai fallback. STT.ai anonymous mode
+is usable without a credential but is limited to roughly 3 transcriptions per
+IP per day; set `STT_AI_API_KEY` or another ASR key for unattended batches.
+There is no local model fallback: the image contains no Whisper weights,
+torch, CTranslate2 or faster-whisper. The text AI Relay is never treated as an
+audio endpoint, and a missing key cannot allow title-only substitutes.
 
 ## Verify the reference report
 

@@ -109,7 +109,7 @@ python {plugin_dir}/cloud_cli.py industry-report 白酒
 
 安装插件后，在本 Skill 目录执行 `python scripts/run_all.py --scheduled`。源码项目另提供 `tools/run_daily_briefing.py` 启动器，从任意工作目录调用项目源码并固定 UTF-8 编码与项目报告目录；此项目启动器不属于插件安装包。恢复指定日期已采集数据时使用 `--date YYYY-MM-DD --resume`，日期和逐模块完整性校验仍执行，不能把其他日期的数据当成本日结果。
 
-日报转录先尝试抖音原生字幕；没有原生字幕时只调用云端 ASR API，按 `DOUYIN_TRANSCRIPT_PROVIDER=auto` 依次尝试通用 ASR、Groq、OpenAI、SiliconFlow。代码、镜像和依赖中不再包含 faster-whisper、openai-whisper、torch 或本地模型权重；没有配置任何云端 ASR Key 时预检直接报错并列出缺失变量，完整简报没有跳过转录或本地兜底模式。
+日报转录先尝试抖音原生字幕；没有原生字幕时只调用云端 ASR API，按 `DOUYIN_TRANSCRIPT_PROVIDER=auto` 依次尝试已配置的通用 ASR、Groq、OpenAI、SiliconFlow，最后回退到无需 Key 的 STT.ai。代码、镜像和依赖中不再包含 faster-whisper、openai-whisper、torch 或本地模型权重；完整简报没有跳过转录或本地模型兜底。STT.ai 匿名额度约 `3 次/日/IP`，稳定批量运行应配置 `STT_AI_API_KEY` 或其他 ASR Key。
 
 博主调查按作者数及原文长度分批，通过有限并行调用语义 API，并逐批保存精确日期/原文哈希缓存。语义阶段有独立总时限；编排器的外层时限须覆盖平台采集与语义阶段之和。抖音的日期核验、媒体解析、下载及转录各自报告失败原因，成功转录保存按视频 ID 绑定的缓存，重跑不重复下载已经核验的同一视频。当前默认串行转录；`DOUYIN_MAX_CONCURRENT` 可显式配置最多 2 条，云端 ASR 并发过高会触发供应商限流。
 
@@ -172,7 +172,7 @@ AI 总结只使用已配置的 OpenAI-compatible API。本机 Codex CLI 登录�
 
 核验细节（2026-09 起抖音改版后的实测口径）：移动端列表接口已不再返回 `create_time`，且移动端 UA 的详情页会被静默拦空（HTTP 200 但 DOM 为空），因此**详情页时间核验必须用桌面 UA 渲染**（每次约 6 秒，失败重试 1 次），只在桌面端取不到时才回退移动端。主页列表是新→旧排列，核验到早于目标窗口的条目即可停止，不必整页逐条渲染。桌面端 `/aweme/v1/web/aweme/post/` 常返回数天前的旧缓存，不能作为发布时间依据。
 
-默认串行转录，可显式配置最多 2 条（`DOUYIN_MAX_CONCURRENT` 可调，云端 ASR 并发过高会触发供应商限流）。`auto` 依次尝试显式配置的通用 OpenAI-compatible ASR、Groq、OpenAI、SiliconFlow，不会回退到任何本地模型；没有可用 Key 时直接报错，不会把标题当转录。`DOUYIN_TRANSCRIPT_PROVIDER=cloud` 必须同时配置 `DOUYIN_ASR_BASE_URL`、`DOUYIN_ASR_API_KEY`、`DOUYIN_ASR_MODEL`，文本 Relay 不能作为音频接口。失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
+默认串行转录，可显式配置最多 2 条（`DOUYIN_MAX_CONCURRENT` 可调，云端 ASR 并发过高会触发供应商限流）。`auto` 依次尝试显式配置的通用 OpenAI-compatible ASR、Groq、OpenAI、SiliconFlow，最后使用 STT.ai 匿名兜底，不会回退到任何本地模型，也不会把标题当转录。`DOUYIN_TRANSCRIPT_PROVIDER=cloud` 必须同时配置 `DOUYIN_ASR_BASE_URL`、`DOUYIN_ASR_API_KEY`、`DOUYIN_ASR_MODEL`，文本 Relay 不能作为音频接口。失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
 
 当天未更新时的回退规则：按**自然日**回退到最近一个确有视频的发布日，最多 `DOUYIN_MAX_STALE_DAYS`（默认 7）天；不做工作日跳过，因为短视频博主周末照常更新。回退时必须在 `note` 与板块 meta 里写明实际数据日期，且不得用旧视频冒充当日内容；超过窗口仍无视频则如实标注账号最近发布时间。禁止保存视频/音频/Markdown/HTML 等专项产物。表格列为 `标题 | 核心观点 | 标的 | 方向`，最后给出核心主线；无法获取时间时不得凭猜测纳入当日结果。观点提炼提示词按语音转写场景编写：在内部纠正同音错字，只输出判断+逻辑+【标的】，禁止输出纠错清单或补充转录里没有的个股。
 
@@ -263,7 +263,7 @@ AI 总结只使用已配置的 OpenAI-compatible API。本机 Codex CLI 登录�
 
 8. **未来大事件：后台HTTP，禁止打开浏览器** — 该板块必须使用专用的后台Python脚本（`fetch_future_events.py`）通过urllib/httpx直接请求API获取数据。**严禁**使用Playwright、`mcp__plugin_playwright`、手动打开浏览器或任何会弹出窗口的方式获取。脚本运行时无可见界面，纯后台执行。自选股新闻抓取器仅供专项筛选使用，不属于完整简报流程。
 
-9. **抖音转录必须使用云端 ASR，不允许本地模型兜底** — `analyze_douyin.py` 默认 `--provider auto`，优先使用抖音原生字幕；没有字幕时按通用 ASR → Groq → OpenAI → SiliconFlow 调用真实音频接口。未配置任何云端 ASR Key 时预检和运行都必须报错并列出缺失变量，禁止把标题、话题或固定回放当转录。若单条视频转录仍失败，`fetch_douyin.py` 必须**使用视频标题+话题标签兜底**并写入 warning；成功转录但无 AI 时，必须保留真实 transcript 并在 HTML 以“转录摘录（未使用AI）”标注。缓存命中必须保留原始 `transcript_source` 并标记 `transcript_cache_hit`，不能用固定回放冒充新转录。
+9. **抖音转录必须使用云端 ASR，不允许本地模型兜底** — `analyze_douyin.py` 默认 `--provider auto`，优先使用抖音原生字幕；没有字幕时按通用 ASR → Groq → OpenAI → SiliconFlow → STT.ai 调用真实音频接口。STT.ai 无 Key 时使用匿名额度（约 3 次/日/IP），配置 `STT_AI_API_KEY` 可提高额度；禁止把标题、话题或固定回放当转录。若单条视频转录仍失败，`fetch_douyin.py` 必须**使用视频标题+话题标签兜底**并写入 warning；成功转录但无 AI 时，必须保留真实 transcript 并在 HTML 以“转录摘录（未使用AI）”标注。缓存命中必须保留原始 `transcript_source` 并标记 `transcript_cache_hit`，不能用固定回放冒充新转录。
 
 10. **机构研报必须含看多/看空逻辑** — 机构研报板块的核心价值不在于"谁看多谁看空"，而在于**为什么看多、为什么看空**。每条研报观点必须包含：
    - **标的/板块**（必须标注具体股票代码或板块名称）
@@ -380,7 +380,7 @@ AI 总结只使用已配置的 OpenAI-compatible API。本机 Codex CLI 登录�
   - **并发转录**：同一博主的目标日视频默认串行调用云端 ASR，避免触发供应商限流；可通过环境变量 `DOUYIN_MAX_CONCURRENT` 显式配置最多 2 条
   - 抓取博主主页返回的全部今日视频，**不再做 topN 截断**
   - 转录失败/为空时，仅记录标题/话题元数据和失败原因；完整简报必须全部转录成功并取得与全文哈希一致的语义摘要，禁止用标题替代视频观点
-  - 转录流程：`--provider auto` 按通用 ASR → Groq → OpenAI → SiliconFlow 尝试；没有 Key 时直接报错，不会进入本地模型
+  - 转录流程：`--provider auto` 按通用 ASR → Groq → OpenAI → SiliconFlow → STT.ai 尝试；最后一级无 Key 也可匿名调用，但不进入本地模型
   - 标的/板块关键词库持续扩展，覆盖 A 股/港股/美股常见科技与消费标的
 - **输出字段**：每条视频包含 `title/url/transcript/summary/symbols/direction/warning`；`warning` 标注转录失败；`title_source` 单独标注标题来自原始标题或转录开头
 - **信息遗漏检查**：生成器逐视频核验转录、原始链接和语义摘要；任何目标视频缺失即阻断完整简报，不写出成功页面
@@ -794,7 +794,7 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 - node.js（研报客搜索）
 - `hithink-finance` CLI（同花顺官方数据，龙虎榜与盘面补充的主源）：`npm install -g @hithink-tech/hithink-finance-cli` 后执行 `hithink-finance auth login`；未安装或未登录时自动降级（龙虎榜回退 AkShare，盘面补充只剩连板网）
 - `scripts/yanbao/` 三源研报专项模式所需的 Node.js 运行时
-- **必配其一**：通用 OpenAI-compatible ASR、SiliconFlow / Groq / OpenAI 音频 Key（抖音无字幕视频的唯一转录通道；不提供本地模型兜底）
+- **推荐配置其一**：通用 OpenAI-compatible ASR、SiliconFlow / Groq / OpenAI / STT.ai 音频 Key；完全未配置时仍可使用 STT.ai 匿名额度，但稳定批量日报不建议依赖它
 - IMA API凭证（知识库搜索）
 - 淘股吧登录Cookie（`data/tgb_cookies.json`）
 - 同花顺自选股JSON（`$THS_SELFSTOCK_PATH`，仅供专项新闻筛选）
@@ -919,7 +919,7 @@ playwright install chromium
 - `--resume` 在编译前复用逐模块完整性校验，缺日期数据、未完成转录或未核验来源时直接阻断，不再等到 HTML 编译阶段才发现。
 - 行业轮动模型改为环境变量和插件内 `models/sw_rotation_model` 的确定性路径，不再扫描整个 `D:\Codex`；云端使用可写模型工作卷，缺少原始模型时明确失败而不是拿旧排行结果重画。
 - 持久数据迁移和云端种子共用同一长期文件白名单，只同步面板、节点/轮动历史、AI缓存、转录缓存和行情缓存；`*_today.json`、Cookie、登录态和临时交付文件不再进入干净云端目录。
-- 修正 Compose Cookie secret 的目标文件名，使 `/run/secrets/*.json` 与实际读取路径一致；新增 `seed-data.ps1`、模型卷和云端预检说明。
+- 修正 Compose Cookie secret 的目标文件名，使 `/run/secrets/*.json` 与实际读取路径一致；新增跨平台 `runtime_seed.py`、模型卷和云端预检说明。
 
 ### v3.23.11 (2026-10-14)
 
