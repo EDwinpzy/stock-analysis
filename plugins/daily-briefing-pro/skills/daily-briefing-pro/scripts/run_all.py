@@ -529,7 +529,7 @@ def main():
     # 节点票模型必须在连板池写入后再更新，保留近三个月滚动历史供次日重复计算。
     # 节点模型除连板历史回补外，还要为每个节点抓一次日线核验"是否走A"，
     # 行情源偶发限流时会有退避重试，因此超时给宽一些。
-    node_result = persisted('node_cycle_today.json') if resume else run_script("build_node_cycle.py", ["--date", trade_date], timeout=420)
+    node_result = persisted('node_cycle_today.json') if resume else run_script("build_node_cycle.py", ["--date", trade_date], timeout=900)
     if not node_result.get("_error"):
         save_result("build_node_cycle.py", node_result)
     else:

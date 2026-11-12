@@ -34,6 +34,7 @@ DAILY_CACHE_PATH = DATA_DIR / "stock_daily_cache.json"
 
 _CALL_INTERVAL = 0.4
 _last_call_at = 0.0
+_FETCHED_THIS_RUN: set[str] = set()
 
 
 def _load(path: Path, default):
@@ -125,7 +126,11 @@ def fetch_daily(code: str, start_date: str, end_date: str, cache: dict, run_date
     当天后续运行可以继续补抓而不是复用半截数据。
     """
     entry = cache.get(code) or {}
-    if entry.get("fetched_at") == run_date and entry.get("complete") and entry.get("rows"):
+    if (
+        entry.get("fetched_at") == run_date
+        and entry.get("rows")
+        and (entry.get("complete") or code in _FETCHED_THIS_RUN)
+    ):
         return entry["rows"]
     try:
         import akshare as ak
@@ -150,6 +155,11 @@ def fetch_daily(code: str, start_date: str, end_date: str, cache: dict, run_date
                 break
         if done:
             break
+        # A suspended/delisted stock will never reach the window end.  One
+        # complete pass over the three sources is enough; retrying only burns
+        # the cloud runner's limited time budget.
+        if best_rows:
+            break
         time.sleep(1.5 * (round_no + 1))
     if best_rows:
         cache[code] = {
@@ -158,6 +168,7 @@ def fetch_daily(code: str, start_date: str, end_date: str, cache: dict, run_date
             "source": best_source,
             "complete": best_rows[-1][0] >= end_date,
         }
+        _FETCHED_THIS_RUN.add(code)
     return best_rows
 
 
