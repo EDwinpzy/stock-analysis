@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import time
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -50,7 +51,7 @@ EASTMONEY_INDUSTRY_URL = (
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 EASTMONEY_QUOTE_REFERER = "https://quote.eastmoney.com/"
-EASTMONEY_SECTOR_LIST_URL = "https://push2.eastmoney.com/api/qt/clist/get"
+EASTMONEY_SECTOR_SEARCH_URL = "https://searchapi.eastmoney.com/api/suggest/get"
 EASTMONEY_SECTOR_KLINE_URL = (
     "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 )
@@ -198,6 +199,32 @@ def _date_key(value: Any) -> str:
     return "".join(match.groups()) if match else ""
 
 
+def _fetch_eastmoney_urllib_json(url: str, headers: dict[str, str]) -> Any:
+    """Fetch endpoints whose response differs between HTTP clients."""
+
+    last_error: OSError | None = None
+    raw = b""
+    for attempt in range(3):
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=EASTMONEY_TIMEOUT,
+            ) as response:
+                raw = response.read()
+            break
+        except OSError as exc:
+            last_error = exc
+            if attempt == 2:
+                raise
+            time.sleep(0.5 * (attempt + 1))
+    if not raw and last_error is not None:
+        raise last_error
+    if raw[:2] == b"\x1f\x8b":
+        raw = gzip.decompress(raw)
+    return json.loads(raw.decode("utf-8-sig"))
+
+
 def _fetch_eastmoney_json(
     url: str,
     *,
@@ -217,21 +244,26 @@ def _fetch_eastmoney_json(
         "Accept-Encoding": "identity",
         "Connection": "close",
     }
-    for attempt in range(3):
-        try:
-            response = requests.get(
-                url,
-                headers=headers,
-                timeout=EASTMONEY_TIMEOUT,
-            )
-            response.raise_for_status()
-            raw = response.content
-            break
-        except (requests.RequestException, OSError) as exc:
-            last_error = exc
-            if attempt == 2:
-                raise
-            time.sleep(0.5 * (attempt + 1))
+    if "searchapi.eastmoney.com" in url:
+        return _fetch_eastmoney_urllib_json(url, headers)
+    try:
+        for attempt in range(3):
+            try:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    timeout=EASTMONEY_TIMEOUT,
+                )
+                response.raise_for_status()
+                raw = response.content
+                break
+            except (requests.RequestException, OSError) as exc:
+                last_error = exc
+                if attempt == 2:
+                    raise
+                time.sleep(0.5 * (attempt + 1))
+    except (requests.RequestException, OSError):
+        return _fetch_eastmoney_urllib_json(url, headers)
     if not raw and last_error is not None:
         raise last_error
     if raw[:2] == b"\x1f\x8b":
@@ -378,66 +410,67 @@ def _eastmoney_sector_board(keyword: str) -> dict[str, str]:
 
     normalized = _normalize_name(keyword)
     rows: list[dict[str, Any]] = []
-    pages = 1
-    page = 1
-    while page <= pages:
+    queries = [keyword.strip(), normalized]
+    for query in list(dict.fromkeys(item for item in queries if item)):
         payload = _fetch_eastmoney_json(
-            f"{EASTMONEY_SECTOR_LIST_URL}?"
+            f"{EASTMONEY_SECTOR_SEARCH_URL}?"
             + urlencode(
                 {
-                    "pn": str(page),
-                    "pz": "100",
-                    "po": "1",
-                    "np": "1",
-                    "fltt": "2",
-                    "invt": "2",
-                    "fid": "f12",
-                    "fs": "m:90+t:2",
-                    "fields": "f12,f14",
+                    "input": query,
+                    "type": "14",
+                    "token": "D43BF722C8E33BDC906FB84D85E326E8",
+                    "markettype": "",
+                    "mktnum": "",
+                    "jys": "",
+                    "classify": "",
+                    "securitytype": "",
+                    "status": "",
+                    "count": "20",
                 }
             ),
             referer=EASTMONEY_QUOTE_REFERER,
         )
-        page_rows = (payload.get("data") or {}).get("diff") or []
-        page_rows = [
-            item for item in page_rows if isinstance(item, dict)
+        candidates = (
+            ((payload or {}).get("QuotationCodeTable") or {}).get("Data") or []
+            if isinstance(payload, dict)
+            else []
+        )
+        rows = [
+            item
+            for item in candidates
+            if isinstance(item, dict)
+            and _text(item.get("Code")).upper().startswith("BK")
+            and _text(item.get("MktNum")) == "90"
         ]
-        rows.extend(page_rows)
-        if page == 1:
-            total = _number((payload.get("data") or {}).get("total")) or len(
-                page_rows
-            )
-            pages = max(1, math.ceil(total / 100))
-        if len(page_rows) < 100:
+        if rows:
             break
-        page += 1
     if not rows:
         raise ValueError(f"东方财富未找到板块：{normalized or keyword}")
     exact = [
         item
         for item in rows
-        if _text(item.get("f14")) == keyword.strip()
+        if _text(item.get("Name")) == keyword.strip()
     ]
     same_level = [
         item
         for item in rows
-        if _normalize_name(item.get("f14")) == normalized
+        if _normalize_name(item.get("Name")) == normalized
     ]
     same_level.sort(
         key=lambda item: (
-            0 if _text(item.get("f14")).endswith("Ⅲ") else
-            1 if _text(item.get("f14")).endswith("Ⅱ") else 2,
-            _text(item.get("f12")),
+            0 if _text(item.get("Name")).endswith("Ⅲ") else
+            1 if _text(item.get("Name")).endswith("Ⅱ") else 2,
+            _text(item.get("Code")),
         )
     )
     hit = (exact or same_level or rows)[0]
-    code = _text(hit.get("f12")).upper()
+    code = _text(hit.get("Code")).upper()
     if not re.fullmatch(r"BK\d{4}", code):
         raise ValueError(f"东方财富板块代码无效：{code or 'empty'}")
     return {
         "code": code,
-        "secid": f"90.{code}",
-        "name": _text(hit.get("f14")) or normalized,
+        "secid": _text(hit.get("QuoteID")) or f"90.{code}",
+        "name": _text(hit.get("Name")) or normalized,
     }
 
 

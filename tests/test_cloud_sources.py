@@ -678,11 +678,17 @@ def test_industry_cloud_preflight_falls_back_when_wencai_quota_is_exhausted(
         )
 
     def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
-        if "clist/get" in url:
+        if "searchapi.eastmoney.com" in url:
             return {
-                "data": {
-                    "total": 1,
-                    "diff": [{"f12": "BK1575", "f14": "白酒Ⅲ"}],
+                "QuotationCodeTable": {
+                    "Data": [
+                        {
+                            "Code": "BK1575",
+                            "Name": "白酒Ⅲ",
+                            "MktNum": "90",
+                            "QuoteID": "90.BK1575",
+                        }
+                    ]
                 }
             }
         if "kline/get" in url:
@@ -804,11 +810,17 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
                     ]
                 }
             }
-        if "clist/get" in url:
+        if "searchapi.eastmoney.com" in url:
             return {
-                "data": {
-                    "total": 1,
-                    "diff": [{"f12": "BK1575", "f14": "白酒Ⅲ"}],
+                "QuotationCodeTable": {
+                    "Data": [
+                        {
+                            "Code": "BK1575",
+                            "Name": "白酒Ⅲ",
+                            "MktNum": "90",
+                            "QuoteID": "90.BK1575",
+                        }
+                    ]
                 }
             }
         if "kline/get" in url and "fflow" not in url:
