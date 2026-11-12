@@ -5,6 +5,7 @@
 ## 使用说明
 
 - [使用文档.md](使用文档.md)：模型输入、输出、三分钟上手、数据口径和接入方式。
+- [credentials.md](credentials.md)：API Key、AI Relay、Cookie、GitHub Secrets 的可替换清单和审计命令。
 - [daily-briefing-pro 云端部署](../plugins/daily-briefing-pro/deploy/cloud/README.md)：每日简报、行情、个股/行业采集和报告门禁的容器入口。
 - [yuanxiaoer-cloud-workflow.md](yuanxiaoer-cloud-workflow.md)：圆小二语料的云端采集、增量蒸馏、状态边界和日常检查。
 

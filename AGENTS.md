@@ -6,6 +6,7 @@
 - 官方插件源码入口：`plugins/daily-briefing-pro/`；不要把安装缓存或 `deploy/cloud/runtime/` 当作源码。
 - 行情/个股/行业/简报统一入口：`python plugins/daily-briefing-pro/cloud_cli.py ...`；完整命令见根 `README.md` 和插件 `SKILL.md`。
 - 测试：`python -m pytest tests -q`。云端/取数冒烟：`python plugins/daily-briefing-pro/cloud_cli.py doctor --probe`。
+- 凭证/外部服务：机器清单位于 `config/credentials.manifest.json`，替换流程见 `docs/credentials.md`；真实值只放在 `~/.codex/daily-briefing.env` 和 Cookie JSON，不写入仓库。审计命令：`python tools\credential_manifest.py check --github --all --strict`。
 - 报告交付门禁：个股/行业报告必须同时校验 HTML 和采集 JSON，未通过不得交付。
 - 生成/忽略目录：`work/`、`plugins/daily-briefing-pro/deploy/cloud/runtime/`、`secrets/`、`*.tmp.html`、采集器旁的 `_fetch_result_*.json` / `_industry_*.json`。
 - 发布/签名：本仓库当前无 APK/HAP/商店发布门禁；插件版本、标签和 Release 未获明确指令不执行。

@@ -38,6 +38,8 @@ python plugins\daily-briefing-pro\cloud_cli.py parity --data-local 本机.json -
 
 云端容器用法见 `plugins/daily-briefing-pro/deploy/cloud/README.md`。测试命令：`python -m pytest tests -q`。
 
+凭证与外部服务的可替换清单见 `docs/credentials.md`；机器可读清单为 `config/credentials.manifest.json`。更换 Key、Relay 模型或 Cookie 后运行 `python tools\credential_manifest.py check --github --all --strict`，确认后再用 `sync-github --apply` 同步 GitHub Actions Secrets。
+
 ## 项目结构
 
 ```
