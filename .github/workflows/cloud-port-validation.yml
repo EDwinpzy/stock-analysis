@@ -63,8 +63,8 @@ jobs:
 
       - name: Prepare artifact directories
         run: |
-          mkdir -p artifacts/data artifacts/reports
-          chmod 777 artifacts/data artifacts/reports
+          mkdir -p artifacts/data artifacts/reports artifacts/visuals
+          chmod 777 artifacts/data artifacts/reports artifacts/visuals
 
       - name: Probe credentials and data channels
         run: |
@@ -122,6 +122,28 @@ jobs:
             python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
             --output-dir /runtime/data/industry-analysis \
             | tee artifacts/industry-report-result.json
+
+      - name: Render desktop and mobile report screenshots
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$PWD/artifacts/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report "/runtime/reports/贵州茅台-600519-个股分析.html" \
+            --sections 10 --tables 25 --label stock \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/stock-visual-result.json
+          docker run --rm \
+            --volume "$PWD/artifacts/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report "/runtime/reports/白酒-行业分析.html" \
+            --sections 8 --tables 14 --label industry \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/industry-visual-result.json
 
       - name: Upload report evidence
         uses: actions/upload-artifact@v4
