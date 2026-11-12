@@ -1553,6 +1553,8 @@ def main():
             else:
                 result = fetch_all_data(ths, thscode, pure_code, stock_name)
                 if getattr(ths, "is_cloud", False):
+                    result["finance_source"] = getattr(ths, "finance_source", "")
+                    result["finance_error"] = getattr(ths, "finance_error", "")
                     result["holders_source"] = getattr(ths, "holders_source", "")
                     result["holders_error"] = getattr(ths, "holders_error", "")
                     result["peers_source"] = getattr(ths, "peers_source", "")

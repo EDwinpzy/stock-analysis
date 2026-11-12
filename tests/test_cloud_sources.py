@@ -103,6 +103,8 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter.holders_error = ""
     adapter.peers_source = ""
     adapter.peers_error = ""
+    adapter.finance_source = ""
+    adapter.finance_error = ""
     return adapter
 
 
@@ -407,6 +409,51 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
     assert rows[1]["营业收入同比"] == pytest.approx(-54.551804064166)
     assert adapter.peers_source == "eastmoney"
     assert adapter.peers_error == ""
+
+
+def test_finance_query_falls_back_to_eastmoney_annual_reports(monkeypatch):
+    adapter = make_adapter(FakeWencai(lambda skill, query, limit: payload()))
+    adapter._stock_code = "600519"
+    adapter.stock_name = "贵州茅台"
+
+    annual_items = [
+        {
+            "REPORT_DATE": f"{year}-12-31 00:00:00",
+            "REPORT_YEAR": str(year),
+            "REPORT_TYPE": "年报",
+            "TOTALOPERATEREVE": revenue,
+            "PARENTNETPROFIT": profit,
+            "XSMLL": 91.0,
+            "XSJLL": 50.0,
+            "ROEJQ": 32.53,
+            "ZCFZL": 16.4,
+            "TOTALOPERATEREVETZ": -1.2,
+            "PARENTNETPROFITTZ": -4.5,
+        }
+        for year, revenue, profit in (
+            (2023, 150560330316.45, 74734071550.75),
+            (2024, 174144069958.25, 86228146421.62),
+            (2025, 172054171890.91, 82320067101.68),
+        )
+    ]
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        assert "NewFinanceAnalysis" in url
+        return {"data": annual_items}
+
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    row = adapter.wencai_nlp("贵州茅台 公司全称 主营业务").df.iloc[0]
+
+    assert row["营业收入[20251231]"] == pytest.approx(172054171890.91)
+    assert row["归属于母公司所有者的净利润[20251231]"] == pytest.approx(
+        82320067101.68
+    )
+    assert row["销售毛利率[20251231]"] == pytest.approx(91.0)
+    assert row["加权净资产收益率[20251231]"] == pytest.approx(32.53)
+    assert row["资产负债率[20251231]"] == pytest.approx(16.4)
+    assert adapter.finance_source == "eastmoney"
+    assert adapter.finance_error == ""
 
 
 def test_concentration_frame_aliases_top_ten_and_first_holder():

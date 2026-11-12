@@ -76,7 +76,11 @@ def test_report_gate_rejects_short_temporary_data_marker(tmp_path):
 def test_data_gate_checks_required_fields(tmp_path):
     data = {
         "quote": {"last_price": 1},
-        "finance_raw": {"pe": 20},
+        "finance_raw": {
+            "pe": 20,
+            "营业收入[20251231]": 10000000000,
+            "归属于母公司所有者的净利润[20251231]": 1000000000,
+        },
         "peers_raw": [{"name": "peer"}],
         "holders_raw": [{"name": "holder"}],
         "big_orders": [{"amount": 1}],
@@ -144,16 +148,39 @@ def test_source_fact_gate_rejects_stock_financial_mismatch(tmp_path):
 def test_source_fact_gate_normalizes_vendor_name_spacing(tmp_path):
     path = tmp_path / "stock.html"
     path.write_text(
-        make_html(STOCK_SECTIONS, 6) + "<p>万科A 000002 最新价 7.00</p>",
+        make_html(STOCK_SECTIONS, 6)
+        + "<p>万科A 000002 最新价 7.00 营业收入 100.00 亿 归母净利润 10.00 亿</p>",
         encoding="utf-8",
     )
     data = {
         "stock_code": "000002",
         "quote": {"name": "万  科Ａ", "price": 7.0},
-        "finance_raw": {"股票简称": "万科A"},
+        "finance_raw": {
+            "股票简称": "万科A",
+            "营业收入[20251231]": 10000000000,
+            "归属于母公司所有者的净利润[20251231]": 1000000000,
+        },
     }
     result = verify.verify_report(path, "stock", data=data)
     assert result["ok"] is True, result["problems"]
+
+
+def test_source_fact_gate_rejects_missing_stock_financials(tmp_path):
+    path = tmp_path / "stock.html"
+    path.write_text(
+        make_html(STOCK_SECTIONS, 6) + "<p>贵州茅台 600519 最新价 1,402.30</p>",
+        encoding="utf-8",
+    )
+    data = {
+        "stock_code": "600519",
+        "quote": {"name": "贵州茅台", "price": 1402.3},
+        "finance_raw": {"股票简称": "贵州茅台"},
+    }
+    result = verify.verify_report(path, "stock", data=data)
+
+    assert result["ok"] is False
+    assert any("缺少最新年度营业收入" in problem for problem in result["problems"])
+    assert any("缺少最新年度归母净利润" in problem for problem in result["problems"])
 
 
 def test_source_fact_gate_rejects_missing_industry_member(tmp_path):

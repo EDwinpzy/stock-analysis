@@ -305,8 +305,8 @@ def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]
     return output
 
 
-def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
-    """Return the latest disclosed annual report at or before target year."""
+def _eastmoney_annual_reports(code: str) -> dict[int, dict[str, Any]]:
+    """Return disclosed annual reports keyed by report year."""
 
     prefix = _eastmoney_market_prefix(code)
     payload = _fetch_eastmoney_json(
@@ -314,7 +314,7 @@ def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
     )
     if not isinstance(payload, dict):
         raise ValueError("东方财富年度财务返回结构无效")
-    annual: list[tuple[int, dict[str, Any]]] = []
+    annual: dict[int, dict[str, Any]] = {}
     for item in payload.get("data") or []:
         if not isinstance(item, dict):
             continue
@@ -325,11 +325,19 @@ def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
         )
         if not is_annual or not report_year.isdigit():
             continue
-        annual.append((int(report_year), item))
+        annual[int(report_year)] = item
     if not annual:
         raise ValueError("东方财富未返回年度财务数据")
-    eligible = [item for item in annual if item[0] <= target_year]
-    selected_year, selected = max(eligible or annual, key=lambda item: item[0])
+    return annual
+
+
+def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
+    """Return the latest disclosed annual report at or before target year."""
+
+    annual = _eastmoney_annual_reports(code)
+    eligible = [year for year in annual if year <= target_year]
+    selected_year = max(eligible or annual)
+    selected = annual[selected_year]
     return {**selected, "_SELECTED_REPORT_YEAR": selected_year}
 
 
@@ -393,6 +401,8 @@ class CloudStockAdapter:
         self.holders_error = ""
         self.peers_source = ""
         self.peers_error = ""
+        self.finance_source = ""
+        self.finance_error = ""
 
     def __enter__(self) -> "CloudStockAdapter":
         return self
@@ -551,8 +561,26 @@ class CloudStockAdapter:
             result = self._query(query, skill, limit=limit)
             if not result.df.empty:
                 merged.update(result.df.iloc[0].to_dict())
+        wencai_finance = any(
+            re.fullmatch(
+                r"(营业收入|归属于母公司所有者的净利润|归母净利润|销售毛利率|"
+                r"销售净利率|加权净资产收益率|净资产收益率ROE|资产负债率)"
+                r"\[\d{8}\]",
+                str(key),
+            )
+            for key in merged
+        )
+        fallback = self._eastmoney_finance_fallback(years)
+        if fallback:
+            for key, value in fallback.items():
+                if merged.get(key) in (None, ""):
+                    merged[key] = value
+            self.finance_source = "mixed" if wencai_finance else "eastmoney"
         if not merged:
             return _empty("问财财务与基本信息查询没有返回数据")
+        if self.finance_source not in {"mixed", "eastmoney"}:
+            self.finance_source = "wencai"
+        self.finance_error = ""
 
         aliases: dict[str, Any] = {}
         for key, value in merged.items():
@@ -587,6 +615,38 @@ class CloudStockAdapter:
         if controlling:
             merged.setdefault("控股股东名称", controlling)
         return SimpleNamespace(df=pd.DataFrame([{key: _json_value(value) for key, value in merged.items()}]), error="")
+
+    def _eastmoney_finance_fallback(self, years: list[int]) -> dict[str, Any]:
+        """Fill annual finance fields when the Wencai finance query is unavailable."""
+
+        if not self._stock_code:
+            return {}
+        try:
+            annual = _eastmoney_annual_reports(self._stock_code)
+        except Exception as exc:
+            self.finance_error = f"东方财富年度财务兜底请求失败：{exc}"
+            return {}
+
+        output: dict[str, Any] = {}
+        fields = (
+            ("营业收入", "TOTALOPERATEREVE"),
+            ("归属于母公司所有者的净利润", "PARENTNETPROFIT"),
+            ("销售毛利率", "XSMLL"),
+            ("销售净利率", "XSJLL"),
+            ("加权净资产收益率", "ROEJQ"),
+            ("资产负债率", "ZCFZL"),
+            ("营业收入同比增长率", "TOTALOPERATEREVETZ"),
+            ("归母净利润同比增长率", "PARENTNETPROFITTZ"),
+        )
+        for year in years:
+            report = annual.get(year)
+            if not report:
+                continue
+            for label, field in fields:
+                value = _number(report.get(field))
+                if value is not None:
+                    output[f"{label}[{year}1231]"] = value
+        return output
 
     def _holders_frame(self) -> SimpleNamespace:
         query = (

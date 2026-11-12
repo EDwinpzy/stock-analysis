@@ -415,6 +415,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
     if str(runtime.get("source") or "") == "cloud":
         holder_source = clean(data.get("holders_source"))
         peer_source = clean(data.get("peers_source"))
+        finance_source = clean(data.get("finance_source"))
         wencai_domains = [
             "实时行情",
             "财务",
@@ -430,6 +431,8 @@ def build_stock_report(data: dict[str, Any]) -> str:
             wencai_domains.remove("股东")
         if peer_source == "eastmoney":
             wencai_domains.remove("同业")
+        if finance_source == "eastmoney":
+            wencai_domains.remove("财务")
         wencai_scope = "、".join(wencai_domains[:-1]) + "与" + wencai_domains[-1]
         source_rows = [
             ("扶摇 REST", "证券检索、新闻与公告", "本次采集已返回"),
@@ -446,6 +449,14 @@ def build_stock_report(data: dict[str, Any]) -> str:
         if peer_source == "eastmoney":
             source_rows.append(
                 ("东方财富 F10/行情", "同业估值、市值与财务指标", "本次采集已返回")
+            )
+        if finance_source == "eastmoney":
+            source_rows.append(
+                ("东方财富 F10", "年度财务指标", "本次采集已返回")
+            )
+        elif finance_source == "mixed":
+            source_rows.append(
+                ("东方财富 F10", "缺失年度财务指标兜底", "本次采集已返回")
             )
         source_rows = tuple(source_rows)
     else:

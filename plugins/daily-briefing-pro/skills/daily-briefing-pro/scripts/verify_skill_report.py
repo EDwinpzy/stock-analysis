@@ -160,18 +160,22 @@ def _source_fact_problems(text: str, kind: str, data: dict[str, Any]) -> list[st
                 problems.append(f"报告未出现与采集行情一致的最新价：{price:g}")
         if not finance:
             problems.append("采集 JSON 缺少财务原始字段")
-        for prefix, label in (
-            ("营业收入", "最新营业收入"),
-            ("归属于母公司所有者的净利润", "最新归母净利润"),
-            ("归母净利润", "最新归母净利润"),
-        ):
-            value = _latest_annual_number(finance, prefix)
-            if value is None:
-                continue
-            expected = f"{value / 1e8:,.2f} 亿"
+        latest_revenue = _latest_annual_number(finance, "营业收入")
+        latest_profit = _latest_annual_number(
+            finance, "归属于母公司所有者的净利润"
+        ) or _latest_annual_number(finance, "归母净利润")
+        if latest_revenue is None:
+            problems.append("采集 JSON 缺少最新年度营业收入")
+        else:
+            expected = f"{latest_revenue / 1e8:,.2f} 亿"
             if expected not in text:
-                problems.append(f"报告未出现与采集 JSON 一致的最新{label}：{expected}")
-                break
+                problems.append(f"报告未出现与采集 JSON 一致的最新营业收入：{expected}")
+        if latest_profit is None:
+            problems.append("采集 JSON 缺少最新年度归母净利润")
+        else:
+            expected = f"{latest_profit / 1e8:,.2f} 亿"
+            if expected not in text:
+                problems.append(f"报告未出现与采集 JSON 一致的最新归母净利润：{expected}")
         holder_text = str(
             holders.get("前十大流通股东名称")
             or holders.get("前十大股东")
