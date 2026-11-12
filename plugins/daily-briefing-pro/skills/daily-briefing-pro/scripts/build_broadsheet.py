@@ -26,6 +26,12 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_DIR = SCRIPT_DIR.parent
 DEFAULT_REPORT_SUBDIR = ("报告", "每日简报")
 WEEKDAYS = ("星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日")
+REMOTE_FONT_LINKS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com"/>\n'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>\n'
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900'
+    '&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>\n'
+)
 
 
 def default_output_dir() -> Path:
@@ -38,6 +44,11 @@ def parse_args(argv=None):
     ap.add_argument("--out", help="输出 HTML 路径")
     ap.add_argument("--date", help="日期 YYYY-MM-DD（默认从源文件名推断）")
     ap.add_argument("--dir", help="简报目录（默认 <cwd>/报告/每日简报）")
+    ap.add_argument(
+        "--remote-fonts",
+        action="store_true",
+        help="写入原始 Google Fonts 链接，用于验证旧基准；默认使用系统字体",
+    )
     return ap.parse_args(argv)
 
 
@@ -242,7 +253,7 @@ def chart_svg(data, labels, phases):
     return "".join(out)
 
 
-def render(src: Path, out: Path, date_str: str) -> Path:
+def render(src: Path, out: Path, date_str: str, remote_fonts: bool = False) -> Path:
     SRC, OUT = src, out
     labels_cn = date_labels(date_str)
     soup = BeautifulSoup(SRC.read_text(encoding="utf-8"), "html.parser")
@@ -356,6 +367,7 @@ def render(src: Path, out: Path, date_str: str) -> Path:
     headline = f"市场温度 {temp_value}，盘面进入{phase_word}区"
 
     values = {
+        "font_links": REMOTE_FONT_LINKS if remote_fonts else "",
         "css": CSS,
         "sprite": SPRITE,
         "headline": headline,
@@ -401,7 +413,7 @@ def main(argv=None):
     src, out, date_str = resolve_paths(args)
     print("源简报:", src)
     print("日期:", date_str)
-    render(src, out, date_str)
+    render(src, out, date_str, remote_fonts=args.remote_fonts)
 
 
 def head_title(head, meta):
@@ -418,10 +430,7 @@ DOC_TEMPLATE = """<!doctype html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{date_dash} 每日简报｜报刊版（全 {board_count} 板块）</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
-<style>{css}</style>
+{font_links}<style>{css}</style>
 </head>
 <body>
 {sprite}

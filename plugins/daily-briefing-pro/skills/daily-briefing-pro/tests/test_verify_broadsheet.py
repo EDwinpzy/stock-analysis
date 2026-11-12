@@ -9,9 +9,17 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import verify_broadsheet
+import build_broadsheet
 
 
 class BroadsheetScreenshotTests(unittest.TestCase):
+    def test_broadsheet_template_has_no_remote_font_dependency(self):
+        self.assertNotIn("fonts.googleapis.com", build_broadsheet.DOC_TEMPLATE)
+
+    def test_baseline_mode_restores_remote_font_links(self):
+        self.assertIn("fonts.googleapis.com", build_broadsheet.REMOTE_FONT_LINKS)
+        self.assertIn("Playfair+Display", build_broadsheet.REMOTE_FONT_LINKS)
+
     def test_blank_tail_is_detected(self):
         with tempfile.TemporaryDirectory(prefix="broadsheet-blank-") as temp:
             path = Path(temp) / "blank.png"

@@ -163,7 +163,12 @@ def main(argv=None):
         for label, width, height in (("desktop", 1440, 1000), ("mobile", 390, 844)):
             view = browser.new_page(viewport={"width": width, "height": height},
                                     device_scale_factor=1)
-            view.goto(page_path.as_uri(), wait_until="load")
+            view.set_default_navigation_timeout(60000)
+            view.goto(page_path.as_uri(), wait_until="domcontentloaded")
+            try:
+                view.wait_for_load_state("load", timeout=15000)
+            except Exception:
+                pass
             try:
                 view.wait_for_function("document.fonts.status === 'loaded'", timeout=8000)
             except Exception:

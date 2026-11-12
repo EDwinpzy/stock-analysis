@@ -2,7 +2,7 @@ name: daily-briefing-pro-cloud
 
 services:
   briefing:
-    image: daily-briefing-pro:3.23.17-cloud
+    image: ${DAILY_BRIEFING_IMAGE:-daily-briefing-pro:3.23.19-cloud}
     build:
       context: ../..
       dockerfile: deploy/cloud/Dockerfile
@@ -52,6 +52,11 @@ services:
       - ima_openapi_clientid
       - ima_openapi_apikey
       - hithink_finance_api_key
+      - fuyao_api_key
+      - iwencai_api_key
+      - ths_username
+      - ths_password
+      - ths_mac
       - source: ths_selfstock
         target: ths_selfstock.json
       - source: xueqiu_cookies
@@ -79,6 +84,16 @@ secrets:
     file: ./secrets/ima_openapi_apikey
   hithink_finance_api_key:
     file: ./secrets/hithink_finance_api_key
+  fuyao_api_key:
+    file: ./secrets/fuyao_api_key
+  iwencai_api_key:
+    file: ./secrets/iwencai_api_key
+  ths_username:
+    file: ./secrets/ths_username
+  ths_password:
+    file: ./secrets/ths_password
+  ths_mac:
+    file: ./secrets/ths_mac
   tgb_cookies:
     file: ./secrets/tgb_cookies.json
   douyin_cookies:

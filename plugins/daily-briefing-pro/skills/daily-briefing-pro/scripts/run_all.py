@@ -432,6 +432,12 @@ def delivery_button(report_path: Path) -> str:
 
 def main():
     t0 = time.time()
+    if '--help' in sys.argv or '-h' in sys.argv:
+        print(
+            '用法: python run_all.py [--date YYYY-MM-DD] [--resume] '
+            '[--scheduled] [--preflight-only]'
+        )
+        return
     if '--skip-transcription' in sys.argv:
         print(json.dumps({'status': 'error', 'reason': '已取消跳过转录；完整简报必须完成抖音转录'}, ensure_ascii=False), file=sys.stderr)
         raise SystemExit(2)

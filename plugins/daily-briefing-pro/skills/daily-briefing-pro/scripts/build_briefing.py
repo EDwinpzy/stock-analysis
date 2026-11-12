@@ -1939,10 +1939,10 @@ def build_html(today: str, trade_date: str) -> str:
         title = str(r.get("title", ""))
         stored_logic = str(r.get("logic") or "").strip()
         ai_logic = yb_logic_results[index] if index < len(yb_logic_results) else ""
-        if ai_logic:
-            logic, logic_tag = ai_logic, ' <span style="color:var(--cyn);font-size:10px">✦AI提炼</span>'
-        elif stored_logic and stored_logic != title:
+        if stored_logic and stored_logic != title:
             logic, logic_tag = stored_logic, ""
+        elif ai_logic:
+            logic, logic_tag = ai_logic, ' <span style="color:var(--cyn);font-size:10px">✦AI提炼</span>'
         else:
             logic, logic_tag = title, ' <span style="color:var(--t3);font-size:10px">（原始报告标题）</span>'
             yb_logic_failed += 1

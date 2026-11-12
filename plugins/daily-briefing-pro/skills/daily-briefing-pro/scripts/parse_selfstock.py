@@ -32,10 +32,15 @@ MARKET_MAP = {
 def _find_ths_base_dirs():
     """查找同花顺安装根目录"""
     candidates = []
-    for base in [r"C:\应用\同花顺远航版", r"C:\应用\同花顺"]:
-        if os.path.isdir(base):
-            candidates.append(base)
-    return candidates
+    for name in ("THS_HOME", "THS_INSTALL_DIR", "THS_ROOT"):
+        value = os.environ.get(name, "").strip()
+        if value and os.path.isdir(value):
+            candidates.append(value)
+    if os.name == "nt":
+        for base in [r"C:\应用\同花顺远航版", r"C:\应用\同花顺"]:
+            if os.path.isdir(base):
+                candidates.append(base)
+    return list(dict.fromkeys(candidates))
 
 
 def discover_selfstock_file():
@@ -227,7 +232,7 @@ def parse_selfstock(filepath=None, fmt=None):
         if filepath is None:
             raise FileNotFoundError(
                 "未找到自选股文件。请设置 THS_SELFSTOCK_PATH 环境变量，"
-                "或确保同花顺（远航版）已安装在默认位置。"
+                "或设置 THS_HOME/THS_INSTALL_DIR/THS_ROOT 指向同花顺安装目录。"
             )
 
     if not os.path.exists(filepath):

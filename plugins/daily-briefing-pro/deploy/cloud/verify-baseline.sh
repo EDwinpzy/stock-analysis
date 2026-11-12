@@ -49,7 +49,7 @@ fi
 
 printf '云端报告逐字节一致：%s\nSHA256: %s\n' "$output_report" "$actual_sha256"
 
-python scripts/build_broadsheet.py --src "$output_report" --out "$output_broadsheet" --date "$target_date"
+python scripts/build_broadsheet.py --src "$output_report" --out "$output_broadsheet" --date "$target_date" --remote-fonts
 python scripts/verify_broadsheet.py --out "$output_broadsheet" --src "$output_report" --shots "$test_root/shots"
 actual_css_sha256=$(python - "$output_broadsheet" <<'PY'
 import hashlib

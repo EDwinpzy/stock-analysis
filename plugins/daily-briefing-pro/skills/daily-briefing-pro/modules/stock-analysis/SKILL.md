@@ -8,7 +8,7 @@ metadata:
     critical_rules:
     - 主线程3步顺序执行，禁止Agent工具（会卡住/超时）
     - 数据采集通过 scripts/fetch_stock_data.py 一次完成，禁止WebFetch逐页抓取
-    - 只生成HTML文件，禁止生成png/md/pdf/json等其他文件
+    - 最终交付只生成HTML；采集JSON仅作内部审计与门禁，不得作为交付物
     - 报告链接使用无中文路径（复制到/tmp/stock-reports/），原始中文路径的file:///链接在Codex中无法解析
   original_name: 个股分析
 ---

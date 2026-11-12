@@ -20,10 +20,11 @@ metadata:
     报告章节固定8章，不可增删
     CSS样式严格使用报刊风格变量体系（米白纸面+微软雅黑+单栏正文），不得修改
     正文固定单栏：8章顺序铺满，禁止再分左右两栏、禁止给章节加 .fw
-    只生成HTML文件，禁止生成图片(png/jpg/svg等)、Markdown(.md)、PDF、Word等其他格式文件
+    最终交付只生成HTML；采集JSON仅作内部审计与门禁，不得作为交付物
   data_sources: |
-    ths-advanced-analysis（主数据源：板块行情/成分股/问财NLP/财务数据/机构预测）
-    WebSearch + WebFetch（辅助数据源，可用时补充行业研报/市场规模等）
+    扶摇 REST（板块目录/成分股/板块快照/新闻/个股行情补充）
+    官方问财 OpenAPI（实时行情主数据/财务/估值/增速/主营产品/行业数据）
+    WebSearch + WebFetch（可选，补充行业研报/市场规模等）
     公司年报/季报（财务数据权威来源）
   style_reference: "本SKILL内嵌报刊风格设计规范（与 daily-briefing-pro 的简报/行情版面统一）"
   original_name: "行业分析"
@@ -46,7 +47,7 @@ metadata:
 1. **禁止 `Agent` 工具 + `run_in_background: true`** — 后台Agent在Codex中不稳定，会被取消/超时
 2. **禁止同时启动多个Agent并行** — 并行Agent互相干扰，任何一个失败整个流程卡死
 3. **禁止使用自定义 subagent_type**（如 industry-researcher / chain-analyst / stock-screener / risk-doctor）— 这些不是注册的agent类型，调度必然失败
-4. **禁止生成HTML以外的任何文件** — 不生成图片(png/jpg/svg)、Markdown(.md)、PDF、Word、JSON数据文件等。唯一输出产物是HTML报告文件
+4. **除内部采集 JSON 外，禁止生成其他中间文件** — 不从采集 JSON 生成图片(png/jpg/svg)、Markdown(.md)、PDF、Word 等副本；唯一交付产物是 HTML 报告，采集 JSON 只供门禁和追溯。
 
 **唯一正确做法：主Agent自己按3步顺序执行，每一步完成后才进入下一步。**
 
@@ -70,6 +71,28 @@ metadata:
 ---
 
 ## 执行流程（3步精简版）
+
+> **云端/跨平台一键入口（推荐）**
+>
+> ```powershell
+> python {plugin_dir}/cloud_cli.py industry-report "{行业关键词}"
+> ```
+>
+> 该命令自动执行板块采集、HTML 生成和 8 章/表格/源数据事实门禁；只有门禁通过才返回成功。需要先检查板块解析时加 `--preflight`。采集 JSON 写入 `--output-dir`（默认 `$DAILY_BRIEFING_DATA_DIR/industry-analysis`），HTML 写入 `$BRIEFING_OUTPUT_DIR`，不要写安装目录。
+
+> **云端/跨平台首选入口（不再依赖本机桌面客户端）**
+>
+> ```bash
+> python {skill_dir}/scripts/fetch_industry_data.py "{行业关键词}" \
+>   --source cloud \
+>   --output-dir "${DAILY_BRIEFING_DATA_DIR:-$HOME/.codex/daily-briefing-pro/data}/industry-analysis"
+> ```
+>
+> 统一入口等价写法：`python {plugin_dir}/cloud_cli.py industry "{行业关键词}" --output-dir ...`。`industry-report` 会强制使用 `--source cloud`。
+>
+> 云端模式使用**扶摇 REST**获取板块目录、成分股、板块快照、新闻和个股行情补充，使用**官方问财 OpenAPI**获取实时行情主数据、财务、估值、增速、主营产品与行业数据；输出 JSON 包含板块解析、成分股、行情、财务/估值、板块快照和公告。必须注入 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`（也接受兼容的 `HITHINK_FINANCE_API_KEY` / `WENCAI_API_KEY`），缺少任一凭据即失败，不回退游客账号，不伪造缺失值。先加 `--preflight` 只检查板块解析和通道可用性。
+>
+> 本地兼容路径保留 `--source ths`（`thsdk`），仅用于有固定 `THS_USERNAME/THS_PASSWORD/THS_MAC` 的本机环境；下面的 thsdk 代码只作为旧本地通道的字段口径参考，云端不执行。云端交付以脚本和 `cloud_cli.py` 为准。
 
 ### Step 1：批量数据采集（目标：2-3次Bash调用完成全部数据获取）
 
@@ -188,22 +211,22 @@ Step 1-2全部结论 → 填充固定HTML模板 → 写入文件 → 对话中�
 
 | 优先级 | 数据源 | 用途 | 可靠性 |
 |--------|--------|------|--------|
-| 1 | thsdk wencai_nlp | 标的筛选/财务数据/行业排名 | ✅ 高 |
-| 1 | thsdk ths_concept/block_constituents | 概念板块/成分股 | ✅ 高 |
-| 1 | thsdk market_data_block | 板块行情/市值 | ✅ 高 |
+| 1 | 扶摇 REST | 板块目录/成分股/板块快照/新闻/个股行情补充 | ✅ 云端主通道 |
+| 1 | 官方问财 OpenAPI | 实时行情主数据/财务/估值/增速/行业数据 | ✅ 云端主通道 |
 | 2 | WebSearch | 行业市场规模/增速/政策/研报 | ⚠️ 可能不可用 |
 | 2 | WebFetch | 抓取研报/文章详细数据 | ⚠️ 可能不可用 |
+| 兼容 | thsdk（仅 `--source ths`） | 本机旧通道和字段核对 | 需要固定账号，不用于云端交付 |
 
 **降级规则**：
-- WebSearch/WebFetch不可用 → 跳过，不卡住，用thsdk数据+行业常识完成报告
-- thsdk不可用 → 尝试WebSearch/WebFetch，若也不可用则标注"数据获取降级"
+- WebSearch/WebFetch不可用 → 跳过，不卡住，用扶摇/问财真实数据完成报告
+- 扶摇或官方问财缺少必需凭据 → 云端报告 fail closed，不降级到游客 `thsdk`
 - **禁止伪造**：降级时如实标注，绝不凭空编造
 
 ---
 
 ## 数据铁律
 
-1. **财务数据** → 从thsdk/公开年报获取，不可捏造
+1. **财务数据** → 从官方问财/公开年报获取，不可捏造
 2. **客户订单** → 严格区分 🟢实锤（公告/年报/互动平台）和 ⚠️传闻（雪球/自媒体）
 3. **无法验证的数据** → 标记 `[UNSOURCED]`
 4. **每条数据标注来源**
@@ -512,7 +535,7 @@ document.querySelectorAll('.sch').forEach(function(h){
 - **文件名**: `{行业名称}行业深度分析.html`
 - **输出目录**: `D:\OneDrive\Codex\股票分析\Codex\reports\行业分析\`（相对于工作空间根目录）
 - 若目录不存在，自动创建
-- **⚠️ 唯一输出文件：只生成HTML文件，禁止在输出目录或任何位置生成图片(.png/.jpg/.svg)、Markdown(.md)、PDF、Word、JSON数据转存等其他格式文件**
+- **⚠️ 唯一交付文件：只交付HTML；采集JSON仅作内部门禁与追溯，禁止另存图片(.png/.jpg/.svg)、Markdown(.md)、PDF、Word等副本**
 
 ### Step 3 — 交付报告（总结+链接，缺一不可）
 
@@ -574,6 +597,15 @@ document.querySelectorAll('.sch').forEach(function(h){
 - [ ] Footer免责声明
 - [ ] 折叠交互正常
 
+### 交付门禁（必做）
+
+```bash
+python {skill_dir}/../daily-briefing-pro/scripts/verify_skill_report.py 报告.html \
+  --type industry --data-json _industry_{行业关键词}.json
+```
+
+门禁必须确认 8 个固定章节全部存在、至少 5 张数据表、无 `暂无/UNSOURCED/NaN` 占位值，并核对采集 JSON 的 `sector/members/stocks/sector_snapshot/news` 均非空。未通过不得交付；数据缺口应回到采集脚本补齐或在报告中明确标注来源与缺失原因。
+
 ---
 
 ## 常见错误与修正
@@ -582,12 +614,12 @@ document.querySelectorAll('.sch').forEach(function(h){
 |---------|------|---------|
 | **Skill卡住不动** | 使用了后台并行子Agent | **禁止使用后台Agent，主线程顺序执行** |
 | **Agent调度失败** | 自定义subagent_type未注册 | 不使用subagent_type，主Agent自己完成 |
-| **数据采集耗时>3分钟** | wencai_nlp拆分多次调用同一批标的 | 一次查询合并所有指标（年报+Q1+增速+涨幅），总Bash调用≤3次 |
+| **数据采集耗时>3分钟** | 问财/兼容通道拆分多次调用同一批标的 | 一次查询合并所有指标（年报+增速+估值），云端总调用保持有界 |
 | 客户订单全标🟢 | 未区分数据来源 | 公告/年报→🟢，雪球/自媒体→⚠️ |
 | 市场规模等数字无来源 | 凭空编造 | 必须标注来源，无法验证标[UNSOURCED] |
 | 涨幅>80%仍推荐 | 未查涨幅风险 | 标注"涨幅透支风险" |
 | 风险提示太笼统 | 只写"市场风险" | 必须具体：估值/技术/竞争/地缘/周期 |
-| WebSearch不可用后卡住 | 等待超时 | 跳过WebSearch，用thsdk数据继续 |
+| WebSearch不可用后卡住 | 等待超时 | 跳过WebSearch，用扶摇/官方问财真实数据继续 |
 | 用深色/黑底背景 | 违反报刊风格 | 严格使用 `--paper:#f5f1e8` 纸面体系 |
 | 中文小字发虚发糊 | 用了宋体/衬线字体回退到 SimSun | 正文强制微软雅黑栈，字号 ≥13.5px，辅助文字 ≥10.5px |
 | 又拆成左右两栏 | 沿用上一版的 `.fw` 分栏写法 | 正文固定单栏，`.sec` 一律不带分栏类 |
@@ -597,7 +629,11 @@ document.querySelectorAll('.sch').forEach(function(h){
 
 ---
 
-## thsdk 调用参考
+## 本地兼容通道字段参考（云端不执行）
+
+以下 `thsdk` 示例只用于本机 `--source ths` 兼容路径的字段口径核对。云端
+`cloud_cli.py industry-report` 始终使用扶摇 REST + 官方问财 OpenAPI，
+不创建游客连接，也不以本节的本地实现替代云端契约。
 
 ### 核心原则：一次查询拿齐，不要拆分
 

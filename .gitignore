@@ -24,3 +24,7 @@ data/yuanxiaoer/raw/
 /报告/每日简报/2026-10-13*
 /报告/每日简报/2026-10-14*
 *.tmp.html
+
+# Collector output accidentally written beside a skill script
+/plugins/daily-briefing-pro/skills/**/scripts/_fetch_result_*.json
+/plugins/daily-briefing-pro/skills/**/scripts/_industry_*.json

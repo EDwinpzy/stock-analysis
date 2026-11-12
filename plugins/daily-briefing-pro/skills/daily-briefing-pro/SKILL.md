@@ -20,7 +20,7 @@ metadata:
     - A股个股分析
     - 个股行情
     - K线
-    version: 3.23.17
+    version: 3.23.19
     author: Codex
     dependencies:
       python: '>=3.12'
@@ -90,6 +90,17 @@ metadata:
 云端模式（`DAILY_BRIEFING_CLOUD=1`）与会话模式共用同一份长期数据白名单：干净环境会把安装包内 `data/` 的历史基线按“缺失才补”的方式迁入持久目录，已有云端数据优先保留；`*_today.json`、Cookie、登录态仍被排除。因此云端首次运行至少具备面板、节点/轮动历史和 AI 缓存基线，采集阶段再增量补齐当日数据，而不是从空面板起步。预检会校验面板 22 个模型列、历史 JSON 有效性和更新时间；基线过期会明确告警。
 
 插件执行入口为本 Skill 目录内的 `scripts/run_all.py`。普通运行会先执行 `scripts/runtime_preflight.py`，缺模型、历史面板、AI凭证、抖音转录环境、平台Cookie、同花顺认证或可写目录时在采集前阻断；只检查不采集使用 `--preflight-only`。在源码项目中维护时，使用 `plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/run_all.py`；不要修改安装缓存。定时运行加 `--scheduled`：先用同花顺交易所日历核验，非交易日跳过；日历缺失或未覆盖目标日则报错，不用星期推断节假日。
+
+跨平台统一入口为插件根目录的 `cloud_cli.py`，Linux/Windows/macOS 使用同一条命令：
+
+```powershell
+python {plugin_dir}/cloud_cli.py briefing --date YYYY-MM-DD
+python {plugin_dir}/cloud_cli.py briefing --date YYYY-MM-DD --preflight-only
+python {plugin_dir}/cloud_cli.py stock-report 600519
+python {plugin_dir}/cloud_cli.py industry-report 白酒
+```
+
+`briefing` 透传 `run_all.py` 参数，仍执行完整性、凭证和报刊版视觉门禁；`stock-report` / `industry-report` 自动完成采集、HTML 生成和源数据事实校验。云端运行目录通过 `DAILY_BRIEFING_DATA_DIR`、`BRIEFING_OUTPUT_DIR` 持久化；`work/`、运行数据和 Cookie 不提交到仓库。
 
 行业轮动模型优先从 `ROTATION_MODEL_DIR` 读取，其次读取插件根目录 `models/sw_rotation_model`；云端若两者都没有，会自动把随包分发的 `data/cloud-baseline/models/sw_rotation_model.zip` 解压到 `~/.codex/daily-briefing-pro/models/sw_rotation_model-<sha>`，无需人工上传模型目录。模型工作目录必须可写，因为行情刷新和预测会更新它的 `data/` 与 `outputs/`；缺少原始 `run.py`、配置或行情文件时不得用旧排行结果代替计算。随包模型是丢失原目录后的功能性重建，`RECONSTRUCTED.md` 记录了快照回归与已知差异；同一份压缩包保证本地和云端可复现同一组分数，但不宣称与原模型逐字节一致。
 
@@ -825,7 +836,7 @@ export BRIEFING_LIANBAN_SUPPLEMENT="1"
 # 同花顺官方数据 API Key（可选，通常不需要）
 #   推荐直接用 `hithink-finance auth login` 存进系统凭据库；
 #   只有在无凭据库的环境（容器/定时任务）才用这个变量兜底，且不得写入仓库
-# export HITHINK_FINANCE_API_KEY="sk-fuyao-xxxxxxxx"
+# export HITHINK_FINANCE_API_KEY="<按部署环境注入，不要写入仓库>"
 ```
 
 ---
@@ -847,6 +858,23 @@ playwright install chromium
 ---
 
 ## 更新日志
+
+### v3.23.19 (2026-11-12)
+
+- 可移植行情入口补齐 `sort`、`watchlist`、`sectors`、`subscribe` 和白名单 `call`；云端排行使用扶摇实时快照分页，支持市场范围、指数成分和排除板块，`prev_close` 不再返回空值。
+- 云端 `subscribe --api SubscribeIntradayCandle` 默认周期改为 `5`，与桌面端日 K 默认一致；其余订阅仍是一次性首帧快照，不伪装持续推送。
+- `parity` 只归一采集 JSON 中的确切 `fetch_time`，不再全局屏蔽 HTML 内所有日期时间，业务时间差异会正常报错。
+- 修正云端报告的数据来源口径：问财提供实时行情、财务、估值、同业、股东、产品、筹码、壁垒和大单日汇总；扶摇提供证券检索、板块/成分/快照、新闻和行情补充。
+- 完整性门禁新增最新营业收入、最新归母净利润和行业证券代码的源事实校验，防止财务值或标的代码错误通过。
+- `codex-cloud-bootstrap.sh` 默认从 `main` 取数，并继续要求显式 `EXPECTED_SHA` 锁定提交，不再指向旧的临时分支。
+
+### v3.23.18 (2026-11-12)
+
+- 云端移植加固：`cloud_cli.py` 的所有子命令超时会终止完整进程树（POSIX 进程组、Windows `taskkill /T`），超时统一返回 `124`，避免容器里残留采集或浏览器子进程。
+- 增加 `DAILY_BRIEFING_PREFLIGHT_TIMEOUT`、`DAILY_BRIEFING_COLLECT_TIMEOUT`、`DAILY_BRIEFING_BUILD_TIMEOUT`、`DAILY_BRIEFING_PROBE_TIMEOUT`、`DAILY_BRIEFING_RUN_TIMEOUT`，默认值与云端入口文档一致。
+- 个股和行业采集统一规范化证券名称：去除厂商返回的空格并做 NFKC 全半角归一（如 `万  科Ａ` → `万科A`），避免报告门禁把真实标的误判为缺失。
+- 个股报告在无机构研报样本时不再输出空表，改为明确的“本次采集未返回可核验的机构研报样本”边界说明；`stock-report 000002`、机器人行业报告已通过门禁。
+- 扶摇云端 `sector` 增加指数快照字段（价格、涨跌幅、成交量/额、开高低收），并对快照缺失返回显式 `snapshot_error`；新增板块、名称规范化和报告空表回归测试。
 
 ### v3.23.17 (2026-11-05)
 

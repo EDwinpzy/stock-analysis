@@ -2,7 +2,6 @@
 playwright==1.58.0
 httpx==0.27.2
 requests==2.33.0
-akshare==1.18.46
 pandas==3.0.1
 numpy==2.4.3
 scikit-learn==1.9.0
@@ -15,3 +14,18 @@ soupsieve==2.8
 thsdk==1.7.18
 zhconv==1.4.3
 pytest==8.3.4
+
+# AKShare 1.18.46 requires py-mini-racer on Linux, which has no ARM64 wheel.
+# Install AKShare separately with --no-deps and provide the JavaScript runtime
+# per architecture (akracer on ARM64, py-mini-racer on AMD64). Keep these
+# runtime dependencies pinned to the verified cloud baseline.
+lxml==6.1.3
+curl-cffi==0.17.0
+html5lib==1.1
+xlrd==2.0.2
+urllib3==2.8.0
+tqdm==4.70.1
+openpyxl==3.1.5
+jsonpath==0.82.2
+tabulate==0.10.0
+decorator==5.3.1

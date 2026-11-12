@@ -8,6 +8,36 @@
 本仓库把 3.2 版模型从「完整包」落地成一个可直接运行、可测试、可被其他项目调用的
 Python 项目，并提供当初约定的 `EmotionEngine` 接口。
 
+## A股每日简报插件
+
+GitHub 仓库：<https://github.com/EDwinpzy/stock-analysis>
+
+官方插件源码入口是 `plugins/daily-briefing-pro/`。其中的 `cloud_cli.py` 提供跨平台统一入口，不依赖 Windows Lumi：
+
+```powershell
+python plugins\daily-briefing-pro\cloud_cli.py doctor --probe
+python plugins\daily-briefing-pro\cloud_cli.py market realtime 600519 --mode cloud
+python plugins\daily-briefing-pro\cloud_cli.py market trend 600519 --mode ths
+python plugins\daily-briefing-pro\cloud_cli.py market tick 600519 --count 20 --mode ths
+python plugins\daily-briefing-pro\cloud_cli.py market fields --data-type tick --query 最新价
+python plugins\daily-briefing-pro\cloud_cli.py market sort --block 14 --count 20
+python plugins\daily-briefing-pro\cloud_cli.py market watchlist
+python plugins\daily-briefing-pro\cloud_cli.py market subscribe --api SubscribeRealtime --target 600519
+python plugins\daily-briefing-pro\cloud_cli.py stock 600519
+python plugins\daily-briefing-pro\cloud_cli.py industry 白酒 --limit 15
+python plugins\daily-briefing-pro\cloud_cli.py stock-report 600519
+python plugins\daily-briefing-pro\cloud_cli.py industry-report 白酒
+python plugins\daily-briefing-pro\cloud_cli.py briefing --date 2026-11-11
+python plugins\daily-briefing-pro\cloud_cli.py verify 报告.html --type stock --data-json 采集.json
+python plugins\daily-briefing-pro\cloud_cli.py parity --data-local 本机.json --data-cloud 云端.json --html-local 本机.html --html-cloud 云端.html
+```
+
+`stock-report` / `industry-report` 会自动完成“采集 → 生成 HTML → 校验固定章节、表格和源数据事实”，只有门禁通过才返回成功；`briefing` 调用同一套完整每日简报流水线。`parity` 对照同一时点的本机与云端采集 JSON/HTML，忽略采集时间、耗时和运行时路径，但任何业务字段差异都会返回非零。云端个股报告用官方问财 OpenAPI 获取实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总，用扶摇 REST 获取证券检索、新闻与公告；行业报告用扶摇获取板块目录、成分、快照、新闻和行情补充，用问财获取行情主数据、财务、估值与增速。`thsdk` 直连优先，配置 `FUYAO_API_KEY` / `HITHINK_API_KEY` / `HITHINK_FINANCE_API_KEY` 后可回退扶摇 REST；显式 `FUYAO_API_KEY` 优先。问财查询使用独立的 `IWENCAI_API_KEY` / `WENCAI_API_KEY`。生产环境建议再用 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 注入固定同花顺账号。个股/行业采集默认写入 `$DAILY_BRIEFING_DATA_DIR`，报告默认写入 `$BRIEFING_OUTPUT_DIR`，不会写安装目录。跨平台行情、个股/行业采集和报告完整性门禁的说明分别在 `plugins/daily-briefing-pro/skills/` 对应 `SKILL.md`。
+
+本仓库的 `work/`、云端运行数据、Cookie 和临时报告被忽略，不能作为提交内容；交付报告请使用门禁通过后的 HTML。
+
+云端容器用法见 `plugins/daily-briefing-pro/deploy/cloud/README.md`。测试命令：`python -m pytest tests -q`。
+
 ## 项目结构
 
 ```

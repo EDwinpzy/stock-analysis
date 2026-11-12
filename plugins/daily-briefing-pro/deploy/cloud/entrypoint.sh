@@ -18,6 +18,14 @@ load_secret GROQ_API_KEY /run/secrets/groq_api_key
 load_secret IMA_OPENAPI_CLIENTID /run/secrets/ima_openapi_clientid
 load_secret IMA_OPENAPI_APIKEY /run/secrets/ima_openapi_apikey
 load_secret HITHINK_FINANCE_API_KEY /run/secrets/hithink_finance_api_key
+load_secret FUYAO_API_KEY /run/secrets/fuyao_api_key
+load_secret IWENCAI_API_KEY /run/secrets/iwencai_api_key
+load_secret THS_USERNAME /run/secrets/ths_username
+load_secret THS_PASSWORD /run/secrets/ths_password
+load_secret THS_MAC /run/secrets/ths_mac
+if [ -z "${HITHINK_FINANCE_API_KEY:-}" ] && [ -s /run/secrets/fuyao_api_key ]; then
+    load_secret HITHINK_FINANCE_API_KEY /run/secrets/fuyao_api_key
+fi
 
 # The image carries the small Whisper checkpoint; the named home volume does
 # not. Copy it once so local transcription works before any download.

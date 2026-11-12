@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "daily-briefing-pro",
-  "version": "3.23.17",
+  "version": "3.23.19",
   "description": "提供A股每日简报、情绪面板、个股与行业研究、K线行情看板，以及本地同花顺客户端与扶摇云API双通道行情查询。",
   "author": {
     "name": "EDwin"

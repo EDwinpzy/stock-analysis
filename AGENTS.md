@@ -1,5 +1,17 @@
 # 圆小二每日更新
 
+## 项目 Quick Card
+
+- 仓库：`EDwinpzy/stock-analysis`（`git@github.com:EDwinpzy/stock-analysis.git`）。
+- 官方插件源码入口：`plugins/daily-briefing-pro/`；不要把安装缓存或 `deploy/cloud/runtime/` 当作源码。
+- 行情/个股/行业/简报统一入口：`python plugins/daily-briefing-pro/cloud_cli.py ...`；完整命令见根 `README.md` 和插件 `SKILL.md`。
+- 测试：`python -m pytest tests -q`。云端/取数冒烟：`python plugins/daily-briefing-pro/cloud_cli.py doctor --probe`。
+- 报告交付门禁：个股/行业报告必须同时校验 HTML 和采集 JSON，未通过不得交付。
+- 生成/忽略目录：`work/`、`plugins/daily-briefing-pro/deploy/cloud/runtime/`、`secrets/`、`*.tmp.html`、采集器旁的 `_fetch_result_*.json` / `_industry_*.json`。
+- 发布/签名：本仓库当前无 APK/HAP/商店发布门禁；插件版本、标签和 Release 未获明确指令不执行。
+- 禁止直接修改：`reference/` 口径基准、`C:\Users\63054\.codex\plugins\cache\` 安装缓存、`deploy/cloud/runtime/` 运行快照。
+- 任务隔离：写入前按 `$git-workflow` 使用独立 worktree 和 `codex/<topic>` 分支；主工作区保持 `main`。
+
 在本项目使用圆小二体系分析时，先读取 `data/yuanxiaoer/latest_run.json`、`data/yuanxiaoer/latest.md` 与最近的蒸馏记录，再读取安装插件的体系规则。明确报告最新原文日期、核验时间及缺失范围。
 
 每日增量采集命令：`python tools/fetch_yuanxiaoer_posts.py`。首次补齐安装包截至日期之后的帖子可用 `--since 2026-09-25`。

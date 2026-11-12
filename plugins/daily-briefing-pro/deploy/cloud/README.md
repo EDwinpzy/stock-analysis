@@ -1,24 +1,103 @@
 # Daily Briefing Pro Cloud Runtime
 
-This Compose runtime carries the complete `daily-briefing-pro` plugin tree, including its five top-level skills, nested stock-analysis and market-board modules, scripts, templates, and reference material. `market-query` is bundled for source completeness but depends on a Windows Lumi client, so it is not a cloud data source. It runs as an on-demand CLI container; it publishes no network port or web service.
+This Compose runtime carries the complete `daily-briefing-pro` plugin tree, including its five top-level skills, nested stock-analysis and market-board modules, scripts, templates, and reference material. `market-query` now has a portable Python entry point backed by `thsdk` and the Fuyao REST API, so it works on Linux without a Windows Lumi client. It runs as an on-demand CLI container; it publishes no network port or web service.
 
-The image pins Python 3.12.8, Node 24.18.0, the direct Python dependencies observed in the local baseline environment, Chromium, FFmpeg, and the `hithink-finance` CLI. `PYTHONHASHSEED=2` and CRLF HTML output preserve both the 2026-10-10 source report and its final broadsheet edition byte-for-byte. `scripts/run_all.py` always builds and visually verifies the broadsheet edition, and delivers that artifact as the report.
+Stock and industry report delivery uses a separate, fail-closed cloud contract.
+Fuyao REST supplies security lookup, sector directory/membership, sector
+snapshots, news and quote fallback. The official iWencai OpenAPI supplies the
+primary real-time quote, financials, valuation, peer metrics, holders,
+fund-flow aggregates and industry fundamentals. It does not use a guest
+`thsdk` account as the report's primary source. Both `FUYAO_API_KEY` and
+`IWENCAI_API_KEY` are required; a missing key exits non-zero instead of
+returning a partial or invented report. The official iWencai endpoint exposes
+only an aggregated daily buy/sell total for large orders, so reports label
+that block `daily_aggregate` / `非逐笔` and never present it as tick data.
 
-Version 3.23.17 bounds Codex semantic-summary batches, runs up to four batches concurrently, reuses cached report logic during compilation, uses the faster default reasoning level, and terminates the complete CLI process tree on timeout so a stuck child cannot consume the collector's whole time budget. Version 3.23.16 adds the official Hithink index fallback for industry and CSI 300 bars when AKShare trails the target session. Version 3.23.15 added the missing-only cloud baseline and the bundled rotation-model archive. Version 3.23.14 added the fail-fast runtime preflight, durable-data seed path, explicit writable rotation-model volume, and correct Compose secret targets. No version invents missing model data or downgrades source/cookie completeness gates.
+The image pins Python 3.12.8, Node 24.18.0, the direct Python dependencies observed in the local baseline environment, Chromium, FFmpeg, and the `hithink-finance` CLI. `PYTHONHASHSEED=2` and CRLF HTML output preserve the 2026-10-10 source report byte-for-byte. The default broadsheet removes the three remote Google Fonts links so an offline cloud host always renders immediately; the benchmark verifier passes `--remote-fonts` to reproduce the original local broadsheet byte-for-byte. `scripts/run_all.py` always builds and visually verifies the default broadsheet edition, and delivers that artifact as the report.
+
+Chromium is installed under `/opt/playwright-browsers`, outside the persistent `/runtime/home` volume. Do not move it back under `$HOME`: an empty or reused home volume would hide the browser binary and break report verification.
+
+The Dockerfile contains architecture-specific branches for both `linux/amd64`
+and `linux/arm64`. AKShare is installed with `--no-deps` because its Linux
+metadata pulls in `py-mini-racer`, which has no ARM64 wheel. The image
+installs `py-mini-racer` on AMD64 and `akracer` on ARM64, then runs a
+`MiniRacer` smoke test during the build. AKShare's other runtime dependencies
+are pinned explicitly in `requirements-cloud.txt`. The last formally built
+AMD64 image is `candidate9`, which predates the latest source-label and
+integrity-gate corrections; the current working tree still needs a formal
+candidate10 rebuild. The ARM64 formal image build and native Chromium visual
+gate are also still unverified, so an ARM64 overlay image must not be
+presented as a formal build.
+
+Version 3.23.19 completes the portable market-query surface with sorting, watchlists, sector groups, one-shot subscriptions, and a read-only tool whitelist; cloud ranking now returns `prev_close` and HTML parity only normalizes the exact collection timestamp from each payload. Version 3.23.18 hardens the portable entry point with process-tree timeouts, vendor-name normalization (`万  科Ａ` → `万科A`), non-empty research/section boundaries, and a cloud sector snapshot. Version 3.23.17 bounds Codex semantic-summary batches, runs up to four batches concurrently, reuses cached report logic during compilation, uses the faster default reasoning level, and terminates the complete CLI process tree on timeout so a stuck child cannot consume the collector's whole time budget. Version 3.23.16 adds the official Hithink index fallback for industry and CSI 300 bars when AKShare trails the target session. Version 3.23.15 added the missing-only cloud baseline and the bundled rotation-model archive. Version 3.23.14 added the fail-fast runtime preflight, durable-data seed path, explicit writable rotation-model volume, and correct Compose secret targets. No version invents missing model data or downgrades source/cookie completeness gates.
+
+The portable CLI also normalizes the vendor's premarket null sentinel
+(`2147483648`) instead of exposing it as a price, and `market status --probe`
+requires at least one real THS or Fuyao query to succeed. The stock collector
+retries transient peer-query failures and falls back from the leaf industry to
+its parent before allowing a report section to become empty.
 
 ## Prepare the cloud host
 
-From this directory on the cloud host (the setup command needs permission to assign the runtime files to container UID 10001):
+The commands below require Docker Engine with the Compose v2 plugin available to root (`sudo docker compose version`).
+
+From this directory on the cloud host (the setup command needs permission to assign the runtime files and secrets to container UID 10001):
 
 ```sh
-sh ./init-secrets.sh
-docker build \
+sudo sh ./init-secrets.sh
+
+# Docker Engine 20.10 and newer: use BuildKit so --platform is honored.
+# Replace amd64 with arm64 on an ARM host.
+sudo env DOCKER_BUILDKIT=1 docker build \
+  --platform linux/amd64 \
   --memory=1800m --memory-swap=1800m \
   --cpu-period=100000 --cpu-quota=100000 \
-  -f Dockerfile -t daily-briefing-pro:3.23.17-cloud ../..
+  -f Dockerfile -t daily-briefing-pro:3.23.19-cloud ../..
 ```
 
-The secret files are created empty and are ignored by Git and Docker build context. Copy or enter the user's own API keys and platform cookie JSON files directly on the cloud host. The setup command assigns them to container UID 10001 with mode `0600`. Do not put secrets in the image, repository, command-line arguments, or logs. After copying a data snapshot into `runtime/data/`, or restoring model files under `runtime/models/`, rerun `sh ./init-secrets.sh` so container UID 10001 can update those persistent files.
+Without `DOCKER_BUILDKIT=1`, older Docker engines may silently use the host
+architecture even when `--platform` is present. Verify the result before
+starting Compose:
+
+```sh
+sudo docker image inspect daily-briefing-pro:3.23.19-cloud \
+  --format '{{.Architecture}} {{.Os}}'
+```
+
+The output must match the host runtime (`amd64` on x86_64, `arm64` on
+`aarch64`/`arm64`). The image includes architecture-specific AKShare glue:
+`akracer` on ARM64 and `py-mini-racer` on AMD64.
+
+The current verification state for this revision is:
+
+| Architecture | Verification state |
+| --- | --- |
+| AMD64 | Last formal Dockerfile build is `daily-briefing-pro:3.23.19-cloud-amd64-candidate9`; current working tree needs a candidate10 rebuild |
+| ARM64 | Formal build and native visual gate not yet verified for the current working tree |
+
+The tag above is an internal verification tag, not a release tag. Build and
+tag the image in your own registry before production use. Do not use an
+overlay image as proof of an ARM64 build. Set `DAILY_BRIEFING_IMAGE` to the
+image tag you actually built and verified:
+
+```sh
+sudo DAILY_BRIEFING_IMAGE=daily-briefing-pro:3.23.19-cloud \
+  docker compose -f compose.yaml run --rm briefing python scripts/run_all.py
+```
+
+## Manual validation in GitHub Actions
+
+`.github/workflows/cloud-port-validation.yml` provides a manual, reproducible
+Linux validation path when no SSH build host is available. It runs the full
+Python test suite, builds the formal AMD64 Dockerfile, then executes
+`doctor --probe`, live market queries, and the stock/industry report gates
+inside that image. Configure repository Actions secrets `FUYAO_API_KEY` and
+`IWENCAI_API_KEY`; the workflow passes them as environment variables and the
+container entrypoint keeps them out of image layers. Evidence is uploaded as
+the `cloud-port-evidence` artifact. The workflow is manual-only and does not
+publish an image or a release.
+
+The secret files are created empty and are ignored by Git and Docker build context. Copy or enter the user's own API keys and platform cookie JSON files directly on the cloud host. The setup command assigns secrets and persistent runtime files to container UID 10001 with mode `0600`. Compose reads the host secret files before mounting them read-only into the container, so run `init-secrets.sh` and the Compose commands with `sudo` unless the deployment user already has Docker access and can read those files. Do not put secrets in the image, repository, command-line arguments, or logs. After copying a data snapshot into `runtime/data/`, or restoring model files under `runtime/models/`, rerun `sh ./init-secrets.sh` so container UID 10001 can update those persistent files.
 
 Recognized secret files:
 
@@ -29,13 +108,16 @@ Recognized secret files:
 | `secrets/siliconflow_api_key` | Douyin transcription |
 | `secrets/groq_api_key` | Douyin transcription |
 | `secrets/ima_openapi_clientid`, `secrets/ima_openapi_apikey` | IMA research search |
-| `secrets/hithink_finance_api_key` | Official Tonghuashun finance data CLI |
+| `secrets/hithink_finance_api_key` | Optional override for the official Tonghuashun finance data CLI |
+| `secrets/fuyao_api_key` | Required for cloud stock/industry reports and Fuyao REST market queries (`FUYAO_API_KEY`); also used by the finance CLI when no separate key is supplied |
+| `secrets/iwencai_api_key` | Required for cloud stock/industry reports and official iWencai OpenAPI queries (`IWENCAI_API_KEY`); separate from the Fuyao market key |
+| `secrets/ths_username`, `secrets/ths_password`, `secrets/ths_mac` | Optional fixed THS account for `thsdk`-only compatibility queries; not required by the cloud stock/industry report path |
 | `secrets/tgb_cookies.json` | TGB authenticated pages |
 | `secrets/douyin_cookies.json` | Douyin authenticated requests |
 | `secrets/xueqiu_cookies.json` | Xueqiu browser context |
 | `secrets/ths_selfstock.json` | Optional Tonghuashun watchlist input |
 
-The container passes API keys from read-only Compose secrets to the child process environment. Cookie files are mounted read-only. The runtime data, reports, and user cache live under `runtime/` and persist across runs.
+The container passes API keys from read-only Compose secrets to the child process environment. A single Fuyao key can serve both the REST market query and the official `hithink-finance` CLI; an explicitly populated `secrets/hithink_finance_api_key` still takes precedence. Wencai uses its own `secrets/iwencai_api_key`; it is not interchangeable with the Fuyao key. Stock/industry reports require both keys and fail closed when either is absent. Cookie files are mounted read-only. The runtime data, reports, and user cache live under `runtime/` and persist across runs.
 
 The Compose file explicitly maps cookie secrets to `/run/secrets/*.json`; do not remove those `target:` entries. A secret named `tgb_cookies` otherwise appears at `/run/secrets/tgb_cookies` while the collector reads `/run/secrets/tgb_cookies.json`.
 
@@ -87,10 +169,10 @@ After copying model files directly into `runtime/models/`, run `sh ./init-secret
 Run the structured check before collecting data:
 
 ```sh
-docker compose -f compose.yaml run --rm --no-build briefing \
+sudo docker compose -f compose.yaml run --rm briefing \
   python scripts/runtime_preflight.py --date 2026-10-19 --json
 
-docker compose -f compose.yaml run --rm --no-build briefing \
+sudo docker compose -f compose.yaml run --rm briefing \
   python scripts/run_all.py --date 2026-10-19 --preflight-only
 ```
 
@@ -108,7 +190,7 @@ transcription fail or take many minutes.
 Copy the complete `2026-10-10数据` snapshot into `verification/2026-10-10-data/`, the source `2026-10-10简报.html`, and its final `2026-10-10简报-报刊版.html` reference into `verification/`. The verifier copies the snapshot into an ephemeral container directory, so it does not seed live runtime state. Then run:
 
 ```sh
-docker compose -f compose.yaml run --rm --no-build briefing \
+sudo docker compose -f compose.yaml run --rm briefing \
   sh /opt/daily-briefing-pro/deploy/cloud/verify-baseline.sh \
   2026-10-10 /verification/2026-10-10简报.html
 ```
@@ -118,7 +200,7 @@ The script checks the source-report SHA256, rebuilds it from the snapshot, rende
 Run the bundled regression suite with:
 
 ```sh
-docker compose -f compose.yaml run --rm --no-build briefing \
+sudo docker compose -f compose.yaml run --rm briefing \
   python -m unittest discover -s tests -v
 ```
 
@@ -127,20 +209,152 @@ docker compose -f compose.yaml run --rm --no-build briefing \
 ```sh
 # Full daily briefing (live sources; requires the relevant keys/cookies above)
 # The run creates and verifies the newspaper-style final report automatically.
-docker compose -f compose.yaml run --rm --no-build briefing python scripts/run_all.py
+sudo docker compose -f compose.yaml run --rm briefing python scripts/run_all.py
 
 # A requested report date
-docker compose -f compose.yaml run --rm --no-build briefing python scripts/run_all.py --date 2026-10-10
+sudo docker compose -f compose.yaml run --rm briefing python scripts/run_all.py --date 2026-10-10
 
 # Standalone news, research, blogger, and market-data entry points
-docker compose -f compose.yaml run --rm --no-build briefing python scripts/news_screener.py health
-docker compose -f compose.yaml run --rm --no-build briefing node scripts/yanbao/run.mjs --date 2026-10-10
-docker compose -f compose.yaml run --rm --no-build briefing python scripts/fetch_sentiment_survey.py --date 2026-10-10
+sudo docker compose -f compose.yaml run --rm briefing python scripts/news_screener.py health
+sudo docker compose -f compose.yaml run --rm briefing node scripts/yanbao/run.mjs --date 2026-10-10
+sudo docker compose -f compose.yaml run --rm briefing python scripts/fetch_sentiment_survey.py --date 2026-10-10
 
-# Stock analysis, market board, industry analysis, and emotion panel
-docker compose -f compose.yaml run --rm --no-build briefing python ../stock-analysis/scripts/fetch_stock_data.py 600519
-docker compose -f compose.yaml run --rm --no-build briefing python modules/stock-market-board/scripts/fetch_data.py 600519
-docker compose -f compose.yaml run --rm --no-build briefing python ../stock-emotion-panel/scripts/fetch_panel.py --help
+# Stock / industry reports: collect, build, and gate in one command
+sudo docker compose -f compose.yaml run --rm briefing python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519
+sudo docker compose -f compose.yaml run --rm briefing python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒
+
+# Raw collectors and the other on-demand pages
+sudo docker compose -f compose.yaml run --rm briefing python /opt/daily-briefing-pro/cloud_cli.py stock 600519
+sudo docker compose -f compose.yaml run --rm briefing python /opt/daily-briefing-pro/cloud_cli.py industry 白酒 --limit 15
+sudo docker compose -f compose.yaml run --rm briefing python modules/stock-market-board/scripts/fetch_data.py 600519
+sudo docker compose -f compose.yaml run --rm briefing python ../stock-emotion-panel/scripts/fetch_panel.py --help
 ```
+
+`stock-report` and `industry-report` are the delivery entry points. They invoke the portable collector, build the HTML, and run the same section/table/source-fact gate used locally. A non-zero exit means the report must not be delivered. The collector JSON and report are written below the mounted `/runtime` directories; `work/` and local runtime snapshots are intentionally excluded from Git.
+
+The cloud report path is deliberately deterministic: `stock-report` and
+`industry-report` force `--source cloud`. Financial and valuation fields must
+come from the official iWencai response, while quotes, sector membership,
+news and holder snapshots come from Fuyao REST. The builder rejects missing
+sections and empty tables, and the verifier rejects `暂无`, `UNSOURCED` and
+`NaN` placeholders in required data. Use `doctor --probe` before the first
+live run to verify both channels. A guest `thsdk` probe is not sufficient for
+report delivery.
+
+## Portable command boundary
+
+`cloud_cli.py market` exposes the queries that have a real cloud contract. It
+does not silently substitute a local-only feature with a different metric.
+
+| Capability | Portable action | Cloud runtime | Boundary |
+| --- | --- | --- | --- |
+| Environment check | `doctor`, `market status` | `thsdk` and/or Fuyao key | Reports credential presence only |
+| Security/realtime/day K | `search`, `realtime`, `candle` | Fuyao REST and `thsdk` | Fuyao K-line is daily only |
+| Sector lookup | `blocks`, `sector` | Fuyao REST and `thsdk` | Constituents and index identity are preserved |
+| Stock news | `news` | Fuyao REST and `thsdk` | Source/category columns are retained |
+| Reference lookup | `catalog`, `fields`, `cloud-get`, `datahub-get` | Bundled references and REST | No guessed endpoint or field IDs |
+| Intraday/tick | `trend`, `tick` | `thsdk` only | Fuyao public REST has no equivalent endpoint |
+| Capital flow | `capital-flow` | `thsdk` only | Fuyao marks the flow endpoint `client-only` |
+| Ranking | `sort` | `thsdk` block members plus realtime; Fuyao market/index fallback | Common market scopes and `.TI` sectors have a direct REST path; other numeric block IDs use `thsdk` |
+| First-push subscription | `subscribe` | One-shot realtime/candle snapshot; `thsdk` for trend/tick | It returns the equivalent first snapshot and does not keep a persistent stream |
+| Watchlist/groups | `watchlist`, `sectors` | `THS_SELFSTOCK_PATH` or `/run/secrets/ths_selfstock.json` | No login-state import; a missing file is reported instead of invented |
+| Read-only calls | `call` | Allowlisted portable tools | `wencai_query` uses `IWENCAI_API_KEY` for all 21 skills; without it only the `hithink-market-query` skill can fall back to `thsdk` |
+| Data/report parity | `parity` | Local and cloud JSON/HTML inputs | Ignores collection timestamps and runtime paths, not business values |
+
+The portable CLI never invents a replacement for a local-only result. If a
+required capability is unavailable, it returns a non-zero exit code and a JSON
+error such as `unsupported_cloud` or `missing_api_key`.
+
+`sort` supports the same `block`, `sortField`, `sortOrder`, `offset`, `count`
+and `excludeBlocks` fields as the desktop tool. With `thsdk`, arbitrary numeric
+block IDs are resolved through the Tonghuashun block tree. With pure Fuyao REST,
+use `14` (沪深A股), `21` (沪市), `27` (深市), `50854` (全部含北交所), or a
+`.TI` sector such as `881273.TI`. `subscribe` is deliberately one-shot: it
+performs the requested realtime, candle, trend or tick fetch, returns the first
+equivalent snapshot, and exits. This matches the desktop operation's
+"first event then unsubscribe" lifecycle without claiming a persistent stream.
+
+For watchlist parity, mount a genuine Tonghuashun self-stock export at
+`secrets/ths_selfstock.json`. The portable reader supports the old list format
+and both remote-client pipe formats. If the file is absent, `watchlist` returns
+an explicit `unavailable` result with zero securities.
+
+## Timeouts and process cleanup
+
+The portable entry point applies a process-level timeout to every child
+command and terminates the complete process tree on expiry, including
+descendants that inherited stdout/stderr pipes. A timeout returns exit code
+`124` instead of hanging the scheduler.
+
+| Variable | Default | Scope |
+| --- | ---: | --- |
+| `DAILY_BRIEFING_PREFLIGHT_TIMEOUT` | 120 s | `stock --preflight`, `industry --preflight` |
+| `DAILY_BRIEFING_COLLECT_TIMEOUT` | 300 s | market queries and report collectors |
+| `DAILY_BRIEFING_BUILD_TIMEOUT` | 120 s | deterministic HTML builder |
+| `DAILY_BRIEFING_PROBE_TIMEOUT` | 120 s | `doctor --probe` checks |
+| `DAILY_BRIEFING_RUN_TIMEOUT` | 3600 s | complete `briefing` pipeline |
+
+The collector also retries empty industry/concept directory responses a
+bounded number of times and restores the `thsdk` connection context before
+querying. Fuyao requests retry network errors, HTTP 429 and 5xx responses a
+limited number of times; auth failures, redirects and business errors are not
+blindly retried.
+
+The broadsheet HTML uses system font fallbacks and makes no Google Fonts request, so the visual gate does not block on external font downloads. The image installs `fonts-noto-cjk` for Linux rendering; Windows/macOS use their native CJK font fallbacks.
+
+The unified entry point also exposes market queries and report gates:
+
+```sh
+# Environment and both data channels. Guest THS accounts are for smoke tests;
+# use secrets/ths_username, secrets/ths_password and secrets/ths_mac for a fixed
+# THS account, and secrets/fuyao_api_key (or FUYAO_API_KEY) for the REST fallback.
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py doctor --probe
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market realtime 600519 --mode cloud
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market candle 600519 --mode ths --count 20
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market trend 600519 --mode ths
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market tick 600519 --count 20 --mode ths
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market news 600519 --mode ths
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market fields --data-type tick --query 最新价
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market sort --block 14 --count 20
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market watchlist
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py market subscribe --api SubscribeRealtime --target 600519
+
+# Stock / industry reports must pass the same data and HTML gates before delivery.
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py verify /runtime/reports/stock.html \
+  --type stock --data-json /runtime/data/stock-analysis/_fetch_result_600519.json
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py verify /runtime/reports/industry.html \
+  --type industry --data-json /runtime/data/industry-analysis/_industry_白酒.json
+
+sudo docker compose -f compose.yaml run --rm briefing \
+  python /opt/daily-briefing-pro/cloud_cli.py parity \
+  --data-local /verification/local-stock.json \
+  --data-cloud /verification/cloud-stock.json \
+  --html-local /verification/local-stock.html \
+  --html-cloud /verification/cloud-stock.html
+```
+
+The Fuyao REST contract uses `600519.SH`; `thsdk` uses `USHA600519`. The CLI accepts either and keeps `vendor_thscode` in its output. Cloud K-lines are daily only; `trend` and `tick` are available through `thsdk` (`--mode ths` or `auto`) but the public Fuyao REST channel has no corresponding endpoint. `capital-flow` is `ths`-only because the public Fuyao endpoint is marked `client-only`; the CLI fails explicitly instead of substituting another metric. For stock/industry report schedulers, set `DAILY_BRIEFING_DATA_DIR`, `BRIEFING_OUTPUT_DIR`, `FUYAO_API_KEY` and `IWENCAI_API_KEY`; THS account variables are only needed for the `thsdk` compatibility channel.
 
 The installed skill documents remain in `/opt/daily-briefing-pro/skills/`. Workflows that require an LLM to interpret fetched data continue to be orchestrated by the cloud agent; this container supplies their Python, Node, browser, and data-source runtime.

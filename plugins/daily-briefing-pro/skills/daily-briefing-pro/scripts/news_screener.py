@@ -22,7 +22,7 @@ from datetime import datetime
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 
-from parse_selfstock import parse_selfstock, get_selfstock_codes, get_selfstock_fullcodes
+from parse_selfstock import get_selfstock_source_info, parse_selfstock
 
 
 def get_today_str():
@@ -95,6 +95,7 @@ def build_selfstock_queries(stocks, max_batch=20):
 
 def cmd_health(_args=None):
     """健康检查 API: health"""
+    source = get_selfstock_source_info()
     result = {
         "status": "ok",
         "service": "daily-briefing-news-filter",
@@ -103,14 +104,26 @@ def cmd_health(_args=None):
         "dependencies": {
             "parse_selfstock": "ok" if os.path.exists(os.path.join(SCRIPT_DIR, "parse_selfstock.py")) else "missing",
             "web_search": "available",
-        }
+        },
+        "selfstock": {
+            "found": bool(source.get("found")),
+            "path": source.get("filepath", ""),
+            "format": source.get("format", ""),
+            "count": source.get("count", 0),
+            "error": source.get("error", ""),
+        },
     }
     return result
 
 
 def cmd_tasks(_args=None):
     """任务清单 API: tasks"""
-    self_stocks = parse_selfstock()
+    source = get_selfstock_source_info()
+    self_stocks = (
+        parse_selfstock(source["filepath"], source["format"])
+        if source.get("found")
+        else []
+    )
     finance_queries = build_finance_news_queries()
     selfstock_queries = build_selfstock_queries(self_stocks) if self_stocks else []
 
@@ -118,6 +131,11 @@ def cmd_tasks(_args=None):
         "date": get_today_str(),
         "selfstock_count": len(self_stocks),
         "selfstock_codes_preview": [s["code"] for s in self_stocks[:5]],
+        "selfstock_source": {
+            "found": bool(source.get("found")),
+            "path": source.get("filepath", ""),
+            "error": source.get("error", ""),
+        },
         "tasks": {
             "finance_news": {
                 "description": "国内国际财经+科技新闻（≤15条）",
@@ -136,17 +154,23 @@ def cmd_tasks(_args=None):
 
 def cmd_stocks(args):
     """自选股列表 API: stocks"""
-    self_stocks = parse_selfstock()
+    source = get_selfstock_source_info()
+    if source.get("found"):
+        self_stocks = parse_selfstock(source["filepath"], source["format"])
+    else:
+        self_stocks = []
 
     if getattr(args, 'codes', False):
-        return {"codes": get_selfstock_codes()}
+        return {"codes": [stock["code"] for stock in self_stocks]}
     elif getattr(args, 'full_codes', False):
-        return {"full_codes": get_selfstock_fullcodes()}
+        return {"full_codes": [stock["full_code"] for stock in self_stocks]}
     else:
         return {
             "count": len(self_stocks),
             "stocks": self_stocks,
-            "source_file": "C:\\应用\\同花顺\\mo_4aknfs5zs\\SelfStockInfo.json",
+            "source_file": source.get("filepath", ""),
+            "source_format": source.get("format", ""),
+            "error": source.get("error", ""),
         }
 
 

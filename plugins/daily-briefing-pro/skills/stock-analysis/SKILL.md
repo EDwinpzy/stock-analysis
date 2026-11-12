@@ -8,7 +8,7 @@ metadata:
     critical_rules:
     - 主线程3步顺序执行，禁止Agent工具（会卡住/超时）
     - 数据采集通过 scripts/fetch_stock_data.py 一次完成，禁止WebFetch逐页抓取
-    - 只生成HTML文件，禁止生成png/md/pdf/json等其他文件
+    - 最终交付只生成HTML；采集JSON仅作内部审计与门禁，不得作为交付物
     - 报告链接使用无中文路径（复制到/tmp/stock-reports/），原始中文路径的file:///链接在Codex中无法解析
   original_name: 个股分析
 ---
@@ -23,17 +23,44 @@ metadata:
 
 ## 执行流程（3步）
 
+> **云端/跨平台一键入口（推荐）**
+>
+> ```powershell
+> python {plugin_dir}/cloud_cli.py stock-report {股票名称或代码}
+> ```
+>
+> 该命令自动执行采集、HTML 生成和完整性门禁；只有门禁通过才返回成功。需要先检查行情连接时加 `--preflight`。采集 JSON 写入 `--output-dir`（默认 `$DAILY_BRIEFING_DATA_DIR/stock-analysis`），HTML 写入 `$BRIEFING_OUTPUT_DIR`，不要写安装目录。
+
 ### Step 1：数据采集（1次Bash，~10秒）
 
 ```bash
-python {skill_dir}/scripts/fetch_stock_data.py {股票名称或代码}
+python {skill_dir}/scripts/fetch_stock_data.py {股票名称或代码} \
+  --source cloud \
+  --output-dir "${DAILY_BRIEFING_DATA_DIR:-$HOME/.codex/daily-briefing-pro/data}/stock-analysis"
 ```
+
+统一入口等价写法：`python {plugin_dir}/cloud_cli.py stock {股票名称或代码} --output-dir ...`。
 
 脚本输出JSON文件路径到stdout最后一行。读取JSON获取全部数据（行情/财务/同业/股东/大单/新闻/产品/筹码/博主/壁垒/研报）。
 
+`cloud_cli.py stock-report` / `stock` 会强制使用 `--source cloud`：证券检索、新闻和公告来自**同花顺扶摇 REST**；实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总来自**官方问财 OpenAPI**。第一次云端运行可加 `--preflight` 检查证券解析和两个数据通道；必须注入 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`（也接受兼容的 `HITHINK_FINANCE_API_KEY` / `WENCAI_API_KEY`），缺少任一凭据即失败，绝不回退到游客账号或伪造数据。输出目录必须可写，不要写安装包目录。
+
+本地兼容路径保留 `--source ths`（`thsdk`），仅用于有固定 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 的本机环境；它不属于云端交付链路。云端大单数据只有官方问财返回的**当日买入/卖出汇总**，报告会标记为“大单日汇总（非逐笔）”，不会冒充逐笔成交。
+
+盘前行情中的供应商哨兵值 `2147483648` 会统一转成“暂无”，不会伪装成价格或涨跌幅。同业查询遇到瞬时空响应会重试，并按“末级行业 → 上级行业”回退，既不丢板块，也不用目标股票自身冒充同业样本。
+
+`stock-report` 已内置报告门禁。若采用分步执行，报告写完后必须运行完整性门禁：
+
+```bash
+python {skill_dir}/../daily-briefing-pro/scripts/verify_skill_report.py 报告.html \
+  --type stock --data-json _fetch_result_<代码>.json
+```
+
+门禁检查 10 个固定章节、表格行数和 `暂无/UNSOURCED/NaN` 等占位值；未通过不得交付。
+
 > 详细数据结构、wencai列名映射、数据铁律、容错机制见 `references/data-spec.md`
 
-补充数据：thsdk未覆盖的可用WebFetch补充（最多2次，30秒超时），重点补**客户供应链细节**。数据缺失标"暂无"，禁止编造。
+补充数据：扶摇/官方问财未覆盖的可用WebFetch补充（最多2次，30秒超时），重点补**客户供应链细节**。数据缺失标“暂无”，禁止编造。
 
 ---
 

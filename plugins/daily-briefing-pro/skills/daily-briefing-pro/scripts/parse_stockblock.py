@@ -8,20 +8,33 @@ import os
 import re
 import sys
 
-THS_DIR = os.environ.get("THS_SELFSTOCK_PATH", r"C:\应用\同花顺\mo_4aknfs5zs")
-if THS_DIR.endswith(".json"):
-    THS_DIR = os.path.dirname(THS_DIR)
-STOCKBLOCK_FILE = os.path.join(THS_DIR, "stockblock.ini")
+DEFAULT_WINDOWS_THS_DIR = r"C:\应用\同花顺\mo_4aknfs5zs"
+
+
+def default_stockblock_file():
+    configured = (
+        os.environ.get("THS_STOCKBLOCK_PATH")
+        or os.environ.get("THS_SELFSTOCK_PATH")
+        or (DEFAULT_WINDOWS_THS_DIR if os.name == "nt" else "")
+    )
+    if not configured:
+        return ""
+    if os.path.isfile(configured) and not configured.lower().endswith(".json"):
+        return configured
+    if configured.lower().endswith(".json"):
+        configured = os.path.dirname(configured)
+    return os.path.join(configured, "stockblock.ini")
 
 MARKET_MAP = {"17": "SH", "33": "SZ", "48": "BJ"}
 
 
 def parse_stockblock(filepath=None):
     if filepath is None:
-        filepath = STOCKBLOCK_FILE
+        filepath = default_stockblock_file()
 
-    if not os.path.exists(filepath):
-        print(json.dumps({"error": f"文件不存在: {filepath}"}, ensure_ascii=False))
+    if not filepath or not os.path.exists(filepath):
+        detail = filepath or "未配置 THS_STOCKBLOCK_PATH 或 THS_SELFSTOCK_PATH"
+        print(json.dumps({"error": f"文件不存在: {detail}"}, ensure_ascii=False))
         sys.exit(1)
 
     with open(filepath, "rb") as f:

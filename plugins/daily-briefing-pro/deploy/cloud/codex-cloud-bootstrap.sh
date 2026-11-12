@@ -6,7 +6,7 @@ export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PYTHONIOENCODING=utf-8
 
 BASE="${DAILY_BRIEFING_HOME:-/workspace/.daily-briefing-pro}"
-BRANCH="${DAILY_BRIEFING_BRANCH:-codex/daily-briefing-cloud-parity}"
+BRANCH="${DAILY_BRIEFING_BRANCH:-main}"
 EXPECTED_SHA="${DAILY_BRIEFING_EXPECTED_SHA:?DAILY_BRIEFING_EXPECTED_SHA must pin the cloud runtime commit}"
 REPO_URL="${DAILY_BRIEFING_REPO_URL:-https://github.com/EDwinpzy/stock-analysis.git}"
 VENV="$BASE/venv"
@@ -88,8 +88,24 @@ git -C "$REPO_ROOT" show \
 python3 -m venv "$VENV"
 "$VENV/bin/python" -m pip install --upgrade pip setuptools wheel
 "$VENV/bin/python" -m pip install \
-  --index-url https://download.pytorch.org/whl/cpu "torch==2.5.1"
+  --index-url https://download.pytorch.org/whl/cpu \
+  --extra-index-url https://pypi.org/simple \
+  "torch==2.7.0+cpu"
 "$VENV/bin/python" -m pip install -r "$BASE/requirements-cloud.txt"
+case "$(uname -m)" in
+  aarch64|arm64)
+    "$VENV/bin/python" -m pip install --no-deps "akracer==0.0.14"
+    ;;
+  x86_64|amd64)
+    "$VENV/bin/python" -m pip install --no-deps "py-mini-racer==0.6.0"
+    ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+"$VENV/bin/python" -m pip install --no-deps "akshare==1.18.46"
+"$VENV/bin/python" -c "from py_mini_racer import MiniRacer; assert MiniRacer().eval('1+1') == 2"
 
 if command -v node >/dev/null 2>&1 &&
   command -v npm >/dev/null 2>&1 &&

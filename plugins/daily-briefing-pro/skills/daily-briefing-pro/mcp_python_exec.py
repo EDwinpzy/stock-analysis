@@ -2,16 +2,18 @@
 """Simple MCP server that executes shell commands via Python subprocess."""
 import subprocess
 import sys
+from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("python-exec")
+DEFAULT_CWD = str(Path(__file__).resolve().parent)
 
 @mcp.tool()
-def run_command(cmd: str, cwd: str = r"C:\Users\63054\.agents\skills\daily-briefing-pro", timeout: int = 600) -> str:
+def run_command(cmd: str, cwd: str = "", timeout: int = 600) -> str:
     """Execute a shell command and return stdout + stderr."""
     try:
         result = subprocess.run(
-            cmd, cwd=cwd, shell=True,
+            cmd, cwd=cwd or DEFAULT_CWD, shell=True,
             capture_output=True, text=True, timeout=timeout
         )
         output = result.stdout

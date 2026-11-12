@@ -1,0 +1,129 @@
+name: Cloud port validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-port-validation
+  cancel-in-progress: false
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the task branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r plugins/daily-briefing-pro/deploy/cloud/requirements-cloud.txt
+          python -m pip install --no-deps "py-mini-racer==0.6.0" "akshare==1.18.46"
+
+      - name: Compile Python sources
+        run: python -m compileall -q plugins tests
+
+      - name: Run the complete test suite
+        run: python -m pytest -q
+
+  container-reports:
+    needs: python-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      IMAGE: daily-briefing-pro:3.23.19-cloud-amd64-ci
+      FUYAO_API_KEY: ${{ secrets.FUYAO_API_KEY }}
+      IWENCAI_API_KEY: ${{ secrets.IWENCAI_API_KEY }}
+    steps:
+      - name: Check out the task branch
+        uses: actions/checkout@v4
+
+      - name: Build the formal AMD64 image
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --platform linux/amd64 \
+            -f plugins/daily-briefing-pro/deploy/cloud/Dockerfile \
+            -t "$IMAGE" \
+            plugins/daily-briefing-pro
+          docker image inspect "$IMAGE" --format '{{.Architecture}} {{.Os}} {{.Id}}'
+
+      - name: Prepare artifact directories
+        run: |
+          mkdir -p artifacts/data artifacts/reports
+          chmod 777 artifacts/data artifacts/reports
+
+      - name: Probe credentials and data channels
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts/data:/runtime/data" \
+            --volume "$PWD/artifacts/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py doctor --probe \
+            | tee artifacts/doctor.json
+
+      - name: Query live market data
+        run: |
+          set -euo pipefail
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            realtime 600519 --mode cloud --compact \
+            | tee artifacts/market-realtime.json
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            candle 600519 --mode cloud --count 3 --compact \
+            | tee artifacts/market-candle.json
+          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
+            sector --target 白酒 --mode cloud --compact \
+            | tee artifacts/market-sector.json
+
+      - name: Generate and gate the stock report
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts/data:/runtime/data" \
+            --volume "$PWD/artifacts/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
+            --output-dir /runtime/data/stock-analysis \
+            | tee artifacts/stock-report-result.json
+
+      - name: Generate and gate the industry report
+        run: |
+          docker run --rm \
+            --env FUYAO_API_KEY \
+            --env IWENCAI_API_KEY \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --volume "$PWD/artifacts/data:/runtime/data" \
+            --volume "$PWD/artifacts/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
+            --output-dir /runtime/data/industry-analysis \
+            | tee artifacts/industry-report-result.json
+
+      - name: Upload report evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-port-evidence
+          if-no-files-found: error
+          retention-days: 14
+          path: artifacts/
