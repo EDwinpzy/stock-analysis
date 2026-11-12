@@ -278,7 +278,7 @@ def test_cloud_stock_report_labels_thsdk_big_order_fallback():
     assert "大单日汇总" not in report
 
 
-def test_cloud_stock_report_survives_without_wencai_and_labels_net_flow():
+def test_cloud_stock_report_survives_without_wencai_and_labels_net_flow(tmp_path):
     data = stock_fixture()
     data["runtime"] = {"source": "cloud"}
     data["wencai_available"] = False
@@ -307,7 +307,14 @@ def test_cloud_stock_report_survives_without_wencai_and_labels_net_flow():
     assert "东方财富 F10" in report
     assert "日度主力/大单/超大单净流入（非逐笔）" in report
     assert "日度净流入口径，未提供买卖拆分" in report
+    assert "日度净流入，未拆分买卖" in report
     assert "日度净流入 1 行（非逐笔）" in report
+    assert "公开数据未覆盖" not in report
+
+    path = tmp_path / "stock-net-flow.html"
+    path.write_text(report, encoding="utf-8")
+    result = verify_report(path, "stock", data=data)
+    assert result["ok"] is True, result["problems"]
 
 
 def test_cloud_stock_report_labels_eastmoney_holder_fallback():

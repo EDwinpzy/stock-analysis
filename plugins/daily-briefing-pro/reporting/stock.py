@@ -318,6 +318,22 @@ def build_stock_report(data: dict[str, Any]) -> str:
         if order_scope == "daily_net_flow"
         else fpct(buy_share, signed=False)
     )
+    if order_scope == "daily_net_flow":
+        order_direction = "净流入口径"
+        order_detail = "日度净流入，未拆分买卖"
+    else:
+        order_direction = (
+            "买入占优"
+            if buy_share is not None and buy_share >= 55
+            else "卖出占优"
+            if buy_share is not None and buy_share < 45
+            else "均衡"
+        )
+        order_detail = (
+            f"买入占比 {fpct(buy_share, signed=False)}"
+            if buy_share is not None
+            else "无可用买卖金额样本"
+        )
 
     holder_names: list[str] = []
     if isinstance(holders_raw, dict):
@@ -723,7 +739,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
                 ("资金类型", "方向", "详情"),
                 (
                     ("主力资金", "流入" if (main_inflow or 0) > 0 else "流出" if (main_inflow or 0) < 0 else "中性", fyi(main_inflow)),
-                    ("大单买卖", "买入占优" if (buy_share or 50) >= 55 else "卖出占优" if (buy_share or 50) < 45 else "均衡", f"买入占比 {fpct(buy_share, signed=False)}"),
+                    ("大单买卖", order_direction, order_detail),
                     ("融资余额", "已采集", fnum(margin_balance)),
                 ),
             )
