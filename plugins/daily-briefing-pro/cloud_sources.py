@@ -1152,6 +1152,61 @@ class CloudStockAdapter:
         return SimpleNamespace(df=frame, error="" if current else "empty")
 
 
+def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
+    """Check both cloud channels without collecting a full industry report."""
+
+    started = time.time()
+    market, market_error = _safe_market_client()
+    if not market:
+        raise CloudSourceError(market_error or "扶摇行情凭据未配置", "missing_api_key")
+    wencai, wencai_source = _wencai_client()
+
+    sector_data = market.sector(keyword)
+    sector_raw = sector_data.get("sector") or {}
+    sector_name = _text(sector_raw.get("name")) or keyword
+    members = [
+        item
+        for item in sector_data.get("members") or []
+        if isinstance(item, dict) and _text(item.get("thscode"))
+    ]
+    if not members:
+        raise CloudSourceError(f"板块 {sector_name} 没有成分股", "empty_sector")
+
+    ticker = _text(members[0].get("ticker"))[-6:]
+    quote = market.realtime([ticker])
+    if not quote.get("data"):
+        raise CloudSourceError("扶摇实时行情预检未返回数据", "empty_quote")
+
+    try:
+        wencai_payload = wencai.query(
+            "hithink-industry-query",
+            f"{sector_name}行业成分股 最新价",
+            page=1,
+            limit=5,
+        )
+    except mq.QueryError as exc:
+        raise CloudSourceError(f"官方问财行业预检失败：{exc}", "wencai_probe_failed") from exc
+    frame = _frame_result(wencai_payload)
+    if frame.df.empty:
+        raise CloudSourceError(
+            f"官方问财行业预检没有返回 {sector_name} 数据：{frame.error or 'empty'}",
+            "wencai_probe_failed",
+        )
+
+    return {
+        "ok": True,
+        "mode": "preflight",
+        "sector": sector_raw,
+        "members_count": len(members),
+        "channels": {
+            "fuyao": "ok",
+            "wencai": "ok",
+            "wencai_source": wencai_source,
+        },
+        "elapsed_seconds": round(time.time() - started, 1),
+    }
+
+
 def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
     """Collect the industry report schema using only Fuyao and official Wencai."""
 

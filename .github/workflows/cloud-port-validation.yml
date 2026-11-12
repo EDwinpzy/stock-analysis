@@ -68,6 +68,7 @@ jobs:
 
       - name: Probe credentials and data channels
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
@@ -203,6 +204,7 @@ jobs:
 
       - name: Probe credentials and data channels
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \

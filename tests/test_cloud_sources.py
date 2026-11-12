@@ -642,6 +642,30 @@ def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
     assert any("官方问财 OpenAPI" in item and "实时行情主数据" in item for item in result["sources"])
 
 
+def test_industry_cloud_preflight_checks_channels_without_full_collection(monkeypatch):
+    market = FakeMarket()
+
+    def responder(skill, query, limit):
+        assert skill == "hithink-industry-query"
+        assert "白酒Ⅲ行业成分股" in query
+        assert limit == 5
+        return payload({"股票代码": "600519.SH", "最新价": 1402.3})
+
+    wencai = FakeWencai(responder)
+    monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
+    monkeypatch.setattr(cloud_sources, "_wencai_client", lambda: (wencai, "test"))
+
+    result = cloud_sources.preflight_industry_cloud("白酒")
+
+    assert result["ok"] is True
+    assert result["mode"] == "preflight"
+    assert result["sector"]["name"] == "白酒Ⅲ"
+    assert result["members_count"] == 2
+    assert result["channels"]["fuyao"] == "ok"
+    assert result["channels"]["wencai"] == "ok"
+    assert len(wencai.calls) == 1
+
+
 def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
     market = FakeMarket()
 

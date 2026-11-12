@@ -349,7 +349,7 @@ def doctor(probe: bool = False, dry_run: bool = False) -> int:
                 continue
             code, stdout, stderr = run_capture(
                 command,
-                timeout=timeout_seconds("DAILY_BRIEFING_PROBE_TIMEOUT", 120),
+                timeout=timeout_seconds("DAILY_BRIEFING_PROBE_TIMEOUT", 300),
             )
             payload["probe"].append(
                 {

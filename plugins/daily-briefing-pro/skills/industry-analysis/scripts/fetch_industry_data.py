@@ -565,12 +565,16 @@ def main() -> int:
             plugin_root = Path(__file__).resolve().parents[3]
             if str(plugin_root) not in sys.path:
                 sys.path.insert(0, str(plugin_root))
-            from cloud_sources import collect_industry_cloud
+            from cloud_sources import collect_industry_cloud, preflight_industry_cloud
 
-            result = collect_industry_cloud(args.industry, args.limit)
+            result = (
+                preflight_industry_cloud(args.industry)
+                if args.preflight
+                else collect_industry_cloud(args.industry, args.limit)
+            )
         else:
             result = collect(args.industry, args.limit)
-        if args.preflight:
+        if args.preflight and source != "cloud":
             result = {
                 "ok": True,
                 "mode": "preflight",
