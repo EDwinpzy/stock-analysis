@@ -82,6 +82,32 @@ PLACEHOLDER_PATTERNS = (
     r"暂无数据",
 )
 
+INDUSTRY_SNAPSHOT_FIELDS = (
+    "涨幅",
+    "5日涨幅",
+    "10日涨幅",
+    "20日涨幅",
+    "主力净流入",
+    "量比",
+)
+
+INDUSTRY_STOCK_FIELDS = {
+    "price": "最新价",
+    "change_pct": "涨跌幅",
+    "pe": "PE",
+    "pb": "PB",
+    "market_cap_yi": "总市值",
+    "revenue_yi": "营业收入",
+    "net_profit_yi": "归母净利润",
+    "gross_margin": "毛利率",
+    "net_margin": "净利率",
+    "roe": "ROE",
+    "revenue_yoy": "营收同比",
+    "profit_yoy": "净利同比",
+    "ytd_change": "年内涨幅",
+    "industry": "所属行业",
+}
+
 
 def visible_text(html: str) -> str:
     text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", " ", html)
@@ -131,6 +157,19 @@ def _latest_annual_number(
         if match and parsed is not None:
             candidates.append((int(match.group(1)), parsed))
     return max(candidates, key=lambda item: item[0])[1] if candidates else None
+
+
+def _formatted_value_present(text: str, key: str, value: float) -> bool:
+    if key in {"涨幅", "5日涨幅", "10日涨幅", "20日涨幅"}:
+        sign = "+" if value > 0 else ""
+        variants = {f"{sign}{value:,.2f}%", f"{value:,.2f}%"}
+    elif key == "主力净流入":
+        variants = {f"{value / 1e8:,.2f} 亿"}
+    elif key == "量比":
+        variants = {f"{value:,.2f}", f"{value:g}"}
+    else:
+        variants = {f"{value:,.2f}", f"{value:g}"}
+    return any(variant in text for variant in variants)
 
 
 def _source_fact_problems(text: str, kind: str, data: dict[str, Any]) -> list[str]:
@@ -206,6 +245,47 @@ def _source_fact_problems(text: str, kind: str, data: dict[str, Any]) -> list[st
         ]
         if missing_tickers:
             problems.append("报告缺少采集证券代码：" + "、".join(missing_tickers[:5]))
+        snapshot = (
+            data.get("sector_snapshot")
+            if isinstance(data.get("sector_snapshot"), dict)
+            else {}
+        )
+        missing_snapshot = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if _number(snapshot.get(key)) is None
+        ]
+        if missing_snapshot:
+            problems.append("采集 JSON 缺少板块指标：" + "、".join(missing_snapshot))
+        else:
+            for key in INDUSTRY_SNAPSHOT_FIELDS:
+                parsed = _number(snapshot.get(key))
+                if parsed is not None and not _formatted_value_present(
+                    text,
+                    key,
+                    parsed,
+                ):
+                    problems.append(
+                        f"报告未出现与采集 JSON 一致的板块{key}：{parsed:g}"
+                    )
+        incomplete_stocks = []
+        for item in stocks:
+            missing_fields = [
+                label
+                for key, label in INDUSTRY_STOCK_FIELDS.items()
+                if is_empty(item.get(key))
+            ]
+            if missing_fields:
+                incomplete_stocks.append(
+                    f"{item.get('name') or item.get('ticker') or '未命名标的'}"
+                    f"（{'、'.join(missing_fields)}）"
+                )
+        if incomplete_stocks:
+            problems.append(
+                "行业核心标的字段缺失：" + "；".join(incomplete_stocks[:5])
+            )
+        if "公开数据未覆盖" in text:
+            problems.append("行业报告仍含“公开数据未覆盖”字段")
     return problems
 
 
@@ -278,6 +358,40 @@ def verify_data(path: Path, kind: str) -> dict[str, Any]:
     problems = []
     if missing:
         problems.append("缺少或为空：" + "、".join(missing))
+    if kind == "industry":
+        snapshot = (
+            data.get("sector_snapshot")
+            if isinstance(data.get("sector_snapshot"), dict)
+            else {}
+        )
+        missing_snapshot = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if _number(snapshot.get(key)) is None
+        ]
+        if missing_snapshot:
+            problems.append("板块指标缺失：" + "、".join(missing_snapshot))
+        stocks = [
+            item
+            for item in (data.get("stocks") or [])
+            if isinstance(item, dict)
+        ]
+        incomplete_stocks = []
+        for item in stocks:
+            missing_fields = [
+                label
+                for key, label in INDUSTRY_STOCK_FIELDS.items()
+                if is_empty(item.get(key))
+            ]
+            if missing_fields:
+                incomplete_stocks.append(
+                    f"{item.get('name') or item.get('ticker') or '未命名标的'}"
+                    f"（{'、'.join(missing_fields)}）"
+                )
+        if incomplete_stocks:
+            problems.append(
+                "核心标的字段缺失：" + "；".join(incomplete_stocks[:5])
+            )
     if data.get("error"):
         problems.append("采集器报错：" + str(data["error"]))
     return {

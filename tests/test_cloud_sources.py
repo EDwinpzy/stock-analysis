@@ -666,20 +666,76 @@ def test_industry_cloud_preflight_checks_channels_without_full_collection(monkey
     assert len(wencai.calls) == 1
 
 
+def test_industry_cloud_preflight_falls_back_when_wencai_quota_is_exhausted(
+    monkeypatch,
+):
+    market = FakeMarket()
+
+    def responder(skill, query, limit):
+        raise cloud_sources.mq.QueryError(
+            "今天的次数已用完",
+            "wencai_quota_exhausted",
+        )
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        if "clist/get" in url:
+            return {
+                "data": {
+                    "total": 1,
+                    "diff": [{"f12": "BK1575", "f14": "白酒Ⅲ"}],
+                }
+            }
+        if "kline/get" in url:
+            return {
+                "data": {
+                    "klines": [
+                        f"2026-11-{index + 1:02d},"
+                        f"{100 + index},{100 + index},"
+                        f"{100 + index},{100 + index},"
+                        f"{1000000 + index * 10000},"
+                        f"{100000000 + index * 1000000},"
+                        "1.0,0.0,0.0,1.0"
+                        for index in range(30)
+                    ]
+                }
+            }
+        if "fflow" in url:
+            return {
+                "data": {
+                    "klines": [
+                        "2026-11-12,-160098192.0,-364834816.0,"
+                        "524732672.0,-355624736.0,195526544.0"
+                    ]
+                }
+            }
+        if "stock/get" in url:
+            return {"data": {"f50": 1.23, "f170": 0.35}}
+        raise AssertionError(url)
+
+    monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
+    monkeypatch.setattr(
+        cloud_sources,
+        "_wencai_client",
+        lambda: (FakeWencai(responder), "test"),
+    )
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    result = cloud_sources.preflight_industry_cloud("白酒")
+
+    assert result["ok"] is True
+    assert result["channels"]["fuyao"] == "ok"
+    assert result["channels"]["wencai"] == "unavailable"
+    assert result["channels"]["eastmoney"] == "ok"
+    assert result["eastmoney_board"]["code"] == "BK1575"
+    assert result["warnings"]
+
+
 def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
     market = FakeMarket()
 
     def responder(skill, query, limit):
         if "5日涨幅" in query:
-            return payload(
-                {
-                    "涨跌幅[20261106-20261112]": 1.1,
-                    "涨跌幅[20261030-20261112]": 2.2,
-                    "涨跌幅[20261016-20261112]": 3.3,
-                    "主力净买入额[20261112]": 123456789,
-                    "量比[20261112]": 1.5,
-                }
-            )
+            return payload()
         if "成分股" in query:
             raise cloud_sources.mq.QueryError(
                 "今天的次数已用完",
@@ -748,6 +804,38 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
                     ]
                 }
             }
+        if "clist/get" in url:
+            return {
+                "data": {
+                    "total": 1,
+                    "diff": [{"f12": "BK1575", "f14": "白酒Ⅲ"}],
+                }
+            }
+        if "kline/get" in url and "fflow" not in url:
+            return {
+                "data": {
+                    "klines": [
+                        f"2026-11-{index + 1:02d},"
+                        f"{100 + index},{100 + index},"
+                        f"{100 + index},{100 + index},"
+                        f"{1000000 + index * 10000},"
+                        f"{100000000 + index * 1000000},"
+                        "1.0,0.0,0.0,1.0"
+                        for index in range(30)
+                    ]
+                }
+            }
+        if "fflow" in url:
+            return {
+                "data": {
+                    "klines": [
+                        "2026-11-12,-160098192.0,-364834816.0,"
+                        "524732672.0,-355624736.0,195526544.0"
+                    ]
+                }
+            }
+        if "stock/get" in url:
+            return {"data": {"f50": 1.23, "f170": 0.35}}
         raise AssertionError(url)
 
     monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
@@ -771,7 +859,14 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
     assert by_code["000568"]["profit_yoy"] == pytest.approx(-20.1)
     assert by_code["000568"]["ytd_change"] == pytest.approx(-30.3)
     assert by_code["600519"]["industry"] == "白酒Ⅲ"
+    assert result["sector_snapshot"]["5日涨幅"] == pytest.approx((129 / 124 - 1) * 100)
+    assert result["sector_snapshot"]["10日涨幅"] == pytest.approx((129 / 119 - 1) * 100)
+    assert result["sector_snapshot"]["20日涨幅"] == pytest.approx((129 / 109 - 1) * 100)
+    assert result["sector_snapshot"]["主力净流入"] == pytest.approx(-160098192.0)
+    assert result["sector_snapshot"]["量比"] == pytest.approx(1.23)
+    assert result["sector"]["eastmoney_block_code"] == "BK1575"
     assert any("东方财富 F10/行情" in item for item in result["sources"])
+    assert any("东方财富板块行情" in item for item in result["sources"])
     assert any("问财行业财务数据不完整" in item for item in result["warnings"])
 
 

@@ -211,6 +211,90 @@ def test_source_fact_gate_rejects_missing_industry_ticker(tmp_path):
     assert any("证券代码" in problem for problem in result["problems"])
 
 
+def test_source_fact_gate_rejects_missing_industry_snapshot_metrics(tmp_path):
+    path = tmp_path / "industry.html"
+    path.write_text(
+        make_html(INDUSTRY_SECTIONS, 5) + "<p>白酒 贵州茅台 600519</p>",
+        encoding="utf-8",
+    )
+    data = {
+        "sector": {"name": "白酒"},
+        "stocks": [{"name": "贵州茅台", "ticker": "600519"}],
+        "sector_snapshot": {"涨幅": 1.2},
+    }
+    result = verify.verify_report(path, "industry", data=data)
+
+    assert result["ok"] is False
+    assert any("板块指标" in problem for problem in result["problems"])
+
+
+def test_source_fact_gate_rejects_industry_metric_mismatch(tmp_path):
+    path = tmp_path / "industry.html"
+    path.write_text(
+        make_html(INDUSTRY_SECTIONS, 5)
+        + "<p>白酒 贵州茅台 600519 5日涨幅 +1.00% 公开数据未覆盖</p>",
+        encoding="utf-8",
+    )
+    data = {
+        "sector": {"name": "白酒"},
+        "stocks": [
+            {
+                "name": "贵州茅台",
+                "ticker": "600519",
+                "price": 1402.3,
+                "change_pct": -2.55,
+                "pe": 21.0,
+                "pb": 7.2,
+                "market_cap_yi": 17600.0,
+                "revenue_yi": 1720.54,
+                "net_profit_yi": 823.2,
+                "gross_margin": 91.18,
+                "net_margin": 50.53,
+                "roe": 32.53,
+                "revenue_yoy": -1.2,
+                "profit_yoy": -4.53,
+                "ytd_change": 5.5,
+                "industry": "白酒Ⅲ",
+            }
+        ],
+        "sector_snapshot": {
+            "涨幅": 1.2,
+            "5日涨幅": -2.1,
+            "10日涨幅": 1.3,
+            "20日涨幅": 3.4,
+            "主力净流入": 120000000,
+            "量比": 1.1,
+        },
+    }
+    result = verify.verify_report(path, "industry", data=data)
+
+    assert result["ok"] is False
+    assert any("5日涨幅" in problem for problem in result["problems"])
+    assert any("公开数据未覆盖" in problem for problem in result["problems"])
+
+
+def test_data_gate_rejects_incomplete_industry_metrics(tmp_path):
+    path = tmp_path / "industry.json"
+    path.write_text(
+        json.dumps(
+            {
+                "sector": {"name": "白酒"},
+                "members": [{"name": "贵州茅台", "ticker": "600519"}],
+                "stocks": [{"name": "贵州茅台", "ticker": "600519"}],
+                "sector_snapshot": {"涨幅": 1.2, "5日涨幅": -2.1},
+                "news": [{"title": "公告"}],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    result = verify.verify_data(path, "industry")
+
+    assert result["ok"] is False
+    assert any("板块指标缺失" in problem for problem in result["problems"])
+    assert any("核心标的字段缺失" in problem for problem in result["problems"])
+
+
 def test_source_fact_gate_rejects_missing_shareholder_names(tmp_path):
     path = tmp_path / "stock.html"
     path.write_text(

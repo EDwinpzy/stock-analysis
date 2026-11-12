@@ -16,14 +16,15 @@ import os
 import re
 import sys
 import time
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterable
+from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 import pandas as pd
+import requests
 
 
 PLUGIN_ROOT = Path(__file__).resolve().parent
@@ -49,9 +50,24 @@ EASTMONEY_INDUSTRY_URL = (
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 EASTMONEY_QUOTE_REFERER = "https://quote.eastmoney.com/"
+EASTMONEY_SECTOR_LIST_URL = "https://push2.eastmoney.com/api/qt/clist/get"
+EASTMONEY_SECTOR_KLINE_URL = (
+    "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+)
+EASTMONEY_SECTOR_FLOW_URL = (
+    "https://push2his.eastmoney.com/api/qt/stock/fflow/kline/get"
+)
 EASTMONEY_FINANCE_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
     "NewFinanceAnalysis/ZYZBAjaxNew"
+)
+INDUSTRY_SNAPSHOT_FIELDS = (
+    "涨幅",
+    "5日涨幅",
+    "10日涨幅",
+    "20日涨幅",
+    "主力净流入",
+    "量比",
 )
 CloudSourceError = mq.QueryError
 
@@ -189,20 +205,35 @@ def _fetch_eastmoney_json(
 ) -> Any:
     """Fetch a public Eastmoney JSON endpoint without browser state."""
 
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Referer": referer,
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "identity",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=EASTMONEY_TIMEOUT) as response:
-        raw = response.read()
+    last_error: Exception | None = None
+    raw = b""
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Referer": referer,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "identity",
+        "Connection": "close",
+    }
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=EASTMONEY_TIMEOUT,
+            )
+            response.raise_for_status()
+            raw = response.content
+            break
+        except (requests.RequestException, OSError) as exc:
+            last_error = exc
+            if attempt == 2:
+                raise
+            time.sleep(0.5 * (attempt + 1))
+    if not raw and last_error is not None:
+        raise last_error
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
     return json.loads(raw.decode("utf-8-sig"))
@@ -239,7 +270,7 @@ def _eastmoney_stock_quote(code: str) -> dict[str, Any]:
 
     payload = _fetch_eastmoney_json(
         f"{EASTMONEY_STOCK_URL}?secid={_eastmoney_secid(code)}"
-        "&fields=f43,f57,f58,f116,f117,f162,f167,f170",
+        "&fields=f43,f57,f58,f116,f117,f162,f167,f170,f25",
         referer=EASTMONEY_QUOTE_REFERER,
     )
     data = (payload or {}).get("data") if isinstance(payload, dict) else None
@@ -257,6 +288,7 @@ def _eastmoney_stock_quote(code: str) -> dict[str, Any]:
         "f20": _number(data.get("f116")),
         "f21": _number(data.get("f117")),
         "f23": _scaled_quote_number(data.get("f167")),
+        "f25": _scaled_quote_number(data.get("f25")),
     }
 
 
@@ -341,6 +373,211 @@ def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
     return {**selected, "_SELECTED_REPORT_YEAR": selected_year}
 
 
+def _eastmoney_sector_board(keyword: str) -> dict[str, str]:
+    """Resolve an industry name to the public Eastmoney board identifier."""
+
+    normalized = _normalize_name(keyword)
+    rows: list[dict[str, Any]] = []
+    pages = 1
+    page = 1
+    while page <= pages:
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_SECTOR_LIST_URL}?"
+            + urlencode(
+                {
+                    "pn": str(page),
+                    "pz": "100",
+                    "po": "1",
+                    "np": "1",
+                    "fltt": "2",
+                    "invt": "2",
+                    "fid": "f12",
+                    "fs": "m:90+t:2",
+                    "fields": "f12,f14",
+                }
+            ),
+            referer=EASTMONEY_QUOTE_REFERER,
+        )
+        page_rows = (payload.get("data") or {}).get("diff") or []
+        page_rows = [
+            item for item in page_rows if isinstance(item, dict)
+        ]
+        rows.extend(page_rows)
+        if page == 1:
+            total = _number((payload.get("data") or {}).get("total")) or len(
+                page_rows
+            )
+            pages = max(1, math.ceil(total / 100))
+        if len(page_rows) < 100:
+            break
+        page += 1
+    if not rows:
+        raise ValueError(f"东方财富未找到板块：{normalized or keyword}")
+    exact = [
+        item
+        for item in rows
+        if _text(item.get("f14")) == keyword.strip()
+    ]
+    same_level = [
+        item
+        for item in rows
+        if _normalize_name(item.get("f14")) == normalized
+    ]
+    same_level.sort(
+        key=lambda item: (
+            0 if _text(item.get("f14")).endswith("Ⅲ") else
+            1 if _text(item.get("f14")).endswith("Ⅱ") else 2,
+            _text(item.get("f12")),
+        )
+    )
+    hit = (exact or same_level or rows)[0]
+    code = _text(hit.get("f12")).upper()
+    if not re.fullmatch(r"BK\d{4}", code):
+        raise ValueError(f"东方财富板块代码无效：{code or 'empty'}")
+    return {
+        "code": code,
+        "secid": f"90.{code}",
+        "name": _text(hit.get("f14")) or normalized,
+    }
+
+
+def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
+    """Return verified board returns, fund flow and volume ratio.
+
+    The board search resolves the public BK code.  Daily closes are used for
+    the 5/10/20 trading-session returns; main flow comes from the current fund
+    flow row, and volume ratio uses the quote field or the same daily-volume
+    ratio when that field is unavailable.
+    """
+
+    board = _eastmoney_sector_board(keyword)
+    try:
+        quote_payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_STOCK_URL}?"
+            + urlencode(
+                {
+                    "fltt": "2",
+                    "invt": "2",
+                    "secid": board["secid"],
+                    "fields": "f43,f50,f57,f58,f60,f170",
+                }
+            ),
+            referer=EASTMONEY_QUOTE_REFERER,
+        )
+    except Exception:
+        quote_payload = {}
+    quote = (
+        (quote_payload or {}).get("data")
+        if isinstance(quote_payload, dict)
+        else None
+    )
+    if not isinstance(quote, dict):
+        quote = {}
+    kline_payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_SECTOR_KLINE_URL}?"
+        + urlencode(
+            {
+                "secid": board["secid"],
+                "klt": "101",
+                "fqt": "1",
+                "lmt": "60",
+                "end": "20500101",
+                "fields1": "f1,f2,f3,f4,f5,f6",
+                "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+            }
+        ),
+        referer=EASTMONEY_QUOTE_REFERER,
+    )
+    kline_data = (
+        (kline_payload or {}).get("data")
+        if isinstance(kline_payload, dict)
+        else None
+    )
+    rows: list[tuple[str, float, float | None, float | None]] = []
+    for line in (kline_data or {}).get("klines") or []:
+        parts = str(line).split(",")
+        if len(parts) < 7:
+            continue
+        close = _number(parts[2])
+        if close is None:
+            continue
+        change_pct = _number(parts[8]) if len(parts) > 8 else None
+        rows.append((parts[0], close, _number(parts[5]), change_pct))
+    if len(rows) < 21:
+        raise ValueError(
+            f"东方财富板块日线不足 21 条：{board['code']}，实际 {len(rows)}"
+        )
+
+    metrics: dict[str, float] = {}
+    for days in (5, 10, 20):
+        base = rows[-1 - days][1]
+        if base:
+            metrics[f"{days}日涨幅"] = round((rows[-1][1] / base - 1) * 100, 6)
+    change = _number(quote.get("f170"))
+    if change is None:
+        change = rows[-1][3]
+    if change is not None:
+        metrics["涨幅"] = change
+    volume_ratio = _number(quote.get("f50"))
+    if volume_ratio is None:
+        previous_volumes = [
+            volume
+            for _, _, volume, _ in rows[-6:-1]
+            if volume is not None and volume > 0
+        ]
+        current_volume = rows[-1][2]
+        if (
+            len(previous_volumes) == 5
+            and current_volume is not None
+            and current_volume > 0
+        ):
+            volume_ratio = round(
+                current_volume / (sum(previous_volumes) / 5),
+                6,
+            )
+    if volume_ratio is not None:
+        metrics["量比"] = volume_ratio
+
+    flow_payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_SECTOR_FLOW_URL}?"
+        + urlencode(
+            {
+                "lmt": "10",
+                "klt": "101",
+                "secid": board["secid"],
+                "fields1": "f1,f2,f3,f7",
+                "fields2": "f51,f52,f53,f54,f55,f56",
+            }
+        ),
+        referer=EASTMONEY_QUOTE_REFERER,
+    )
+    flow_data = (
+        (flow_payload or {}).get("data")
+        if isinstance(flow_payload, dict)
+        else None
+    )
+    flow_rows = [
+        str(line).split(",")
+        for line in (flow_data or {}).get("klines") or []
+        if str(line).strip()
+    ]
+    if flow_rows:
+        main_flow = _number(flow_rows[-1][1]) if len(flow_rows[-1]) > 1 else None
+        if main_flow is not None:
+            metrics["主力净流入"] = main_flow
+
+    return {
+        "board": board,
+        "as_of": rows[-1][0],
+        "metrics": metrics,
+        "raw": {
+            "quote": quote,
+            "kline_tail": rows[-21:],
+            "flow_tail": flow_rows[-1:] if flow_rows else [],
+        },
+    }
+
+
 def _previous_close(row: dict[str, Any]) -> float | None:
     """Return the prior close when the vendor exposes dated close columns.
 
@@ -368,6 +605,14 @@ def _wencai_client() -> tuple[mq.WencaiClient, str]:
             "missing_api_key",
         )
     return mq.WencaiClient(key, timeout=WENCAI_TIMEOUT), source or "env"
+
+
+def _optional_wencai_client() -> tuple[mq.WencaiClient | None, str, str]:
+    try:
+        client, source = _wencai_client()
+        return client, source, ""
+    except CloudSourceError as exc:
+        return None, "", str(exc)
 
 
 def _safe_market_client() -> tuple[mq.CloudClient | None, str]:
@@ -1153,13 +1398,12 @@ class CloudStockAdapter:
 
 
 def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
-    """Check both cloud channels without collecting a full industry report."""
+    """Check report-grade industry channels without full collection."""
 
     started = time.time()
     market, market_error = _safe_market_client()
     if not market:
         raise CloudSourceError(market_error or "扶摇行情凭据未配置", "missing_api_key")
-    wencai, wencai_source = _wencai_client()
 
     sector_data = market.sector(keyword)
     sector_raw = sector_data.get("sector") or {}
@@ -1177,34 +1421,65 @@ def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
     if not quote.get("data"):
         raise CloudSourceError("扶摇实时行情预检未返回数据", "empty_quote")
 
-    try:
-        wencai_payload = wencai.query(
-            "hithink-industry-query",
-            f"{sector_name}行业成分股 最新价",
-            page=1,
-            limit=5,
-        )
-    except mq.QueryError as exc:
-        raise CloudSourceError(f"官方问财行业预检失败：{exc}", "wencai_probe_failed") from exc
-    frame = _frame_result(wencai_payload)
-    if frame.df.empty:
-        raise CloudSourceError(
-            f"官方问财行业预检没有返回 {sector_name} 数据：{frame.error or 'empty'}",
-            "wencai_probe_failed",
-        )
+    wencai, wencai_source, wencai_error = _optional_wencai_client()
+    wencai_ok = False
+    if wencai:
+        try:
+            wencai_payload = wencai.query(
+                "hithink-industry-query",
+                f"{sector_name}行业成分股 最新价",
+                page=1,
+                limit=5,
+            )
+            frame = _frame_result(wencai_payload)
+            if frame.df.empty:
+                wencai_error = (
+                    f"没有返回 {sector_name} 数据：{frame.error or 'empty'}"
+                )
+            else:
+                wencai_ok = True
+        except mq.QueryError as exc:
+            wencai_error = str(exc)
 
-    return {
+    eastmoney_probe: dict[str, Any] | None = None
+    if not wencai_ok:
+        try:
+            eastmoney_probe = _eastmoney_sector_metrics(sector_name or keyword)
+            missing = [
+                key
+                for key in INDUSTRY_SNAPSHOT_FIELDS
+                if _number((eastmoney_probe.get("metrics") or {}).get(key))
+                is None
+            ]
+            if missing:
+                raise ValueError("缺少板块指标：" + "、".join(missing))
+        except Exception as exc:
+            raise CloudSourceError(
+                "行业预检失败："
+                f"问财={wencai_error or '未配置'}；"
+                f"东方财富={exc}",
+                "industry_probe_failed",
+            ) from exc
+
+    result = {
         "ok": True,
         "mode": "preflight",
         "sector": sector_raw,
         "members_count": len(members),
         "channels": {
             "fuyao": "ok",
-            "wencai": "ok",
+            "wencai": "ok" if wencai_ok else "unavailable",
+            "eastmoney": "ok" if eastmoney_probe else "not_needed",
             "wencai_source": wencai_source,
         },
         "elapsed_seconds": round(time.time() - started, 1),
     }
+    if wencai_error and not wencai_ok:
+        result["warnings"] = [f"官方问财不可用，已用东方财富板块指标兜底：{wencai_error}"]
+    if eastmoney_probe:
+        result["eastmoney_board"] = eastmoney_probe["board"]
+        result["eastmoney_as_of"] = eastmoney_probe["as_of"]
+    return result
 
 
 def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
@@ -1215,7 +1490,9 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
     market, market_error = _safe_market_client()
     if not market:
         raise CloudSourceError(market_error or "扶摇行情凭据未配置", "missing_api_key")
-    wencai, wencai_source = _wencai_client()
+    wencai, wencai_source, wencai_error = _optional_wencai_client()
+    if wencai_error:
+        warnings.append(f"官方问财不可用，将使用东方财富补齐行业数据：{wencai_error}")
     sector_data = market.sector(keyword)
     sector_raw = sector_data.get("sector") or {}
     sector_name = _text(sector_raw.get("name")) or keyword
@@ -1236,6 +1513,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         raise CloudSourceError(f"板块 {sector_name} 没有成分股", "empty_sector")
 
     def query(query_text: str, skill_id: str) -> SimpleNamespace:
+        if not wencai:
+            return _empty(wencai_error or "wencai unavailable")
         try:
             payload = wencai.query(skill_id, query_text, page=1, limit=50)
         except mq.QueryError as exc:
@@ -1289,6 +1568,17 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
 
     def missing_metrics(row: dict[str, Any]) -> list[str]:
         values = {
+            "price": pick_metric(row, "最新价"),
+            "change_pct": pick_metric(row, "最新涨跌幅"),
+            "pe": pick_metric(
+                row,
+                "最新动态市盈率",
+                "市盈率(pe)",
+                "最新市盈率ttm",
+                "市盈率",
+            ),
+            "pb": pick_metric(row, "最新市净率", "市净率"),
+            "market_cap": pick_metric(row, "总市值"),
             "revenue": pick_metric(row, f"营业收入[{year}1231]", "营业收入"),
             "net_profit": pick_metric(
                 row,
@@ -1316,6 +1606,7 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 "归母净利润同比增长率",
                 "净利润同比增长率",
             ),
+            "ytd_change": pick_metric(row, "年初至今涨跌幅", "年涨跌幅"),
         }
         return [name for name, value in values.items() if value is None]
 
@@ -1489,7 +1780,7 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
             "raw": {key: _json_value(value) for key, value in row.items()},
         }
         if fallback_row:
-            stock["data_sources"] = ["wencai", "eastmoney"]
+            stock["data_sources"] = (["wencai"] if row else []) + ["eastmoney"]
             stock["raw"]["_eastmoney"] = _json_value(fallback_row.get("raw") or {})
         if market_cap is not None:
             stock["market_cap_yi"] = round(market_cap / 1e8, 2)
@@ -1532,6 +1823,40 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         snapshot["主力净流入"] = _number(_first(index_row, "主力净买入额", "主力净流入"))
         snapshot["量比"] = _number(_first(index_row, "量比"))
 
+    eastmoney_sector_used = False
+    eastmoney_sector_board: dict[str, str] = {}
+    eastmoney_sector_as_of = ""
+    missing_snapshot = [
+        key
+        for key in INDUSTRY_SNAPSHOT_FIELDS
+        if _number(snapshot.get(key)) is None
+    ]
+    if missing_snapshot:
+        try:
+            eastmoney_sector = _eastmoney_sector_metrics(sector_name or keyword)
+        except Exception as exc:
+            warnings.append(f"东方财富板块指标兜底失败：{exc}")
+        else:
+            for key, value in (eastmoney_sector.get("metrics") or {}).items():
+                snapshot[key] = value
+            eastmoney_sector_used = True
+            eastmoney_sector_board = eastmoney_sector.get("board") or {}
+            eastmoney_sector_as_of = _text(eastmoney_sector.get("as_of"))
+            warnings.append(
+                "问财板块指标不完整，已使用东方财富板块行情补齐"
+            )
+
+    missing_snapshot = [
+        key
+        for key in INDUSTRY_SNAPSHOT_FIELDS
+        if _number(snapshot.get(key)) is None
+    ]
+    if missing_snapshot:
+        raise CloudSourceError(
+            "行业板块指标缺失：" + "、".join(missing_snapshot),
+            "incomplete_sector_metrics",
+        )
+
     news: list[dict[str, Any]] = []
     seen: set[str] = set()
     for member in members[:5]:
@@ -1565,12 +1890,26 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         "kind": "industry",
         "candidates": [],
     }
+    if eastmoney_sector_used:
+        sector["eastmoney_block_code"] = eastmoney_sector_board.get("code", "")
+        sector["metrics_as_of"] = eastmoney_sector_as_of
     if not snapshot:
         warnings.append("板块行情快照为空")
     if not news:
         warnings.append("未采集到成分股新闻；报告需用公开信息补充催化")
     if stocks and not any(item.get("revenue") is not None for item in stocks):
         warnings.append("财务数据为空；不得用推算值替代")
+
+    sources = ["扶摇 REST：板块目录/成分/板块快照/新闻/个股行情补充"]
+    if wencai:
+        sources.append(
+            "官方问财 OpenAPI：实时行情主数据、行业财务、估值与增速"
+            f"（{wencai_source}）"
+        )
+    if fallback:
+        sources.append("东方财富 F10/行情：问财缺失项的年度财务、估值与行情")
+    if eastmoney_sector_used:
+        sources.append("东方财富板块行情：5/10/20日涨幅、主力净流入、量比")
 
     return {
         "fetch_time": datetime.now(CN_TZ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -1583,16 +1922,6 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         "news": news,
         "warnings": warnings,
         "missing_sections": [] if stocks else ["stocks"],
-        "sources": [
-            "扶摇 REST：板块目录/成分/板块快照/新闻/个股行情补充",
-            f"官方问财 OpenAPI：实时行情主数据、行业财务、估值与增速（{wencai_source}）",
-        ]
-        + (
-            [
-                "东方财富 F10/行情：问财缺失项的年度财务、估值与行情",
-            ]
-            if fallback
-            else []
-        ),
+        "sources": sources,
         "elapsed_seconds": round(time.time() - started, 1),
     }
