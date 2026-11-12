@@ -248,6 +248,89 @@ def test_optional_missing_github_secret_is_not_a_failure():
     assert "缺失（可选）" in result["detail"]
 
 
+def _cloud_asr_group_item() -> dict:
+    return {
+        "id": "douyin_cloud_asr_any",
+        "label": "Douyin ASR",
+        "category": "转录",
+        "kind": "env_any_complete",
+        "groups": [
+            ["DOUYIN_ASR_BASE_URL", "DOUYIN_ASR_API_KEY", "DOUYIN_ASR_MODEL"],
+            ["GROQ_API_KEY"],
+            ["SILICONFLOW_API_KEY"],
+            ["OPENAI_API_KEY"],
+        ],
+        "secret": True,
+        "required": True,
+        "github_secret": [
+            "DOUYIN_ASR_BASE_URL",
+            "DOUYIN_ASR_API_KEY",
+            "DOUYIN_ASR_MODEL",
+            "GROQ_API_KEY",
+            "SILICONFLOW_API_KEY",
+            "OPENAI_API_KEY",
+        ],
+    }
+
+
+def test_cloud_asr_group_requires_a_complete_route():
+    item = _cloud_asr_group_item()
+
+    partial = cm.evaluate_complete_env_groups(
+        item,
+        {},
+        {"DOUYIN_ASR_API_KEY": "configured"},
+    )
+    generic = cm.evaluate_complete_env_groups(
+        item,
+        {},
+        {
+            "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+            "DOUYIN_ASR_API_KEY": "configured",
+            "DOUYIN_ASR_MODEL": "whisper-large-v3",
+        },
+    )
+    native = cm.evaluate_complete_env_groups(
+        item,
+        {},
+        {"GROQ_API_KEY": "configured"},
+    )
+
+    assert partial["state"] == "fail"
+    assert "不完整组合" in partial["detail"]
+    assert generic["state"] == "ok"
+    assert "DOUYIN_ASR_BASE_URL + DOUYIN_ASR_API_KEY + DOUYIN_ASR_MODEL" in generic["detail"]
+    assert native["state"] == "ok"
+    assert "GROQ_API_KEY" in native["detail"]
+
+
+def test_cloud_asr_github_group_requires_one_complete_secret_set():
+    item = _cloud_asr_group_item()
+    complete = {
+        "state": "ok",
+        "detail": "complete",
+        "github_secret": item["github_secret"],
+        "required": True,
+    }
+    partial = dict(complete)
+
+    cm.apply_github_state(
+        complete,
+        {"DOUYIN_ASR_API_KEY", "GROQ_API_KEY"},
+        item,
+    )
+    cm.apply_github_state(
+        partial,
+        {"DOUYIN_ASR_BASE_URL", "DOUYIN_ASR_API_KEY"},
+        item,
+    )
+
+    assert complete["state"] == "ok"
+    assert "至少一组完整" in complete["detail"]
+    assert partial["state"] == "fail"
+    assert "没有完整组合" in partial["detail"]
+
+
 def test_cookie_github_payload_round_trips(tmp_path):
     path = tmp_path / "cookie.json"
     _write_cookies(path, "2026-11-13T05:27:54.588Z")

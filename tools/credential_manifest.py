@@ -355,6 +355,61 @@ def evaluate_any_env_item(
     return result
 
 
+def evaluate_complete_env_groups(
+    item: Mapping[str, Any],
+    env_file: Mapping[str, str],
+    environ: Mapping[str, str],
+    *,
+    prefer_process: bool = True,
+) -> dict[str, Any]:
+    """Evaluate alternatives where every variable in one group must be present."""
+
+    groups = [
+        [str(name) for name in group if str(name).strip()]
+        for group in item.get("groups", [])
+    ]
+    result: dict[str, Any] = {
+        "id": item.get("id"),
+        "label": item.get("label"),
+        "category": item.get("category"),
+        "state": "optional",
+        "detail": "",
+        "source": "",
+        "github_secret": item.get("github_secret"),
+        "required": bool(item.get("required")),
+    }
+    partial: list[str] = []
+    for group in groups:
+        values = [
+            resolve_env(
+                (name,),
+                env_file,
+                environ,
+                prefer_process=prefer_process,
+            )
+            for name in group
+        ]
+        if group and all(value for value, _ in values):
+            result["state"] = "ok"
+            result["source"] = values[0][1]
+            result["detail"] = "已配置完整组合：" + " + ".join(group)
+            return result
+        configured = [name for name, (value, _) in zip(group, values) if value]
+        if configured:
+            missing = [name for name in group if name not in configured]
+            partial.append(
+                " + ".join(configured) + " 缺少 " + " / ".join(missing)
+            )
+    result["state"] = "fail" if item.get("required") else "optional"
+    detail = "未配置任何完整组合：" + "；".join(
+        " + ".join(group) for group in groups
+    )
+    if partial:
+        detail += "。不完整组合：" + "；".join(partial)
+    result["detail"] = detail
+    return result
+
+
 def evaluate_item(
     item: Mapping[str, Any],
     env_file: Mapping[str, str],
@@ -381,6 +436,13 @@ def evaluate_item(
         )
     if kind == "env_any":
         return evaluate_any_env_item(
+            item,
+            env_file,
+            environ,
+            prefer_process=prefer_process,
+        )
+    if kind == "env_any_complete":
+        return evaluate_complete_env_groups(
             item,
             env_file,
             environ,
@@ -432,9 +494,24 @@ def github_secret_names(repo: str) -> set[str]:
 def apply_github_state(
     result: dict[str, Any],
     github_names: set[str],
+    item: Mapping[str, Any] | None = None,
 ) -> None:
     secret = result.get("github_secret")
     if not secret:
+        return
+    if item and item.get("kind") == "env_any_complete":
+        groups = [
+            [str(name) for name in group if str(name).strip()]
+            for group in item.get("groups", [])
+        ]
+        if any(group and all(name in github_names for name in group) for group in groups):
+            result["detail"] = f"{result['detail']}；GitHub Secret 至少一组完整"
+        else:
+            required = bool(result.get("required"))
+            result["state"] = "fail" if required else (
+                "warn" if result.get("state") == "ok" else "optional"
+            )
+            result["detail"] = f"{result['detail']}；GitHub Secret 没有完整组合"
         return
     secret_names = [secret] if isinstance(secret, str) else [
         str(name) for name in secret if str(name).strip()
@@ -594,7 +671,7 @@ def build_github_payload(
     env_file: Mapping[str, str],
     environ: Mapping[str, str],
 ) -> str | None:
-    if item.get("kind") == "env_any":
+    if item.get("kind") in {"env_any", "env_any_complete"}:
         return None
     secret_name = item.get("github_secret")
     if not secret_name:
@@ -635,7 +712,7 @@ def sync_github(
         raise CredentialError("清单缺少 project.repository")
     updates: list[tuple[str, str]] = []
     for item in manifest.get("items", []):
-        if item.get("kind") == "env_any":
+        if item.get("kind") in {"env_any", "env_any_complete"}:
             continue
         secret_name = _nonempty(item.get("github_secret"))
         if not secret_name or (only and secret_name not in only):
@@ -760,8 +837,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             github_names = github_secret_names(
                 _nonempty(project.get("repository"))
             )
+            items_by_id = {
+                str(item.get("id")): item
+                for item in manifest.get("items", [])
+                if item.get("id")
+            }
             for row in rows:
-                apply_github_state(row, github_names)
+                apply_github_state(
+                    row,
+                    github_names,
+                    items_by_id.get(str(row.get("id"))),
+                )
         counts = summarize(rows)
         if args.json:
             print(render_json(manifest, rows))
