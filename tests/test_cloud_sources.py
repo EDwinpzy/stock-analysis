@@ -655,15 +655,35 @@ def test_ths_connection_retries_after_transient_failure(monkeypatch):
 
     monkeypatch.setattr(cloud_sources.mq, "ThsClient", FakeThsClient)
 
-    assert adapter._ths_connection() is None
-    assert "temporary failure" in adapter._ths_connect_error
-    assert adapter._ths_connection() is None
-    assert len(attempts) == 1
-
-    adapter._ths_connect_retry_at = 0.0
     assert adapter._ths_connection() is not None
     assert len(attempts) == 2
     assert adapter._ths_connect_error == ""
+
+
+def test_ths_connection_cools_down_after_persistent_failure(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+    )
+    adapter._ths_connect_error = ""
+    adapter._ths_connect_retry_at = 0.0
+    attempts = []
+
+    class FakeThsClient:
+        def __enter__(self):
+            attempts.append("enter")
+            raise RuntimeError("still failing")
+
+        def __exit__(self, *args):
+            return None
+
+    monkeypatch.setattr(cloud_sources.mq, "ThsClient", FakeThsClient)
+
+    assert adapter._ths_connection() is None
+    assert "still failing" in adapter._ths_connect_error
+    assert len(attempts) == 2
+    assert adapter._ths_connection() is None
+    assert len(attempts) == 2
 
 
 def test_margin_and_patents_fall_back_to_thsdk(monkeypatch):
