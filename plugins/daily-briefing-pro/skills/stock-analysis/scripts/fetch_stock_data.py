@@ -399,6 +399,28 @@ def _format_big_order_row(row, columns):
     return row_data
 
 
+def _apply_daily_aggregate_flow(result, scope, main_net_inflow):
+    """Use the daily big-order aggregate so cloud and local quote flows agree."""
+
+    if str(scope or "") != "daily_aggregate" or main_net_inflow is None:
+        return False
+    quote = result.get("quote")
+    if not isinstance(quote, dict):
+        return False
+    try:
+        flow = float(main_net_inflow)
+    except (TypeError, ValueError):
+        return False
+    quote["main_net_inflow"] = flow
+    cap = quote.get("circulating_cap") or quote.get("market_cap")
+    try:
+        cap = float(cap)
+    except (TypeError, ValueError):
+        cap = None
+    quote["main_net_pct"] = round(flow / cap * 100, 4) if cap else "暂无"
+    return True
+
+
 def _search_blogger_cache(cache_dir, today_str, search_keywords, platform):
     """从每日缓存的博主数据中筛选提及目标股票的帖子
     
@@ -1093,6 +1115,11 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
             result["big_orders"] = []
             result["big_orders_columns"] = []
             result["big_orders_direction_legend"] = _BIG_ORDER_DIR_MAP
+        _apply_daily_aggregate_flow(
+            result,
+            scope,
+            getattr(resp, "main_net_inflow", None),
+        )
     except Exception as e:
         result["big_orders"] = []
         result["big_orders_columns"] = []

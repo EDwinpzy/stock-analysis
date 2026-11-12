@@ -311,6 +311,7 @@ def test_big_order_flow_is_marked_as_daily_aggregate():
     assert len(result.df) == 2
     assert list(result.df["成交方向"]) == ["1", "-1"]
     assert result.df.iloc[0]["总金额"] == 222720230.75
+    assert result.main_net_inflow == pytest.approx(17049508.63)
 
 
 def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):

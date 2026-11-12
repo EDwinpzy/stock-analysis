@@ -111,3 +111,41 @@ def test_big_order_row_maps_vendor_direction_column():
     assert result["成交方向"] == "中单卖出"
     assert result["成交方向_code"] == "-2"
     assert result["成交量"] == "81500"
+
+
+def test_daily_aggregate_flow_replaces_vendor_quote_metric():
+    data = {
+        "quote": {
+            "main_net_inflow": -12902090.0,
+            "main_net_pct": -0.4625,
+            "circulating_cap": 1761865000000.0,
+        }
+    }
+
+    applied = fetch_stock_data._apply_daily_aggregate_flow(
+        data,
+        "daily_aggregate",
+        -26068704.79,
+    )
+
+    assert applied
+    assert data["quote"]["main_net_inflow"] == -26068704.79
+    assert data["quote"]["main_net_pct"] == -0.0015
+
+
+def test_tick_big_orders_keep_vendor_quote_metric():
+    data = {
+        "quote": {
+            "main_net_inflow": -26068780.0,
+            "main_net_pct": -0.0015,
+        }
+    }
+
+    applied = fetch_stock_data._apply_daily_aggregate_flow(
+        data,
+        "",
+        -26068704.79,
+    )
+
+    assert not applied
+    assert data["quote"]["main_net_inflow"] == -26068780.0

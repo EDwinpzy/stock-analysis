@@ -500,6 +500,13 @@ class CloudStockAdapter:
         period = re.search(r"\[(\d{8})\]", buy_amount_key)
         trade_date = period.group(1) if period else datetime.now(CN_TZ).strftime("%Y%m%d")
         formatted_date = f"{trade_date[:4]}-{trade_date[4:6]}-{trade_date[6:]}"
+        buy_amount = _number(row.get(buy_amount_key))
+        sell_amount = _number(row.get(sell_amount_key))
+        main_net_inflow = (
+            buy_amount - sell_amount
+            if buy_amount is not None and sell_amount is not None
+            else None
+        )
         rows = [
             {
                 "时间": formatted_date,
@@ -523,6 +530,7 @@ class CloudStockAdapter:
             error="",
             scope="daily_aggregate",
             source="wencai",
+            main_net_inflow=main_net_inflow,
         )
 
     def _news_items(self, code: str) -> list[dict[str, Any]]:
