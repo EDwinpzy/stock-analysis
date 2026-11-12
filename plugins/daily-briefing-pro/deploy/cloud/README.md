@@ -110,7 +110,7 @@ Recognized secret files:
 | `secrets/openai_api_key` | AI summaries / transcription fallback |
 | `secrets/siliconflow_api_key` | Douyin transcription |
 | `secrets/groq_api_key` | Douyin transcription |
-| `secrets/stt_ai_api_key` | Optional STT.ai key; anonymous STT.ai works without this file but is limited to about 3 requests/day/IP |
+| `secrets/stt_ai_api_key` | Optional STT.ai key; anonymous STT.ai works without this file but is limited to about 3 requests/day/IP. NoteTakers adds a second anonymous route with about 10 requests/day/IP |
 | `secrets/douyin_asr_api_key` | Generic OpenAI-compatible Douyin ASR; `DOUYIN_ASR_BASE_URL` and `DOUYIN_ASR_MODEL` must also be set |
 | `secrets/ima_openapi_clientid`, `secrets/ima_openapi_apikey` | IMA research search |
 | `secrets/hithink_finance_api_key` | Optional override for the official Tonghuashun finance data CLI |
@@ -190,7 +190,9 @@ when all of `DOUYIN_ASR_BASE_URL`, `DOUYIN_ASR_API_KEY` and
 `DOUYIN_ASR_MODEL` are set. Configured generic/Groq/OpenAI/SiliconFlow
 channels are tried before the zero-key STT.ai fallback. STT.ai anonymous mode
 is usable without a credential but is limited to roughly 3 transcriptions per
-IP per day; set `STT_AI_API_KEY` or another ASR key for unattended batches.
+IP per day. If STT.ai is exhausted, the pipeline tries NoteTakers' anonymous
+Whisper endpoint, limited to roughly 10 transcriptions per IP per day; set
+`STT_AI_API_KEY`, `GROQ_API_KEY` or another ASR key for unattended batches.
 There is no local model fallback: the image contains no Whisper weights,
 torch, CTranslate2 or faster-whisper. The text AI Relay is never treated as an
 audio endpoint, and a missing key cannot allow title-only substitutes.
@@ -377,7 +379,8 @@ come from one of these real paths:
 
 - a native Douyin subtitle, when the video actually exposes one;
 - an explicitly configured OpenAI-compatible audio ASR, Groq, OpenAI, or
-  SiliconFlow endpoint.
+  SiliconFlow endpoint;
+- the keyless STT.ai or NoteTakers cloud ASR fallback.
 
 The pipeline never treats a title, hashtags, or a replay fixture as a
 transcript. If no real audio transcript is available, the run is reported as

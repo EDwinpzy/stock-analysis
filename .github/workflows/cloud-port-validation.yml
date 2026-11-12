@@ -330,7 +330,7 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm --env-file "$RUNNER_TEMP/briefing.env" "$IMAGE" \
-            python -c "import os; generic=all(os.environ.get(k,'').strip() for k in ('DOUYIN_ASR_BASE_URL','DOUYIN_ASR_API_KEY','DOUYIN_ASR_MODEL')); native=[k for k in ('GROQ_API_KEY','SILICONFLOW_API_KEY','OPENAI_API_KEY','STT_AI_API_KEY') if os.environ.get(k,'').strip()]; print('ASR generic=%s native=%s sttai=anonymous' % (generic, native))"
+            python -c "import os; generic=all(os.environ.get(k,'').strip() for k in ('DOUYIN_ASR_BASE_URL','DOUYIN_ASR_API_KEY','DOUYIN_ASR_MODEL')); native=[k for k in ('GROQ_API_KEY','SILICONFLOW_API_KEY','OPENAI_API_KEY','STT_AI_API_KEY') if os.environ.get(k,'').strip()]; print('ASR generic=%s native=%s sttai=anonymous notetakers=anonymous' % (generic, native))"
 
       - name: Generate the live scheduled briefing with real audio transcription
         run: |
@@ -392,6 +392,7 @@ jobs:
               "openai-asr",
               "siliconflow-sensevoice",
               "sttai-whisper",
+              "notetakers-whisper",
           }
           for blogger in douyin.get("bloggers", []):
               for video in blogger.get("videos", []):

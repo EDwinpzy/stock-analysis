@@ -262,6 +262,14 @@ class PreflightCheckTests(unittest.TestCase):
         self.assertEqual(check.state, "ok")
         self.assertIn("STT.ai", check.detail)
 
+    def test_explicit_notetakers_without_key_is_a_warning(self):
+        check = preflight._check_transcription(
+            {"DOUYIN_TRANSCRIPT_PROVIDER": "notetakers"}
+        )
+
+        self.assertEqual(check.state, "warning")
+        self.assertIn("10 次/日/IP", check.detail)
+
     def test_resume_mode_skips_collection_only_credentials(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

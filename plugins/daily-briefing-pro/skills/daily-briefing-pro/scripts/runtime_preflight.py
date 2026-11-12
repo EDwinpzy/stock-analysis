@@ -62,6 +62,7 @@ TRANSCRIPTION_KEY_BY_PROVIDER = {
     "openai": "OPENAI_API_KEY",
     "siliconflow": "SILICONFLOW_API_KEY",
     "sttai": "STT_AI_API_KEY",
+    "notetakers": "NOTETAKERS_ASR_API_KEY",
 }
 
 
@@ -472,7 +473,8 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
 
 
 ASR_CONFIG_HINT = (
-    "内置 STT.ai 匿名接口可直接使用（3 次/日/IP）；"
+    "内置 STT.ai（3 次/日/IP）和 NoteTakers（10 次/日/IP）"
+    "匿名接口可直接使用；"
     "如需更高额度，可配置 STT_AI_API_KEY、GROQ_API_KEY、"
     "SILICONFLOW_API_KEY 或 OPENAI_API_KEY，"
     "或同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
@@ -487,11 +489,20 @@ def _configured_asr_providers(env: Mapping[str, str]) -> list[str]:
     ):
         configured.append("cloud")
     for name, key_name in TRANSCRIPTION_KEY_BY_PROVIDER.items():
-        if name in {"cloud", "sttai"}:
+        if name in {"cloud", "sttai", "notetakers"}:
             continue
         if str(env.get(key_name) or "").strip():
             configured.append(name)
-    configured.append("sttai")
+    configured.append(
+        "sttai"
+        if str(env.get("STT_AI_API_KEY") or "").strip()
+        else "sttai-anonymous"
+    )
+    configured.append(
+        "notetakers"
+        if str(env.get("NOTETAKERS_ASR_API_KEY") or "").strip()
+        else "notetakers-anonymous"
+    )
     return configured
 
 
@@ -511,16 +522,22 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "transcription",
             "抖音转录",
             f"未知的 DOUYIN_TRANSCRIPT_PROVIDER={provider}",
-            "改为 auto、cloud、groq、openai、siliconflow 或 sttai",
+            "改为 auto、cloud、groq、openai、siliconflow、sttai 或 notetakers",
         )
 
     configured = _configured_asr_providers(env)
     if provider == "auto":
-        if configured == ["sttai"]:
+        keyed = [
+            name
+            for name in configured
+            if not name.endswith("-anonymous")
+        ]
+        if not keyed:
             return _warning(
                 "transcription",
                 "抖音转录",
-                "使用内置 STT.ai 匿名接口；额度为 3 次/日/IP",
+                "使用内置 STT.ai + NoteTakers 匿名接口；"
+                "合计约 13 次/日/IP",
                 "如需稳定批量转录，请配置 STT_AI_API_KEY 或其他云端 ASR Key",
             )
         return _ok(
@@ -551,6 +568,15 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "抖音转录",
             "STT.ai 匿名接口可用；额度为 3 次/日/IP",
             "配置 STT_AI_API_KEY 可提升额度",
+        )
+    if provider == "notetakers":
+        if str(env.get("NOTETAKERS_ASR_API_KEY") or "").strip():
+            return _ok("transcription", "抖音转录", "NoteTakers API Key 可用")
+        return _warning(
+            "transcription",
+            "抖音转录",
+            "NoteTakers 匿名接口可用；额度约 10 次/日/IP",
+            "配置其他云端 ASR Key 可提升稳定批量任务额度",
         )
     key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
     if str(env.get(key_name) or "").strip():

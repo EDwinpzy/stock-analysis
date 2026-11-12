@@ -518,7 +518,8 @@ def apply_github_state(
             result["state"] = "warn"
             result["detail"] = (
                 f"{result['detail']}；GitHub Secret 无 Key 组合，"
-                "云端将使用内置匿名 ASR 接口（3 次/日/IP）"
+                "云端将使用内置匿名 ASR 接口（STT.ai + NoteTakers，"
+                "合计约 13 次/日/IP）"
             )
         else:
             required = bool(result.get("required"))

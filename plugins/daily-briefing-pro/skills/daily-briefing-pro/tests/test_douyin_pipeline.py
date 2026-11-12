@@ -260,6 +260,26 @@ class CloudTranscriptionTests(unittest.TestCase):
         self.assertEqual(source, "sttai-whisper")
         sttai.assert_called_once()
 
+    def test_auto_falls_back_to_notetakers_when_sttai_is_limited(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_sttai",
+            side_effect=RuntimeError("STT.ai 429"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_notetakers",
+            return_value="NoteTakers 转录",
+        ) as notetakers:
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "NoteTakers 转录")
+        self.assertEqual(source, "notetakers-whisper")
+        notetakers.assert_called_once()
+
     def test_auto_does_not_reuse_text_relay_credentials_for_audio(self):
         environment = {
             "DAILY_BRIEFING_AI_BASE_URL": "https://text.example/v1",
@@ -301,6 +321,21 @@ class CloudTranscriptionTests(unittest.TestCase):
 
         self.assertEqual(text, "指定 STT.ai")
         self.assertEqual(source, "sttai-whisper")
+
+    def test_explicit_notetakers_provider_records_source(self):
+        with patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_notetakers",
+            return_value="指定 NoteTakers",
+        ):
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="notetakers",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "指定 NoteTakers")
+        self.assertEqual(source, "notetakers-whisper")
 
     def test_auto_records_cloud_asr_as_transcript_source(self):
         with patch.dict(
@@ -423,6 +458,54 @@ class SttAiTranscriptionTests(unittest.TestCase):
             ),
             "今天白酒板块反弹, watch volume",
         )
+
+
+class NoteTakersTranscriptionTests(unittest.TestCase):
+    class _Response:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"text": "白酒板块反弹"}
+
+    def test_file_upload_and_anonymous_headers(self):
+        captured = {}
+
+        class Client:
+            def __init__(self, **kwargs):
+                captured["client_kwargs"] = kwargs
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def post(self, url, files, headers):
+                captured.update(url=url, files=files, headers=headers)
+                return NoteTakersTranscriptionTests._Response()
+
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "sample.mp3"
+            audio.write_bytes(b"audio")
+            with patch.dict(
+                os.environ,
+                {
+                    "NOTETAKERS_ASR_BASE_URL": "https://stt.example",
+                    "NOTETAKERS_ASR_ENGINE": "whisper",
+                    "NOTETAKERS_ASR_LANGUAGE": "zh",
+                },
+                clear=True,
+            ), patch("httpx.Client", Client):
+                text = analyze_douyin.extract_text_from_audio_notetakers(audio)
+
+        self.assertEqual(text, "白酒板块反弹")
+        self.assertEqual(captured["url"], "https://stt.example/stt/v1/transcribe")
+        self.assertEqual(captured["files"]["engine"], (None, "whisper"))
+        self.assertEqual(captured["files"]["language"], (None, "zh"))
+        self.assertEqual(captured["headers"], {})
 
 
 class DouyinSubtitleTests(unittest.TestCase):
