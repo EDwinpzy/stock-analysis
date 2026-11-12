@@ -400,10 +400,21 @@ def _probe_ai_key(env: Mapping[str, str]) -> tuple[str, str]:
     """
     import requests
 
-    for key_name, base in AI_ENDPOINTS.items():
-        value = str(env.get(key_name) or "").strip()
-        if not value:
-            continue
+    try:
+        from codex_summary_cli import api_summary_config
+
+        config = api_summary_config(env)
+    except Exception:
+        config = None
+    if config is not None:
+        probes = [(config.provider, config.api_key, config.base_url)]
+    else:
+        probes = [
+            (key_name, str(env.get(key_name) or "").strip(), base)
+            for key_name, base in AI_ENDPOINTS.items()
+            if str(env.get(key_name) or "").strip()
+        ]
+    for key_name, value, base in probes:
         try:
             response = requests.get(
                 f"{base}/models",
@@ -425,7 +436,7 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
     try:
         from codex_summary_cli import semantic_summary_status
 
-        available, source = semantic_summary_status()
+        available, source = semantic_summary_status(values)
     except Exception as exc:
         return _error(
             "semantic_summary",

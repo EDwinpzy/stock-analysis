@@ -42,10 +42,19 @@ def call(*args: str, timeout: int = 120) -> dict:
     if not exe:
         raise HithinkError("未安装 hithink-finance CLI")
     cmd = [exe, *args, "--format", "json", "--no-color"]
+    shared_key = (
+        os.environ.get("HITHINK_API_KEY")
+        or os.environ.get("FUYAO_API_KEY")
+    )
     child_env = None
-    if is_cloud_runtime():
+    if is_cloud_runtime() or (
+        shared_key and not os.environ.get("HITHINK_FINANCE_API_KEY")
+    ):
         child_env = os.environ.copy()
-        child_env.setdefault("NODE_USE_ENV_PROXY", "1")
+        if is_cloud_runtime():
+            child_env.setdefault("NODE_USE_ENV_PROXY", "1")
+        if shared_key and not child_env.get("HITHINK_FINANCE_API_KEY"):
+            child_env["HITHINK_FINANCE_API_KEY"] = shared_key
     try:
         proc = subprocess.run(
             cmd,

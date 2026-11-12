@@ -44,14 +44,14 @@ class CloudDeployContractTests(unittest.TestCase):
         self.assertIn("model_template=/opt/daily-briefing-pro/models/sw_rotation_model", entrypoint)
         self.assertIn("model_runtime=/runtime/models/sw_rotation_model", entrypoint)
         self.assertIn('export ROTATION_MODEL_DIR="${ROTATION_MODEL_DIR:-$model_runtime}"', entrypoint)
-        self.assertIn(
-            'if [ -z "${HITHINK_FINANCE_API_KEY:-}" ] && [ -s /run/secrets/fuyao_api_key ]; then',
-            entrypoint,
-        )
+        self.assertIn('if [ -z "${HITHINK_FINANCE_API_KEY:-}" ]; then', entrypoint)
+        self.assertIn('elif [ -n "${FUYAO_API_KEY:-}" ]; then', entrypoint)
         self.assertIn(
             "load_secret HITHINK_FINANCE_API_KEY /run/secrets/fuyao_api_key",
             entrypoint,
         )
+        dockerfile = (DEPLOY_ROOT / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn("DAILY_BRIEFING_CLOUD=1", dockerfile)
 
     def test_cloud_requirements_include_full_report_runtime_helpers(self):
         requirements = (DEPLOY_ROOT / "requirements-cloud.txt").read_text(encoding="utf-8")

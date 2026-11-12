@@ -18,6 +18,7 @@ ENV LANG=C.UTF-8 \
     HOME=/runtime/home \
     XDG_CONFIG_HOME=/runtime/home/.config \
     XDG_CACHE_HOME=/runtime/home/.cache \
+    DAILY_BRIEFING_CLOUD=1 \
     DAILY_BRIEFING_DATA_DIR=/runtime/data \
     BRIEFING_OUTPUT_DIR=/runtime/reports \
     ROTATION_MODEL_DIR=/runtime/models/sw_rotation_model

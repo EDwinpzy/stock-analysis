@@ -11,8 +11,73 @@ import codex_summary_cli as cli
 
 
 class CodexSummaryTests(unittest.TestCase):
+    def test_api_provider_configuration_prefers_generic_endpoint(self):
+        config = cli.api_summary_config({
+            'DAILY_BRIEFING_AI_API_KEY': 'test-generic-key',
+            'DAILY_BRIEFING_AI_BASE_URL': 'https://summary.example/v1/',
+            'DAILY_BRIEFING_AI_MODEL': 'summary-model',
+            'DEEPSEEK_API_KEY': 'test-deepseek-key',
+        })
+        self.assertIsNotNone(config)
+        self.assertEqual(config.provider, 'generic')
+        self.assertEqual(config.base_url, 'https://summary.example/v1')
+        self.assertEqual(config.model, 'summary-model')
+
+    def test_deepseek_configuration_uses_its_base_url_and_model(self):
+        config = cli.api_summary_config({
+            'DEEPSEEK_API_KEY': 'test-deepseek-key',
+            'DEEPSEEK_BASE_URL': 'https://deepseek.example/v1',
+            'DEEPSEEK_MODEL': 'deepseek-test',
+        })
+        self.assertEqual(config, cli.ApiSummaryConfig(
+            'deepseek', 'test-deepseek-key', 'https://deepseek.example/v1', 'deepseek-test'
+        ))
+
+    def test_api_key_makes_semantic_summary_available_without_codex(self):
+        with patch.object(cli, 'codex_logged_in', return_value=False), patch.object(cli, 'codex_available', return_value=False):
+            available, source = cli.semantic_summary_status({'OPENAI_API_KEY': 'test-openai-key'})
+        self.assertTrue(available)
+        self.assertEqual(source, 'api-key:openai')
+
+    def test_api_summary_parses_fenced_json(self):
+        response = SimpleNamespace(
+            status_code=200,
+            json=lambda: {
+                'choices': [{'message': {'content': '```json\n{"summaries": [{"index": 0, "summary": "中性"}]}\n```'}}]
+            },
+        )
+        with patch.dict(
+            os.environ,
+            {
+                'DAILY_BRIEFING_AI_API_KEY': 'test-key',
+                'DAILY_BRIEFING_AI_BASE_URL': 'https://summary.example/v1',
+                'DAILY_BRIEFING_AI_MODEL': 'summary-model',
+            },
+            clear=False,
+        ), patch.object(cli.httpx, 'post', return_value=response) as post:
+            answer = cli.call_api_json('输入', {'type': 'object'})
+        self.assertEqual(answer['summaries'][0]['summary'], '中性')
+        self.assertEqual(post.call_args.args[0], 'https://summary.example/v1/chat/completions')
+        self.assertEqual(post.call_args.kwargs['json']['model'], 'summary-model')
+
+    def test_api_auth_failure_does_not_echo_response_body(self):
+        response = SimpleNamespace(status_code=401, text='private upstream response')
+        with patch.dict(
+            os.environ,
+            {'DAILY_BRIEFING_AI_API_KEY': 'test-key'},
+            clear=False,
+        ), patch.object(cli.httpx, 'post', return_value=response):
+            with self.assertRaisesRegex(RuntimeError, 'credentials rejected') as result:
+                cli.call_api_text('输入')
+        self.assertNotIn('private upstream response', str(result.exception))
+
     def test_disabled_fallback_requires_api(self):
-        with patch.dict(os.environ, {'DAILY_BRIEFING_CODEX_FALLBACK': '0', 'OPENAI_API_KEY': '', 'DEEPSEEK_API_KEY': ''}):
+        with patch.dict(os.environ, {
+            'DAILY_BRIEFING_CODEX_FALLBACK': '0',
+            'DAILY_BRIEFING_AI_API_KEY': '',
+            'OPENAI_API_KEY': '',
+            'DEEPSEEK_API_KEY': '',
+        }):
             self.assertFalse(cli.semantic_summary_available())
 
     def test_empty_sources_preserve_positions(self):

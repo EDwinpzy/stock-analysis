@@ -19,7 +19,12 @@ from urllib.parse import quote
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
 from market_temperature import format_delta
 from data_quality import dataset_state, data_error_reason
-from codex_summary_cli import semantic_summary_available, summarize_tasks
+from codex_summary_cli import (
+    api_summary_config,
+    call_api_text,
+    semantic_summary_available,
+    summarize_tasks,
+)
 from runtime_paths import get_data_dir
 from summary_cache import (
     NO_CLEAR_OPINION,
@@ -865,19 +870,7 @@ def ai_summarize_opinions(raw_text: str, context: str = "博主观点", max_retr
     if _AI_CREDENTIAL_REJECTED:
         return ""
 
-    deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-
-    # 优先 DeepSeek，其次 OpenAI；自动匹配对应的 base_url 和 model
-    if deepseek_key:
-        api_key = deepseek_key
-        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2")
-        model = os.environ.get("DEEPSEEK_MODEL", "xopqwen35397b")
-    elif openai_key:
-        api_key = openai_key
-        base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-        model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    else:
+    if api_summary_config() is None:
         return summarize_tasks([(raw_text, context)])[0]
 
     prompt = f"""你是一位专业的A股投资观点提炼师。请从以下{context}原始内容中，提炼出1-3句精炼的投资观点。
@@ -901,40 +894,23 @@ def ai_summarize_opinions(raw_text: str, context: str = "博主观点", max_retr
 
 请直接输出提炼后的观点，不要加前缀说明："""
 
-    import httpx
-    for attempt in range(max_retries + 1):
-        try:
-            resp = httpx.post(
-                f"{base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}"},
-                json={
-                    "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 200,
-                    "temperature": 0.3,
-                },
-                timeout=15,
+    try:
+        result = call_api_text(prompt, max_tokens=200, temperature=0.3, timeout=15)
+        # 清理：去掉可能的引号包裹
+        result = result.strip('"\'“”‘’')
+        return normalize_ai_summary(result)
+    except Exception as exc:
+        message = str(exc)
+        if "credentials rejected" in message:
+            # 凭证无效/无权限：重试没有意义，直接指向修复动作
+            _AI_CREDENTIAL_REJECTED = True
+            print(
+                f"  [⛔] AI凭证被拒绝：{message}\n"
+                "       请更新环境变量中的 DAILY_BRIEFING_AI_API_KEY / DEEPSEEK_API_KEY / OPENAI_API_KEY",
+                file=sys.stderr,
             )
-            if resp.status_code == 200:
-                result = resp.json()["choices"][0]["message"]["content"].strip()
-                # 清理：去掉可能的引号包裹
-                result = result.strip('"\'""''')
-                return normalize_ai_summary(result)
-            elif resp.status_code in (401, 403):
-                # 凭证无效/无权限：重试没有意义，直接指向修复动作
-                _AI_CREDENTIAL_REJECTED = True
-                print(
-                    f"  [⛔] AI凭证被拒绝（HTTP {resp.status_code}）：{resp.text[:120]}\n"
-                    "       请更新 ~/.codex/daily-briefing.env 或环境变量中的 DEEPSEEK_API_KEY / OPENAI_API_KEY",
-                    file=sys.stderr,
-                )
-                return ""
-            else:
-                print(f"  [WARN] AI总结API返回 {resp.status_code}: {resp.text[:100]}", file=sys.stderr)
-        except Exception as e:
-            if attempt < max_retries:
-                continue
-            print(f"  [WARN] AI总结失败: {e}", file=sys.stderr)
+            return ""
+        print(f"  [WARN] AI总结失败: {message}", file=sys.stderr)
     return ""
 
 
@@ -952,17 +928,7 @@ def ai_summarize_yanbao(report: dict, max_retries: int = 1) -> str:
     if _AI_CREDENTIAL_REJECTED:
         return ""
 
-    deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if deepseek_key:
-        api_key = deepseek_key
-        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2")
-        model = os.environ.get("DEEPSEEK_MODEL", "xopqwen35397b")
-    elif openai_key:
-        api_key = openai_key
-        base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-        model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    else:
+    if api_summary_config() is None:
         return summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑")])[0]
 
     rating = str(report.get("rate") or "")
@@ -982,35 +948,16 @@ def ai_summarize_yanbao(report: dict, max_retries: int = 1) -> str:
 标题：{title}
 """
 
-    import httpx
-    for attempt in range(max_retries + 1):
-        try:
-            resp = httpx.post(
-                f"{base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}"},
-                json={
-                    "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 160,
-                    "temperature": 0.2,
-                },
-                timeout=20,
-            )
-            if resp.status_code == 200:
-                result = resp.json()["choices"][0]["message"]["content"].strip()
-                return result.strip('"\'“”‘’')
-            if resp.status_code in (401, 403):
-                _AI_CREDENTIAL_REJECTED = True
-                print(
-                    f"  [⛔] 研报AI凭证被拒绝（HTTP {resp.status_code}）：{resp.text[:120]}",
-                    file=sys.stderr,
-                )
-                return ""
-            print(f"  [WARN] 研报AI返回 {resp.status_code}: {resp.text[:100]}", file=sys.stderr)
-        except Exception as exc:
-            if attempt < max_retries:
-                continue
-            print(f"  [WARN] 研报AI失败: {exc}", file=sys.stderr)
+    try:
+        result = call_api_text(prompt, max_tokens=160, temperature=0.2, timeout=20)
+        return result.strip('"\'“”‘’')
+    except Exception as exc:
+        message = str(exc)
+        if "credentials rejected" in message:
+            _AI_CREDENTIAL_REJECTED = True
+            print(f"  [⛔] 研报AI凭证被拒绝：{message}", file=sys.stderr)
+            return ""
+        print(f"  [WARN] 研报AI失败: {message}", file=sys.stderr)
     return ""
 
 
@@ -1029,7 +976,7 @@ def ai_summarize_yanbao_parallel(reports: list) -> list:
             pending.append((index, report))
     if not pending:
         return results
-    if not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")):
+    if api_summary_config() is None:
         generated = summarize_tasks([(json.dumps(report, ensure_ascii=False), "机构研报正文与核心逻辑") for _, report in pending])
         for (index, _), summary in zip(pending, generated):
             results[index] = summary
@@ -1107,9 +1054,7 @@ def ai_summarize_batch_parallel(tasks: list) -> list:
     """
     import concurrent.futures
 
-    deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    if not deepseek_key and not openai_key:
+    if api_summary_config() is None:
         return summarize_tasks(tasks)
 
     def _call(task):

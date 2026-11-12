@@ -98,6 +98,21 @@ class NetworkConfigTests(unittest.TestCase):
                     self.assertEqual(_hithink.call("market", "calendar"), {})
         self.assertEqual(run.call_args.kwargs["env"]["NODE_USE_ENV_PROXY"], "1")
 
+    def test_hithink_child_reuses_fuyao_key_when_needed(self):
+        completed = Mock(stdout='{"ok":true,"data":{}}')
+        with patch.object(_hithink.shutil, "which", return_value="/usr/bin/hithink-finance"):
+            with patch.object(_hithink.subprocess, "run", return_value=completed) as run:
+                with patch.dict(
+                    os.environ,
+                    {"FUYAO_API_KEY": "test-shared-key"},
+                    clear=True,
+                ):
+                    self.assertEqual(_hithink.call("market", "calendar"), {})
+        self.assertEqual(
+            run.call_args.kwargs["env"]["HITHINK_FINANCE_API_KEY"],
+            "test-shared-key",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

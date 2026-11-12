@@ -13,6 +13,10 @@ def payload(*rows):
     return {"datas": list(rows)}
 
 
+def thsdk_unavailable(*args, **kwargs):
+    raise RuntimeError("thsdk unavailable")
+
+
 class FakeWencai:
     def __init__(self, responder):
         self.responder = responder
@@ -724,6 +728,7 @@ def test_industry_cloud_preflight_falls_back_when_wencai_quota_is_exhausted(
         "_wencai_client",
         lambda: (FakeWencai(responder), "test"),
     )
+    monkeypatch.setattr(cloud_sources, "_thsdk_sector_metrics", thsdk_unavailable)
     monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
 
     result = cloud_sources.preflight_industry_cloud("白酒")
@@ -734,6 +739,117 @@ def test_industry_cloud_preflight_falls_back_when_wencai_quota_is_exhausted(
     assert result["channels"]["eastmoney"] == "ok"
     assert result["eastmoney_board"]["code"] == "BK1575"
     assert result["warnings"]
+
+
+def test_industry_cloud_preflight_uses_thsdk_block_snapshot(monkeypatch):
+    market = FakeMarket()
+
+    def responder(skill, query, limit):
+        raise cloud_sources.mq.QueryError(
+            "今天的次数已用完",
+            "wencai_quota_exhausted",
+        )
+
+    def thsdk_success(sector_code, snapshot):
+        assert sector_code == "URFI881273"
+        return {
+            "board": {
+                "code": "URFI881273",
+                "secid": "URFI881273",
+                "name": "白酒Ⅲ",
+            },
+            "as_of": "",
+            "metrics": {
+                "涨幅": 0.7944,
+                "5日涨幅": -4.1862,
+                "10日涨幅": 8.205,
+                "20日涨幅": 6.6646,
+                "主力净流入": 95341780.0,
+                "量比": 1.1614,
+            },
+        }
+
+    monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
+    monkeypatch.setattr(
+        cloud_sources,
+        "_wencai_client",
+        lambda: (FakeWencai(responder), "test"),
+    )
+    monkeypatch.setattr(cloud_sources, "_thsdk_sector_metrics", thsdk_success)
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_sector_metrics",
+        lambda *_: (_ for _ in ()).throw(AssertionError("eastmoney should be skipped")),
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_hithink_sector_metrics",
+        lambda *_: (_ for _ in ()).throw(AssertionError("hithink should be skipped")),
+    )
+
+    result = cloud_sources.preflight_industry_cloud("白酒")
+
+    assert result["channels"]["thsdk"] == "ok"
+    assert result["channels"]["eastmoney"] == "not_needed"
+    assert result["channels"]["hithink"] == "not_needed"
+    assert result["sector_metrics"]["主力净流入"] == 95341780.0
+    assert result["sector_metrics"]["量比"] == 1.1614
+
+
+def test_industry_cloud_preflight_falls_back_to_hithink_index(monkeypatch):
+    market = FakeMarket()
+
+    def responder(skill, query, limit):
+        raise cloud_sources.mq.QueryError(
+            "今天的次数已用完",
+            "wencai_quota_exhausted",
+        )
+
+    def eastmoney_partial(keyword):
+        return {
+            "board": {"code": "BK0896", "secid": "90.BK0896", "name": "白酒"},
+            "as_of": "",
+            "metrics": {"主力净流入": -133299008.0},
+        }
+
+    seen = {}
+
+    def hithink_success(sector_code, snapshot):
+        seen["sector_code"] = sector_code
+        seen["snapshot"] = snapshot
+        return {
+            "board": {"code": "881273.TI", "secid": "881273.TI", "name": "白酒Ⅲ"},
+            "as_of": "2026-11-12",
+            "metrics": {
+                "涨幅": 0.4,
+                "5日涨幅": -4.18,
+                "10日涨幅": 8.2,
+                "20日涨幅": 6.66,
+                "量比": 1.16,
+            },
+        }
+
+    monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
+    monkeypatch.setattr(
+        cloud_sources,
+        "_wencai_client",
+        lambda: (FakeWencai(responder), "test"),
+    )
+    monkeypatch.setattr(cloud_sources, "_thsdk_sector_metrics", thsdk_unavailable)
+    monkeypatch.setattr(cloud_sources, "_eastmoney_sector_metrics", eastmoney_partial)
+    monkeypatch.setattr(cloud_sources, "_hithink_sector_metrics", hithink_success)
+
+    result = cloud_sources.preflight_industry_cloud("白酒")
+
+    assert result["ok"] is True
+    assert result["channels"]["eastmoney"] == "ok"
+    assert result["channels"]["hithink"] == "ok"
+    assert result["eastmoney_board"]["code"] == "BK0896"
+    assert result["hithink_board"]["code"] == "881273.TI"
+    assert result["sector_metrics"]["主力净流入"] == -133299008.0
+    assert result["sector_metrics"]["5日涨幅"] == -4.18
+    assert seen["sector_code"] == "URFI881273"
+    assert seen["snapshot"]["涨幅"] == 1.2
 
 
 def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
@@ -856,6 +972,7 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
         "_wencai_client",
         lambda: (FakeWencai(responder), "test"),
     )
+    monkeypatch.setattr(cloud_sources, "_thsdk_sector_metrics", thsdk_unavailable)
     monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
 
     result = cloud_sources.collect_industry_cloud("白酒", limit=2)

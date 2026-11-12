@@ -17,7 +17,7 @@ import re
 import sys
 import time
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterable
@@ -32,8 +32,12 @@ PLUGIN_ROOT = Path(__file__).resolve().parent
 MARKET_SCRIPTS = PLUGIN_ROOT / "skills" / "market-query" / "scripts"
 if str(MARKET_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(MARKET_SCRIPTS))
+DAILY_SCRIPTS = PLUGIN_ROOT / "skills" / "daily-briefing-pro" / "scripts"
+if str(DAILY_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(DAILY_SCRIPTS))
 
 import market_query as mq  # noqa: E402
+import _hithink as hithink  # noqa: E402
 
 
 CN_TZ = ZoneInfo("Asia/Shanghai")
@@ -52,12 +56,14 @@ EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 EASTMONEY_QUOTE_REFERER = "https://quote.eastmoney.com/"
 EASTMONEY_SECTOR_SEARCH_URL = "https://searchapi.eastmoney.com/api/suggest/get"
+EASTMONEY_SECTOR_LIST_URL = "https://push2.eastmoney.com/api/qt/clist/get"
 EASTMONEY_SECTOR_KLINE_URL = (
     "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 )
 EASTMONEY_SECTOR_FLOW_URL = (
-    "https://push2his.eastmoney.com/api/qt/stock/fflow/kline/get"
+    "https://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get"
 )
+EASTMONEY_UT = "b2884a393a59ad64002292a3e90d46a5"
 EASTMONEY_FINANCE_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
     "NewFinanceAnalysis/ZYZBAjaxNew"
@@ -222,7 +228,40 @@ def _fetch_eastmoney_urllib_json(url: str, headers: dict[str, str]) -> Any:
         raise last_error
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
-    return json.loads(raw.decode("utf-8-sig"))
+    return _parse_eastmoney_json(raw)
+
+
+def _parse_eastmoney_json(raw: bytes) -> Any:
+    text = raw.decode("utf-8-sig").strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        return json.loads(text[start : end + 1])
+
+
+def _fetch_eastmoney_requests_json(url: str, headers: dict[str, str]) -> Any:
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=EASTMONEY_TIMEOUT,
+            )
+            response.raise_for_status()
+            return _parse_eastmoney_json(response.content)
+        except (requests.RequestException, OSError, json.JSONDecodeError) as exc:
+            last_error = exc
+            if attempt == 2:
+                raise
+            time.sleep(0.5 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
+    raise ValueError("东方财富请求没有返回内容")
 
 
 def _fetch_eastmoney_json(
@@ -245,7 +284,10 @@ def _fetch_eastmoney_json(
         "Connection": "close",
     }
     if "searchapi.eastmoney.com" in url:
-        return _fetch_eastmoney_urllib_json(url, headers)
+        try:
+            return _fetch_eastmoney_urllib_json(url, headers)
+        except Exception:
+            return _fetch_eastmoney_requests_json(url, headers)
     try:
         for attempt in range(3):
             try:
@@ -268,7 +310,7 @@ def _fetch_eastmoney_json(
         raise last_error
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
-    return json.loads(raw.decode("utf-8-sig"))
+    return _parse_eastmoney_json(raw)
 
 
 def _fetch_eastmoney_holder_payload(code: str) -> dict[str, Any]:
@@ -410,26 +452,31 @@ def _eastmoney_sector_board(keyword: str) -> dict[str, str]:
 
     normalized = _normalize_name(keyword)
     rows: list[dict[str, Any]] = []
+    errors: list[str] = []
     queries = [keyword.strip(), normalized]
     for query in list(dict.fromkeys(item for item in queries if item)):
-        payload = _fetch_eastmoney_json(
-            f"{EASTMONEY_SECTOR_SEARCH_URL}?"
-            + urlencode(
-                {
-                    "input": query,
-                    "type": "14",
-                    "token": "D43BF722C8E33BDC906FB84D85E326E8",
-                    "markettype": "",
-                    "mktnum": "",
-                    "jys": "",
-                    "classify": "",
-                    "securitytype": "",
-                    "status": "",
-                    "count": "20",
-                }
-            ),
-            referer=EASTMONEY_QUOTE_REFERER,
-        )
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_SECTOR_SEARCH_URL}?"
+                + urlencode(
+                    {
+                        "input": query,
+                        "type": "14",
+                        "token": "D43BF722C8E33BDC906FB84D85E326E8",
+                        "markettype": "",
+                        "mktnum": "",
+                        "jys": "",
+                        "classify": "",
+                        "securitytype": "",
+                        "status": "",
+                        "count": "20",
+                    }
+                ),
+                referer=EASTMONEY_QUOTE_REFERER,
+            )
+        except Exception as exc:
+            errors.append(f"搜索：{exc}")
+            continue
         candidates = (
             ((payload or {}).get("QuotationCodeTable") or {}).get("Data") or []
             if isinstance(payload, dict)
@@ -445,7 +492,46 @@ def _eastmoney_sector_board(keyword: str) -> dict[str, str]:
         if rows:
             break
     if not rows:
-        raise ValueError(f"东方财富未找到板块：{normalized or keyword}")
+        try:
+            for page in range(1, 4):
+                payload = _fetch_eastmoney_json(
+                    f"{EASTMONEY_SECTOR_LIST_URL}?"
+                    + urlencode(
+                        {
+                            "pn": str(page),
+                            "pz": "100",
+                            "po": "1",
+                            "np": "1",
+                            "fltt": "2",
+                            "invt": "2",
+                            "fid": "f12",
+                            "fs": "m:90+t:2",
+                            "fields": "f12,f14",
+                        }
+                    ),
+                    referer=EASTMONEY_QUOTE_REFERER,
+                )
+                page_rows = (payload.get("data") or {}).get("diff") or []
+                rows.extend(
+                    {
+                        "Code": _text(item.get("f12")),
+                        "Name": _text(item.get("f14")),
+                        "QuoteID": f"90.{_text(item.get('f12'))}",
+                    }
+                    for item in page_rows
+                    if isinstance(item, dict)
+                    and _text(item.get("f12")).upper().startswith("BK")
+                )
+                if len(page_rows) < 100:
+                    break
+        except Exception as exc:
+            errors.append(f"板块列表：{exc}")
+    if not rows:
+        detail = "；".join(errors)
+        raise ValueError(
+            f"东方财富未找到板块：{normalized or keyword}"
+            + (f"（{detail}）" if detail else "")
+        )
     exact = [
         item
         for item in rows
@@ -484,6 +570,8 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
     """
 
     board = _eastmoney_sector_board(keyword)
+    errors: list[str] = []
+    metrics: dict[str, float] = {}
     try:
         quote_payload = _fetch_eastmoney_json(
             f"{EASTMONEY_STOCK_URL}?"
@@ -497,7 +585,8 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
             ),
             referer=EASTMONEY_QUOTE_REFERER,
         )
-    except Exception:
+    except Exception as exc:
+        errors.append(f"行情：{exc}")
         quote_payload = {}
     quote = (
         (quote_payload or {}).get("data")
@@ -506,21 +595,26 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
     )
     if not isinstance(quote, dict):
         quote = {}
-    kline_payload = _fetch_eastmoney_json(
-        f"{EASTMONEY_SECTOR_KLINE_URL}?"
-        + urlencode(
-            {
-                "secid": board["secid"],
-                "klt": "101",
-                "fqt": "1",
-                "lmt": "60",
-                "end": "20500101",
-                "fields1": "f1,f2,f3,f4,f5,f6",
-                "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
-            }
-        ),
-        referer=EASTMONEY_QUOTE_REFERER,
-    )
+    try:
+        kline_payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_SECTOR_KLINE_URL}?"
+            + urlencode(
+                {
+                    "secid": board["secid"],
+                    "ut": EASTMONEY_UT,
+                    "klt": "101",
+                    "fqt": "1",
+                    "lmt": "60",
+                    "end": "20500101",
+                    "fields1": "f1,f2,f3,f4,f5,f6",
+                    "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+                }
+            ),
+            referer=EASTMONEY_QUOTE_REFERER,
+        )
+    except Exception as exc:
+        errors.append(f"日线：{exc}")
+        kline_payload = {}
     kline_data = (
         (kline_payload or {}).get("data")
         if isinstance(kline_payload, dict)
@@ -537,17 +631,16 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
         change_pct = _number(parts[8]) if len(parts) > 8 else None
         rows.append((parts[0], close, _number(parts[5]), change_pct))
     if len(rows) < 21:
-        raise ValueError(
-            f"东方财富板块日线不足 21 条：{board['code']}，实际 {len(rows)}"
+        errors.append(
+            f"日线不足 21 条：{board['code']}，实际 {len(rows)}"
         )
-
-    metrics: dict[str, float] = {}
-    for days in (5, 10, 20):
-        base = rows[-1 - days][1]
-        if base:
-            metrics[f"{days}日涨幅"] = round((rows[-1][1] / base - 1) * 100, 6)
+    else:
+        for days in (5, 10, 20):
+            base = rows[-1 - days][1]
+            if base:
+                metrics[f"{days}日涨幅"] = round((rows[-1][1] / base - 1) * 100, 6)
     change = _number(quote.get("f170"))
-    if change is None:
+    if change is None and rows:
         change = rows[-1][3]
     if change is not None:
         metrics["涨幅"] = change
@@ -558,7 +651,7 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
             for _, _, volume, _ in rows[-6:-1]
             if volume is not None and volume > 0
         ]
-        current_volume = rows[-1][2]
+        current_volume = rows[-1][2] if rows else None
         if (
             len(previous_volumes) == 5
             and current_volume is not None
@@ -571,19 +664,24 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
     if volume_ratio is not None:
         metrics["量比"] = volume_ratio
 
-    flow_payload = _fetch_eastmoney_json(
-        f"{EASTMONEY_SECTOR_FLOW_URL}?"
-        + urlencode(
-            {
-                "lmt": "10",
-                "klt": "101",
-                "secid": board["secid"],
-                "fields1": "f1,f2,f3,f7",
-                "fields2": "f51,f52,f53,f54,f55,f56",
-            }
-        ),
-        referer=EASTMONEY_QUOTE_REFERER,
-    )
+    try:
+        flow_payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_SECTOR_FLOW_URL}?"
+            + urlencode(
+                {
+                    "lmt": "10",
+                    "klt": "101",
+                    "ut": EASTMONEY_UT,
+                    "secid": board["secid"],
+                    "fields1": "f1,f2,f3,f7",
+                    "fields2": "f51,f52,f53,f54,f55,f56",
+                }
+            ),
+            referer=EASTMONEY_QUOTE_REFERER,
+        )
+    except Exception as exc:
+        errors.append(f"资金流：{exc}")
+        flow_payload = {}
     flow_data = (
         (flow_payload or {}).get("data")
         if isinstance(flow_payload, dict)
@@ -599,15 +697,157 @@ def _eastmoney_sector_metrics(keyword: str) -> dict[str, Any]:
         if main_flow is not None:
             metrics["主力净流入"] = main_flow
 
+    if not metrics:
+        raise ValueError(
+            f"东方财富板块指标为空：{board['code']}；{'；'.join(errors)}"
+        )
+
     return {
         "board": board,
-        "as_of": rows[-1][0],
+        "as_of": rows[-1][0] if rows else "",
         "metrics": metrics,
+        "errors": errors,
         "raw": {
             "quote": quote,
             "kline_tail": rows[-21:],
             "flow_tail": flow_rows[-1:] if flow_rows else [],
         },
+    }
+
+
+def _hithink_sector_metrics(
+    sector_code: str,
+    snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Fill sector returns and volume ratio from the official THS index feed."""
+
+    code = _text(sector_code).upper()
+    if code.startswith("URFI") and len(code) > 4:
+        code = f"{code[4:]}.TI"
+    elif re.fullmatch(r"\d{6}", code):
+        code = f"{code}.TI"
+    if not re.fullmatch(r"\d{6}\.TI", code):
+        raise ValueError(f"同花顺行业指数代码无效：{sector_code or 'empty'}")
+    end = datetime.now(CN_TZ)
+    start = end - timedelta(days=70)
+    payload = hithink.call(
+        "index",
+        "history",
+        "--thscode",
+        code,
+        "--start-ms",
+        str(int(start.timestamp() * 1000)),
+        "--end-ms",
+        str(int(end.timestamp() * 1000)),
+        timeout=60,
+    )
+    rows = sorted(
+        (
+            row
+            for row in payload.get("item") or []
+            if isinstance(row, dict) and _number(row.get("close_price")) is not None
+        ),
+        key=lambda row: int(row.get("date_ms") or 0),
+    )
+    if len(rows) < 21:
+        raise ValueError(f"同花顺行业日线不足 21 条：{code}，实际 {len(rows)}")
+    closes = [_number(row.get("close_price")) for row in rows]
+    metrics: dict[str, float] = {}
+    for days in (5, 10, 20):
+        base = closes[-1 - days]
+        if base:
+            metrics[f"{days}日涨幅"] = round((closes[-1] / base - 1) * 100, 6)
+    snapshot = snapshot or {}
+    change = _number(snapshot.get("涨幅"))
+    if change is None and len(closes) >= 2 and closes[-2]:
+        change = round((closes[-1] / closes[-2] - 1) * 100, 6)
+    if change is not None:
+        metrics["涨幅"] = change
+    volume = _number(snapshot.get("成交量"))
+    if volume is None:
+        volume = _number(rows[-1].get("volume"))
+    previous_volumes = [
+        _number(row.get("volume"))
+        for row in rows[-6:-1]
+    ]
+    if (
+        volume is not None
+        and volume > 0
+        and len(previous_volumes) == 5
+        and all(value is not None and value > 0 for value in previous_volumes)
+    ):
+        metrics["量比"] = round(volume / (sum(previous_volumes) / 5), 6)
+    as_of = datetime.fromtimestamp(
+        int(rows[-1].get("date_ms") or 0) / 1000,
+        CN_TZ,
+    ).strftime("%Y-%m-%d")
+    return {
+        "board": {"code": code, "secid": code, "name": _text(snapshot.get("名称")) or code},
+        "as_of": as_of,
+        "metrics": metrics,
+        "raw": {"history_tail": [_json_value(row) for row in rows[-21:]]},
+    }
+
+
+def _thsdk_sector_metrics(
+    sector_code: str,
+    snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Read the same extended block snapshot used by the local collector."""
+
+    code = _text(sector_code).upper()
+    if code.startswith("URFI"):
+        block_code = code
+    elif re.fullmatch(r"\d{6}\.TI", code):
+        block_code = f"URFI{code.split('.')[0]}"
+    elif re.fullmatch(r"\d{6}", code):
+        block_code = f"URFI{code}"
+    else:
+        raise ValueError(f"同花顺板块代码无效：{sector_code or 'empty'}")
+
+    response = None
+    errors: list[str] = []
+    with mq.ThsClient() as client:
+        for query_key in ("扩展", "基础数据"):
+            try:
+                response = client.ths.market_data_block(block_code, query_key)
+            except Exception as exc:
+                errors.append(f"{query_key}：{exc}")
+                continue
+            if (
+                not response.error
+                and response.df is not None
+                and len(response.df)
+            ):
+                break
+            if response.error:
+                errors.append(f"{query_key}：{response.error}")
+    if response is None or response.error or response.df is None or not len(response.df):
+        raise ValueError(
+            f"同花顺板块快照为空：{block_code}"
+            + (f"；{'；'.join(errors)}" if errors else "")
+        )
+    rows = mq.records(response.df)
+    if not rows:
+        raise ValueError(f"同花顺板块快照没有记录：{block_code}")
+    row = rows[0]
+    metrics = {
+        key: value
+        for key in INDUSTRY_SNAPSHOT_FIELDS
+        if (value := _number(row.get(key))) is not None
+    }
+    if not metrics:
+        raise ValueError(f"同花顺板块快照缺少指标：{block_code}")
+    snapshot = snapshot or {}
+    return {
+        "board": {
+            "code": block_code,
+            "secid": block_code,
+            "name": _text(snapshot.get("名称")) or block_code,
+        },
+        "as_of": _text(_first(row, "日期", "数据日期", "更新时间", "时间")),
+        "metrics": metrics,
+        "raw": {"row": _json_value(row)},
     }
 
 
@@ -1441,6 +1681,7 @@ def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
     sector_data = market.sector(keyword)
     sector_raw = sector_data.get("sector") or {}
     sector_name = _text(sector_raw.get("name")) or keyword
+    sector_code = _text(sector_raw.get("thscode")) or _text(sector_raw.get("vendor_thscode"))
     members = [
         item
         for item in sector_data.get("members") or []
@@ -1474,25 +1715,82 @@ def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
         except mq.QueryError as exc:
             wencai_error = str(exc)
 
+    thsdk_probe: dict[str, Any] | None = None
+    thsdk_error = ""
     eastmoney_probe: dict[str, Any] | None = None
+    eastmoney_error = ""
+    hithink_probe: dict[str, Any] | None = None
+    hithink_error = ""
+    fallback_metrics: dict[str, Any] = {}
     if not wencai_ok:
         try:
-            eastmoney_probe = _eastmoney_sector_metrics(sector_name or keyword)
-            missing = [
-                key
-                for key in INDUSTRY_SNAPSHOT_FIELDS
-                if _number((eastmoney_probe.get("metrics") or {}).get(key))
-                is None
-            ]
-            if missing:
-                raise ValueError("缺少板块指标：" + "、".join(missing))
+            thsdk_probe = _thsdk_sector_metrics(
+                sector_code,
+                sector_data.get("snapshot") or {},
+            )
         except Exception as exc:
+            thsdk_error = str(exc)
+        else:
+            for key, value in (thsdk_probe.get("metrics") or {}).items():
+                if _number(value) is not None:
+                    fallback_metrics[key] = value
+
+        missing = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if _number(fallback_metrics.get(key)) is None
+        ]
+        if missing:
+            try:
+                eastmoney_probe = _eastmoney_sector_metrics(sector_name or keyword)
+            except Exception as exc:
+                eastmoney_error = str(exc)
+            else:
+                for key, value in (eastmoney_probe.get("metrics") or {}).items():
+                    if (
+                        _number(fallback_metrics.get(key)) is None
+                        and _number(value) is not None
+                    ):
+                        fallback_metrics[key] = value
+
+        missing = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if _number(fallback_metrics.get(key)) is None
+        ]
+        if missing:
+            try:
+                hithink_probe = _hithink_sector_metrics(
+                    sector_code,
+                    sector_data.get("snapshot") or {},
+                )
+            except Exception as exc:
+                hithink_error = str(exc)
+            else:
+                for key, value in (hithink_probe.get("metrics") or {}).items():
+                    if (
+                        _number(fallback_metrics.get(key)) is None
+                        and _number(value) is not None
+                    ):
+                        fallback_metrics[key] = value
+
+        missing = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if _number(fallback_metrics.get(key)) is None
+        ]
+        if missing:
+            details = [
+                f"问财={wencai_error or '未返回数据'}",
+                f"同花顺thsdk={thsdk_error or '未返回指标'}",
+                f"东方财富={eastmoney_error or '未返回指标'}",
+                f"同花顺={hithink_error or '未返回指标'}",
+            ]
             raise CloudSourceError(
-                "行业预检失败："
-                f"问财={wencai_error or '未配置'}；"
-                f"东方财富={exc}",
+                "行业预检失败：" + "；".join(details)
+                + "；缺少板块指标：" + "、".join(missing),
                 "industry_probe_failed",
-            ) from exc
+            )
 
     result = {
         "ok": True,
@@ -1502,16 +1800,45 @@ def preflight_industry_cloud(keyword: str) -> dict[str, Any]:
         "channels": {
             "fuyao": "ok",
             "wencai": "ok" if wencai_ok else "unavailable",
-            "eastmoney": "ok" if eastmoney_probe else "not_needed",
+            "thsdk": (
+                "ok" if thsdk_probe
+                else "unavailable" if thsdk_error
+                else "not_needed"
+            ),
+            "eastmoney": (
+                "ok" if eastmoney_probe
+                else "unavailable" if eastmoney_error
+                else "not_needed"
+            ),
+            "hithink": (
+                "ok" if hithink_probe
+                else "unavailable" if hithink_error
+                else "not_needed"
+            ),
             "wencai_source": wencai_source,
         },
         "elapsed_seconds": round(time.time() - started, 1),
     }
     if wencai_error and not wencai_ok:
-        result["warnings"] = [f"官方问财不可用，已用东方财富板块指标兜底：{wencai_error}"]
+        warnings = [f"官方问财不可用：{wencai_error}"]
+        if thsdk_probe:
+            warnings.append("已用同花顺 thsdk 板块扩展快照兜底")
+        if eastmoney_probe:
+            warnings.append("已用东方财富板块指标兜底")
+        if hithink_probe:
+            warnings.append("已用同花顺行业指数日线兜底")
+        result["warnings"] = warnings
+    if thsdk_probe:
+        result["thsdk_board"] = thsdk_probe["board"]
+        result["thsdk_as_of"] = thsdk_probe["as_of"]
     if eastmoney_probe:
         result["eastmoney_board"] = eastmoney_probe["board"]
         result["eastmoney_as_of"] = eastmoney_probe["as_of"]
+    if hithink_probe:
+        result["hithink_board"] = hithink_probe["board"]
+        result["hithink_as_of"] = hithink_probe["as_of"]
+    if fallback_metrics:
+        result["sector_metrics"] = fallback_metrics
     return result
 
 
@@ -1856,9 +2183,42 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         snapshot["主力净流入"] = _number(_first(index_row, "主力净买入额", "主力净流入"))
         snapshot["量比"] = _number(_first(index_row, "量比"))
 
+    thsdk_sector_used = False
+    thsdk_sector_board: dict[str, str] = {}
+    thsdk_sector_as_of = ""
+    thsdk_sector_metrics: dict[str, Any] = {}
     eastmoney_sector_used = False
     eastmoney_sector_board: dict[str, str] = {}
     eastmoney_sector_as_of = ""
+    eastmoney_sector_metrics: dict[str, Any] = {}
+    hithink_sector_used = False
+    hithink_sector_board: dict[str, str] = {}
+    hithink_sector_as_of = ""
+    missing_snapshot = [
+        key
+        for key in INDUSTRY_SNAPSHOT_FIELDS
+        if _number(snapshot.get(key)) is None
+    ]
+    if missing_snapshot:
+        try:
+            thsdk_sector = _thsdk_sector_metrics(
+                sector_code,
+                sector_data.get("snapshot") or {},
+            )
+        except Exception as exc:
+            warnings.append(f"同花顺 thsdk 板块快照兜底失败：{exc}")
+        else:
+            thsdk_sector_metrics = thsdk_sector.get("metrics") or {}
+            for key, value in thsdk_sector_metrics.items():
+                if _number(snapshot.get(key)) is None:
+                    snapshot[key] = value
+            thsdk_sector_used = True
+            thsdk_sector_board = thsdk_sector.get("board") or {}
+            thsdk_sector_as_of = _text(thsdk_sector.get("as_of"))
+            warnings.append(
+                "问财板块指标不完整，已使用同花顺 thsdk 板块扩展快照补齐"
+            )
+
     missing_snapshot = [
         key
         for key in INDUSTRY_SNAPSHOT_FIELDS
@@ -1870,13 +2230,39 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         except Exception as exc:
             warnings.append(f"东方财富板块指标兜底失败：{exc}")
         else:
-            for key, value in (eastmoney_sector.get("metrics") or {}).items():
-                snapshot[key] = value
+            eastmoney_sector_metrics = eastmoney_sector.get("metrics") or {}
+            for key, value in eastmoney_sector_metrics.items():
+                if _number(snapshot.get(key)) is None:
+                    snapshot[key] = value
             eastmoney_sector_used = True
             eastmoney_sector_board = eastmoney_sector.get("board") or {}
             eastmoney_sector_as_of = _text(eastmoney_sector.get("as_of"))
             warnings.append(
                 "问财板块指标不完整，已使用东方财富板块行情补齐"
+            )
+
+    missing_snapshot = [
+        key
+        for key in INDUSTRY_SNAPSHOT_FIELDS
+        if _number(snapshot.get(key)) is None
+    ]
+    if missing_snapshot:
+        try:
+            hithink_sector = _hithink_sector_metrics(
+                sector_code,
+                sector_data.get("snapshot") or {},
+            )
+        except Exception as exc:
+            warnings.append(f"同花顺行业指数兜底失败：{exc}")
+        else:
+            for key, value in (hithink_sector.get("metrics") or {}).items():
+                if snapshot.get(key) is None:
+                    snapshot[key] = value
+            hithink_sector_used = True
+            hithink_sector_board = hithink_sector.get("board") or {}
+            hithink_sector_as_of = _text(hithink_sector.get("as_of"))
+            warnings.append(
+                "问财板块指标不完整，已使用同花顺行业指数日线补齐"
             )
 
     missing_snapshot = [
@@ -1923,9 +2309,19 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         "kind": "industry",
         "candidates": [],
     }
+    if thsdk_sector_used:
+        sector["thsdk_block_code"] = thsdk_sector_board.get("code", "")
+        sector["metrics_as_of"] = thsdk_sector_as_of
     if eastmoney_sector_used:
         sector["eastmoney_block_code"] = eastmoney_sector_board.get("code", "")
-        sector["metrics_as_of"] = eastmoney_sector_as_of
+        sector["metrics_as_of"] = (
+            sector.get("metrics_as_of")
+            or eastmoney_sector_as_of
+            or hithink_sector_as_of
+        )
+    if hithink_sector_used:
+        sector["hithink_index_code"] = hithink_sector_board.get("code", "")
+        sector["metrics_as_of"] = hithink_sector_as_of or sector.get("metrics_as_of", "")
     if not snapshot:
         warnings.append("板块行情快照为空")
     if not news:
@@ -1941,8 +2337,22 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         )
     if fallback:
         sources.append("东方财富 F10/行情：问财缺失项的年度财务、估值与行情")
+    if thsdk_sector_used:
+        labels = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if key in thsdk_sector_metrics
+        ]
+        sources.append("同花顺 thsdk 板块扩展快照（与本地同源）：" + "、".join(labels))
     if eastmoney_sector_used:
-        sources.append("东方财富板块行情：5/10/20日涨幅、主力净流入、量比")
+        labels = [
+            key
+            for key in INDUSTRY_SNAPSHOT_FIELDS
+            if key in eastmoney_sector_metrics
+        ]
+        sources.append("东方财富板块行情：" + "、".join(labels))
+    if hithink_sector_used:
+        sources.append("同花顺金融数据CLI：行业指数日线与量比")
 
     return {
         "fetch_time": datetime.now(CN_TZ).strftime("%Y-%m-%d %H:%M:%S"),

@@ -23,8 +23,12 @@ load_secret IWENCAI_API_KEY /run/secrets/iwencai_api_key
 load_secret THS_USERNAME /run/secrets/ths_username
 load_secret THS_PASSWORD /run/secrets/ths_password
 load_secret THS_MAC /run/secrets/ths_mac
-if [ -z "${HITHINK_FINANCE_API_KEY:-}" ] && [ -s /run/secrets/fuyao_api_key ]; then
-    load_secret HITHINK_FINANCE_API_KEY /run/secrets/fuyao_api_key
+if [ -z "${HITHINK_FINANCE_API_KEY:-}" ]; then
+    if [ -s /run/secrets/fuyao_api_key ]; then
+        load_secret HITHINK_FINANCE_API_KEY /run/secrets/fuyao_api_key
+    elif [ -n "${FUYAO_API_KEY:-}" ]; then
+        export HITHINK_FINANCE_API_KEY="$FUYAO_API_KEY"
+    fi
 fi
 
 # The image carries the small Whisper checkpoint; the named home volume does
