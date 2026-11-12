@@ -58,6 +58,7 @@ PANEL_COLUMNS = (
 )
 WHISPER_MIN_BYTES = 50 * 1024 * 1024
 TRANSCRIPTION_KEY_BY_PROVIDER = {
+    "cloud": "DOUYIN_ASR_API_KEY",
     "groq": "GROQ_API_KEY",
     "openai": "OPENAI_API_KEY",
     "siliconflow": "SILICONFLOW_API_KEY",
@@ -509,29 +510,46 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "transcription",
             "抖音转录",
             f"未知的 DOUYIN_TRANSCRIPT_PROVIDER={provider}",
-            "改为 local、auto、groq、openai 或 siliconflow",
+            "改为 local、auto、cloud、groq、openai 或 siliconflow",
         )
 
     whisper_ready, whisper_detail = _whisper_ready(env)
+    cloud_missing = [
+        name
+        for name in (
+            "DOUYIN_ASR_BASE_URL",
+            "DOUYIN_ASR_API_KEY",
+            "DOUYIN_ASR_MODEL",
+        )
+        if not str(env.get(name) or "").strip()
+    ]
+    cloud_ready = not cloud_missing
+    cloud_detail = (
+        "通用云端 ASR 三项配置齐全"
+        if cloud_ready
+        else "通用云端 ASR 缺少 " + "、".join(cloud_missing)
+    )
     configured = [
         name for name, key in TRANSCRIPTION_KEY_BY_PROVIDER.items()
-        if str(env.get(key) or "").strip()
+        if name != "cloud" and str(env.get(key) or "").strip()
     ]
+    if cloud_ready:
+        configured.insert(0, "cloud")
     if provider == "local":
         if whisper_ready:
             if cloud_runtime:
                 return _warning(
                     "transcription",
                     "抖音转录",
-                    f"云端显式使用本地 Whisper（{whisper_detail}）；1.5 CPU / 2GB 限制下可能超时",
-                    "如已配置转录 API Key，改为 DOUYIN_TRANSCRIPT_PROVIDER=auto",
+                    f"云端显式使用容器内置本地 Whisper（{whisper_detail}）；1.5 CPU / 2GB 限制下可能超时",
+                    "如已配置通用 ASR 或音频 API Key，改为 DOUYIN_TRANSCRIPT_PROVIDER=auto",
                 )
             return _ok("transcription", "抖音转录", f"本地 Whisper（{whisper_detail}）")
         return _error(
             "transcription",
             "抖音转录",
             f"DOUYIN_TRANSCRIPT_PROVIDER=local，但{whisper_detail}",
-            "安装 openai-whisper 与 CPU torch 并预下载模型权重，或显式配置可用的转录 API Key",
+            "安装 openai-whisper 与 CPU torch 并预下载模型权重，或配置 DOUYIN_ASR_* / 专用音频转录 Key",
         )
     if provider == "auto":
         if configured:
@@ -541,18 +559,27 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
                 return _warning(
                     "transcription",
                     "抖音转录",
-                    f"未配置转录 API Key，将回退到 1.5 CPU 的本地 Whisper（{whisper_detail}），可能超时",
-                    "在云端 secrets 配置 GROQ_API_KEY、OPENAI_API_KEY 或 SILICONFLOW_API_KEY",
+                    f"未配置通用/专用转录 API，将回退到 1.5 CPU 的容器内置本地 Whisper（{whisper_detail}），可能超时",
+                    "配置 DOUYIN_ASR_*，或 GROQ_API_KEY、OPENAI_API_KEY、SILICONFLOW_API_KEY",
                 )
             return _ok("transcription", "抖音转录", f"未配置 API Key，将使用本地 Whisper（{whisper_detail}）")
         return _error(
             "transcription",
             "抖音转录",
-            f"未配置 Groq/OpenAI/SiliconFlow Key，且{whisper_detail}",
-            "安装 openai-whisper 与 CPU torch 并预下载模型，或在 secrets 中配置转录 API Key",
+            f"未配置通用 ASR 或 Groq/OpenAI/SiliconFlow Key，且{whisper_detail}",
+            "安装 openai-whisper 与 CPU torch 并预下载模型，或配置 DOUYIN_ASR_* / 专用音频转录 Key",
         )
 
     key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
+    if provider == "cloud":
+        if cloud_ready:
+            return _ok("transcription", "抖音转录", cloud_detail)
+        return _error(
+            "transcription",
+            "抖音转录",
+            f"DOUYIN_TRANSCRIPT_PROVIDER=cloud，但{cloud_detail}",
+            "同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL",
+        )
     if str(env.get(key_name) or "").strip():
         return _ok("transcription", "抖音转录", f"{provider} API Key 可用")
     return _error(

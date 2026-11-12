@@ -192,6 +192,29 @@ class PreflightCheckTests(unittest.TestCase):
         self.assertEqual(check.state, "ok")
         self.assertIn("groq", check.detail)
 
+    def test_generic_cloud_asr_requires_explicit_endpoint_key_and_model(self):
+        with patch.object(preflight, "_whisper_ready", return_value=(False, "whisper/torch 未安装")):
+            missing_model = preflight._check_transcription(
+                {
+                    "DOUYIN_TRANSCRIPT_PROVIDER": "cloud",
+                    "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+                    "DOUYIN_ASR_API_KEY": "configured",
+                }
+            )
+            ready = preflight._check_transcription(
+                {
+                    "DOUYIN_TRANSCRIPT_PROVIDER": "auto",
+                    "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+                    "DOUYIN_ASR_API_KEY": "configured",
+                    "DOUYIN_ASR_MODEL": "whisper-large-v3",
+                }
+            )
+
+        self.assertEqual(missing_model.state, "error")
+        self.assertIn("DOUYIN_ASR_MODEL", missing_model.detail)
+        self.assertEqual(ready.state, "ok")
+        self.assertIn("cloud", ready.detail)
+
     def test_cloud_local_whisper_fallback_is_a_warning(self):
         with patch.object(preflight, "_whisper_ready", return_value=(True, "small 权重已就绪")):
             check = preflight._check_transcription(

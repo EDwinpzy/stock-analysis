@@ -12,7 +12,7 @@
 | 淘股吧 Cookie | `~/.codex/tgb_cookies.json` | JSON 数组，必须含 `tgbpwd`、`tgbuser` |
 | 抖音 Cookie | `~/.codex/daily-briefing-pro/data/douyin_cookies.json` | `sessionid` 缺失时只能按公开页运行 |
 | 雪球 Cookie | `~/.codex/daily-briefing-pro/data/xueqiu_cookies.json` | 必须含 `xq_a_token`、`xq_is_login` |
-| GitHub Actions | 仓库 Settings → Secrets and variables → Actions | 13 个仓库 Secret，见下表 |
+| GitHub Actions | 仓库 Settings → Secrets and variables → Actions | 工作流引用的 Secret 名称，见下表 |
 | 自托管 Compose | `plugins/daily-briefing-pro/deploy/cloud/secrets/` | 独立于 GitHub Actions，需要单独填充 |
 
 不要把真实值写入 `config/`、`docs/`、`work/` 或任何会被 Git 跟踪的文件。
@@ -37,12 +37,12 @@ python tools\credential_manifest.py sync-github --apply
 `--github` 只能确认 Secret 名称是否存在，GitHub API 不会返回 Secret 值，所以无法判断远端值是否与本机一致。
 本机替换 Key/Cookie 后，必须运行 `sync-github --apply` 并触发一次 CI，不能把“名称存在”当成“值已更新”。
 
-## 必填项
+## 主要配置
 
 | 本机变量 | GitHub Secret | 用途 | 替换后验证 |
 | --- | --- | --- | --- |
 | `FUYAO_API_KEY` | `FUYAO_API_KEY` | 扶摇 REST 行情、个股/行业报告 | `python plugins\daily-briefing-pro\cloud_cli.py doctor --probe` |
-| `IWENCAI_API_KEY` | `IWENCAI_API_KEY` | 问财 OpenAPI；不是扶摇 Key | 同上，或运行一次 `stock-report` |
+| `IWENCAI_API_KEY` | `IWENCAI_API_KEY` | 可选问财 OpenAPI；不是扶摇 Key | 无 Key/额度耗尽时跑一次 `stock-report`，确认东方财富补位 |
 | `DAILY_BRIEFING_AI_BASE_URL` | 同名 | 文本 AI Relay 地址 | `doctor --probe` |
 | `DAILY_BRIEFING_AI_API_KEY` | 同名 | 语义总结 | 运行一次 `briefing --resume` |
 | `DAILY_BRIEFING_AI_MODEL` | 同名 | 主模型 | 观察 AI 摘要是否成功 |
@@ -54,6 +54,9 @@ python tools\credential_manifest.py sync-github --apply
 | `TGB_COOKIE_PATH` | `TGB_COOKIE_GZ_B64` | 淘股吧登录 Cookie 文件 | 重新采集淘股吧 |
 | `DOUYIN_COOKIE_PATH` | `DOUYIN_COOKIE_GZ_B64` | 抖音 Cookie 文件 | 重新采集抖音 |
 | `XUEQIU_COOKIE_PATH` | `XUEQIU_COOKIE_GZ_B64` | 雪球 Cookie 文件 | 重新采集雪球 |
+| `DOUYIN_ASR_BASE_URL` | 同名 | 通用 OpenAI Compatible ASR 地址 | 配置后跑一条真实抖音视频 |
+| `DOUYIN_ASR_API_KEY` | 同名 | 通用 ASR Key；不能使用文本 Relay Key | 同上 |
+| `DOUYIN_ASR_MODEL` | 同名 | 通用 ASR 服务模型名 | 同上 |
 
 `HITHINK_API_KEY`、`HITHINK_FINANCE_API_KEY` 和 `WENCAI_API_KEY` 是兼容别名，不建议同时维护多份。
 当前推荐只写 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`。
@@ -75,18 +78,19 @@ Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完
 
 ## 当前审计（2026-11-12）
 
-- GitHub Actions 的 13 个 Secret 名称与工作流完全对应。
+- GitHub Actions 的 16 个 Secret 名称与工作流完全对应。
 - 本机配置已经包含两组 Relay 变量；它们当前使用同一个 Key，避免只改一边造成不一致。
 - 淘股吧 Cookie 在 2026-11-13 13:27（北京时间）前后过期，属于近期必须替换项。
-- 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 可用，但音频转录走本地 Whisper。
+- 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 与音频 ASR 必须分开配置。
 - `DOUYIN_AI_BASE_URL`、`DOUYIN_AI_API_KEY`、`DOUYIN_AI_MODEL` 是代码未读取的旧变量，保留只会造成漂移。
-- 文本 AI Relay 不支持 `/audio/transcriptions`；不要把它写成抖音音频转录通道。
-- 问财额度可能耗尽；此时报告会使用东方财富、腾讯和同花顺补数，但不能把缺口说成完整。
+- 文本 AI Relay 不支持 `/audio/transcriptions`；`DOUYIN_ASR_*` 必须指向真正的音频接口。
+- 问财现在不是启动硬依赖；无 Key 或额度耗尽时，报告会使用东方财富、腾讯和同花顺补数并标明来源。
+- 云端容器内置 Whisper 是离线兜底，不依赖用户 Windows 电脑；配置通用 ASR 后可避免 1.5 CPU 转录超时。
 - 当前 `thsdk` 是游客态；只有配置 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 才是固定账号。
 - 当前未配置 `THS_SELFSTOCK_PATH`，因此自选股/分组接口属于可选不可用状态。
 - 自托管 Compose 的 `secrets/` 目录目前只有 `fuyao_api_key`；如果实际启用 Compose，需要按
   `deploy/cloud/README.md` 补齐，不要误以为 GitHub Actions 已通过就代表 Compose 也已配置。
-- GitHub 侧 13 个 Secret 名称齐全，但 GitHub 无法回读 Secret 值；远端值是否落后于本机，仍需在替换后
+- GitHub 侧工作流引用的 Secret 名称齐全，但 GitHub 无法回读 Secret 值；远端值是否落后于本机，仍需在替换后
   通过 `sync-github --apply` 刷新并用 CI 验证。
 
 以上是配置审计结论，不代表行情、Cookie 或外部服务永久有效。任何时候都以 `check --github --strict`

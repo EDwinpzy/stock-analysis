@@ -265,6 +265,38 @@ def test_cloud_stock_report_labels_thsdk_big_order_fallback():
     assert "大单日汇总" not in report
 
 
+def test_cloud_stock_report_survives_without_wencai_and_labels_net_flow():
+    data = stock_fixture()
+    data["runtime"] = {"source": "cloud"}
+    data["wencai_available"] = False
+    data["wencai_error"] = "today's quota exhausted"
+    data["quote_source"] = "eastmoney"
+    data["finance_source"] = "eastmoney"
+    data["peers_source"] = "eastmoney"
+    data["holders_source"] = "eastmoney"
+    data["product_source"] = "eastmoney"
+    data["chip_source"] = "eastmoney"
+    data["barrier_source"] = "eastmoney"
+    data["big_orders_source"] = "eastmoney"
+    data["big_orders_scope"] = "daily_net_flow"
+    data["big_orders"] = [
+        {
+            "时间": "2026-11-12",
+            "主力净流入": -322878512,
+            "大单净流入": -200000000,
+            "超大单净流入": -172878512,
+        }
+    ]
+
+    report = build_stock_report(data)
+
+    assert "官方问财 OpenAPI" not in report
+    assert "东方财富 F10" in report
+    assert "日度主力/大单/超大单净流入（非逐笔）" in report
+    assert "日度净流入口径，未提供买卖拆分" in report
+    assert "日度净流入 1 行（非逐笔）" in report
+
+
 def test_cloud_stock_report_labels_eastmoney_holder_fallback():
     data = stock_fixture()
     data["runtime"] = {"source": "cloud"}

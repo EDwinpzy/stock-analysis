@@ -56,6 +56,9 @@ jobs:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
       DEEPSEEK_FALLBACK_MODEL: ${{ secrets.DEEPSEEK_FALLBACK_MODEL }}
+      DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
+      DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
+      DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -74,7 +77,8 @@ jobs:
             DAILY_BRIEFING_AI_BASE_URL DAILY_BRIEFING_AI_API_KEY \
             DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
-            DEEPSEEK_FALLBACK_MODEL; do
+            DEEPSEEK_FALLBACK_MODEL \
+            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"
@@ -185,6 +189,79 @@ jobs:
             --output-dir /runtime/data/industry-analysis \
             | tee artifacts/industry-report-result.json
 
+      - name: Generate complete reports without a Wencai key
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/no-wencai/data \
+            artifacts/no-wencai/reports/stock \
+            artifacts/no-wencai/reports/industry \
+            artifacts/no-wencai/visuals
+          chmod 777 artifacts/no-wencai/data artifacts/no-wencai/reports \
+            artifacts/no-wencai/reports/stock artifacts/no-wencai/reports/industry \
+            artifacts/no-wencai/visuals
+          docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
+            --env IWENCAI_API_KEY=' ' \
+            --env WENCAI_API_KEY=' ' \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/stock \
+            --volume "$PWD/artifacts/no-wencai/data:/runtime/data" \
+            --volume "$PWD/artifacts/no-wencai/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
+            --output-dir /runtime/data/stock-analysis \
+            | tee artifacts/no-wencai/stock-report-result.json
+          docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
+            --env IWENCAI_API_KEY=' ' \
+            --env WENCAI_API_KEY=' ' \
+            --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
+            --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/industry \
+            --volume "$PWD/artifacts/no-wencai/data:/runtime/data" \
+            --volume "$PWD/artifacts/no-wencai/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
+            --output-dir /runtime/data/industry-analysis \
+            | tee artifacts/no-wencai/industry-report-result.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(
+              Path("artifacts/no-wencai/data/stock-analysis/_fetch_result_600519.json")
+              .read_text(encoding="utf-8")
+          )
+          assert payload.get("wencai_available") is False, payload.get("wencai_available")
+          assert payload.get("product_source") == "eastmoney", payload.get("product_source")
+          assert payload.get("finance_source") in {"eastmoney", "mixed"}
+          assert payload.get("big_orders_source") in {"eastmoney", "thsdk"}
+          assert payload.get("big_orders_scope") in {
+              "daily_net_flow", "daily_aggregate", "tick"
+          }
+          PY
+          docker run --rm \
+            --volume "$PWD/artifacts/no-wencai/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/no-wencai/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report-dir /runtime/reports/stock \
+            --sections 10 --tables 25 --label stock-no-wencai \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/stock-no-wencai-visual-result.json
+          docker run --rm \
+            --volume "$PWD/artifacts/no-wencai/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/no-wencai/visuals:/runtime/visuals" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_cloud_report.py \
+            --report-dir /runtime/reports/industry \
+            --sections 8 --tables 14 --label industry-no-wencai \
+            --shots /runtime/visuals \
+            --json /runtime/visuals/industry-no-wencai-visual-result.json
+
       - name: Render desktop and mobile report screenshots
         run: |
           set -euo pipefail
@@ -251,6 +328,9 @@ jobs:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
       DEEPSEEK_FALLBACK_MODEL: ${{ secrets.DEEPSEEK_FALLBACK_MODEL }}
+      DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
+      DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
+      DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -269,7 +349,8 @@ jobs:
             DAILY_BRIEFING_AI_BASE_URL DAILY_BRIEFING_AI_API_KEY \
             DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
-            DEEPSEEK_FALLBACK_MODEL; do
+            DEEPSEEK_FALLBACK_MODEL \
+            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"

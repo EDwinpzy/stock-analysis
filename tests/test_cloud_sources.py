@@ -96,6 +96,7 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter = object.__new__(CloudStockAdapter)
     adapter.wencai = wencai
     adapter.wencai_source = "test"
+    adapter.wencai_error = ""
     adapter.market = market
     adapter.market_error = ""
     adapter._names = {}
@@ -114,6 +115,8 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter.quote_fill_sources = []
     adapter.chip_sources = []
     adapter.barrier_sources = []
+    adapter.product_source = ""
+    adapter.product_error = ""
     adapter._ths_client = None
     adapter._ths_connect_error = "unit-test-disable-thsdk"
     adapter._ths_connect_retry_at = float("inf")
@@ -440,6 +443,95 @@ def test_margin_and_patents_fall_back_to_thsdk(monkeypatch):
     assert patents.df.iloc[0]["研发投入占营业收入的比重[20251231]"] == 0.48
     assert adapter.chip_sources == ["thsdk"]
     assert adapter.barrier_sources == ["thsdk"]
+
+
+def test_margin_falls_back_to_eastmoney_data_center(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        assert "RPTA_WEB_RZRQ_GGMX" in url
+        assert "600519" in url
+        return {
+            "result": {
+                "data": [
+                    {
+                        "DATE": "2026-11-11 00:00:00",
+                        "RZYE": 15093509194,
+                        "RZMRE": 303809512,
+                        "RZCHE": 373412813,
+                        "RZJME": -69603301,
+                        "RQYE": 23149980,
+                        "RZRQYE": 15116659174,
+                        "RZYEZB": 0.82,
+                    }
+                ]
+            }
+        }
+
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 融资余额 融资余额占流通市值比"
+    ).df.iloc[0]
+
+    assert row["融资余额[20261111]"] == 15093509194
+    assert row["融资净买入[20261111]"] == -69603301
+    assert adapter.chip_sources == ["eastmoney"]
+
+
+def test_product_mix_falls_back_to_eastmoney_f10(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        assert "BusinessAnalysis" in url
+        return {
+            "zygcfx": [
+                {
+                    "REPORT_DATE": "2025-12-31 00:00:00",
+                    "MAINOP_TYPE": "2",
+                    "ITEM_NAME": "茅台酒",
+                    "MAIN_BUSINESS_INCOME": 145000000000,
+                    "MBI_RATIO": 0.88,
+                },
+                {
+                    "REPORT_DATE": "2025-12-31 00:00:00",
+                    "MAINOP_TYPE": "2",
+                    "ITEM_NAME": "其他系列酒",
+                    "MAIN_BUSINESS_INCOME": 19800000000,
+                    "MBI_RATIO": 0.12,
+                },
+                {
+                    "REPORT_DATE": "2025-12-31 00:00:00",
+                    "MAINOP_TYPE": "3",
+                    "ITEM_NAME": "境外",
+                    "MAIN_BUSINESS_INCOME": 5100000000,
+                    "MBI_RATIO": 0.031,
+                },
+            ],
+            "zyfw": [{"BUSINESS_SCOPE": "茅台酒及系列酒生产与销售"}],
+        }
+
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 主营业务构成 产品类型"
+    ).df.iloc[0]
+
+    assert row["主营产品名称"] == "茅台酒||其他系列酒"
+    assert "茅台酒" in row["主营业务构成"]
+    assert "境外" in row["经营区域构成"]
+    assert row["主营构成报告期"] == "20251231"
+    assert adapter.product_source == "eastmoney"
 
 
 def test_patent_query_skips_thsdk_when_wencai_is_complete(monkeypatch):
@@ -827,6 +919,23 @@ def test_finance_query_falls_back_to_eastmoney_annual_reports(monkeypatch):
     ]
 
     def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        if "CompanySurvey" in url:
+            return {
+                "jbzl": [
+                    {
+                        "ORG_NAME": "贵州茅台酒股份有限公司",
+                        "EM2016": "白酒Ⅲ",
+                        "REG_ADDRESS": "贵州省仁怀市茅台镇",
+                        "BUSINESS_SCOPE": "茅台酒及系列酒生产与销售",
+                        "LISTING_DATE": "2001-08-27 00:00:00",
+                    }
+                ]
+            }
+        if "ShareholderResearch" in url:
+            return {
+                "sjkzr": [{"HOLDER_NAME": "贵州省人民政府国有资产监督管理委员会"}],
+                "sdgd": [{"HOLDER_RANK": 1, "HOLDER_NAME": "中国贵州茅台酒厂（集团）有限责任公司"}],
+            }
         assert "NewFinanceAnalysis" in url
         return {"data": annual_items}
 
@@ -841,6 +950,11 @@ def test_finance_query_falls_back_to_eastmoney_annual_reports(monkeypatch):
     assert row["销售毛利率[20251231]"] == pytest.approx(91.0)
     assert row["加权净资产收益率[20251231]"] == pytest.approx(32.53)
     assert row["资产负债率[20251231]"] == pytest.approx(16.4)
+    assert row["公司中文名称"] == "贵州茅台酒股份有限公司"
+    assert row["所属同花顺行业"] == "白酒Ⅲ"
+    assert row["注册地址"] == "贵州省仁怀市茅台镇"
+    assert row["实际控制人"] == "贵州省人民政府国有资产监督管理委员会"
+    assert row["控股股东名称"] == "中国贵州茅台酒厂（集团）有限责任公司"
     assert adapter.finance_source == "eastmoney"
     assert adapter.finance_error == ""
 
@@ -966,6 +1080,42 @@ def test_big_order_flow_falls_back_to_thsdk(monkeypatch):
     assert result.scope == "tick"
     assert len(result.df) == 1
     assert result.df.iloc[0]["成交方向"] == "1"
+
+
+def test_big_order_flow_falls_back_to_eastmoney_daily_net_flow(monkeypatch):
+    def responder(skill, query, limit):
+        return payload()
+
+    def fake_thsdk(self, thscode):
+        return cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(),
+            error="thsdk unavailable",
+        )
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        assert "fflow/daykline" in url
+        assert "secid=0.000001" in url
+        return {
+            "data": {
+                "klines": [
+                    "2026-11-11,-100000.0,20000.0,-30000.0,-40000.0,-50000.0",
+                    "2026-11-12,-322878512.0,100000000.0,-50000000.0,"
+                    "-200000000.0,-172878512.0",
+                ]
+            }
+        }
+
+    monkeypatch.setattr(CloudStockAdapter, "_ths_big_order_flow", fake_thsdk)
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+    adapter = make_adapter(FakeWencai(responder), FakeMarket())
+
+    result = adapter.big_order_flow("USZA000001")
+
+    assert result.source == "eastmoney"
+    assert result.scope == "daily_net_flow"
+    assert result.main_net_inflow == pytest.approx(-322878512.0)
+    assert result.df.iloc[-1]["大单净流入"] == pytest.approx(-200000000.0)
+    assert result.df.iloc[-1]["超大单净流入"] == pytest.approx(-172878512.0)
 
 
 def test_tencent_quote_snapshot_parses_valuation_fields(monkeypatch):
@@ -1521,13 +1671,20 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
     assert any("问财行业财务数据不完整" in item for item in result["warnings"])
 
 
-def test_stock_adapter_fails_closed_without_wencai_key(monkeypatch):
+def test_stock_adapter_constructs_without_wencai_key(monkeypatch):
     monkeypatch.setattr(cloud_sources.mq, "wencai_api_key", lambda: (None, None))
+    monkeypatch.setattr(
+        cloud_sources,
+        "_safe_market_client",
+        lambda: (FakeMarket(), ""),
+    )
 
-    with pytest.raises(CloudSourceError) as excinfo:
-        CloudStockAdapter()
+    adapter = CloudStockAdapter()
 
-    assert "IWENCAI_API_KEY" in str(excinfo.value)
+    assert adapter.wencai is None
+    assert "IWENCAI_API_KEY" in adapter.wencai_error
+    assert adapter._query("贵州茅台 营业收入").df.empty
+    assert "IWENCAI_API_KEY" in adapter._query("贵州茅台 营业收入").error
 
 
 def test_stock_adapter_fails_closed_without_market_key(monkeypatch):

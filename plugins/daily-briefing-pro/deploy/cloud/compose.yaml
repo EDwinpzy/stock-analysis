@@ -32,6 +32,8 @@ services:
       ROTATION_MODEL_DIR: /runtime/models/sw_rotation_model
       DAILY_BRIEFING_CLOUD: "1"
       DOUYIN_TRANSCRIPT_PROVIDER: auto
+      DOUYIN_ASR_BASE_URL: ${DOUYIN_ASR_BASE_URL:-}
+      DOUYIN_ASR_MODEL: ${DOUYIN_ASR_MODEL:-}
       DOUYIN_MAX_CONCURRENT: "1"
       DOUYIN_WHISPER_MODEL: small
       TGB_COOKIE_PATH: /run/secrets/tgb_cookies.json
@@ -49,6 +51,7 @@ services:
       - openai_api_key
       - siliconflow_api_key
       - groq_api_key
+      - douyin_asr_api_key
       - ima_openapi_clientid
       - ima_openapi_apikey
       - hithink_finance_api_key
@@ -78,6 +81,8 @@ secrets:
     file: ./secrets/siliconflow_api_key
   groq_api_key:
     file: ./secrets/groq_api_key
+  douyin_asr_api_key:
+    file: ./secrets/douyin_asr_api_key
   ima_openapi_clientid:
     file: ./secrets/ima_openapi_clientid
   ima_openapi_apikey:

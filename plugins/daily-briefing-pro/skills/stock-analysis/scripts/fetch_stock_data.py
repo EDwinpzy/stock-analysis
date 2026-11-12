@@ -400,9 +400,12 @@ def _format_big_order_row(row, columns):
 
 
 def _apply_daily_aggregate_flow(result, scope, main_net_inflow):
-    """Use the daily big-order aggregate so cloud and local quote flows agree."""
+    """Apply a disclosed daily flow without pretending it is tick-level data."""
 
-    if str(scope or "") != "daily_aggregate" or main_net_inflow is None:
+    if (
+        str(scope or "") not in {"daily_aggregate", "daily_net_flow"}
+        or main_net_inflow is None
+    ):
         return False
     quote = result.get("quote")
     if not isinstance(quote, dict):
@@ -1102,11 +1105,17 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
         result["big_orders_source"] = getattr(resp, "source", "") or ""
         if scope:
             result["big_orders_scope"] = scope
-            result["big_orders_note"] = (
-                "官方问财仅提供当日大单买入/卖出汇总，不是逐笔成交明细"
-                if scope == "daily_aggregate"
-                else ""
-            )
+            if scope == "daily_aggregate":
+                result["big_orders_note"] = (
+                    "官方问财仅提供当日大单买入/卖出汇总，不是逐笔成交明细"
+                )
+            elif scope == "daily_net_flow":
+                result["big_orders_note"] = (
+                    "东方财富提供日度主力/大单/超大单净流入，"
+                    "不是逐笔成交，也不等同于买入或卖出总额"
+                )
+            else:
+                result["big_orders_note"] = ""
         if bdf is not None and len(bdf) > 0:
             recent = bdf.tail(10)
             orders = [
@@ -1237,9 +1246,13 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
         merged = {**raw2, **raw1}  # raw1优先（主营构成更关键）
         result["product_raw"] = merged if merged else {}
         result["product_columns"] = list(set(cols1 + cols2))
+        result["product_source"] = getattr(ths, "product_source", "")
+        result["product_error"] = getattr(ths, "product_error", "")
     except Exception as e:
         result["product_raw"] = {}
         result["product_columns"] = []
+        result["product_source"] = ""
+        result["product_error"] = str(e)
         print(f"  产品业务异常: {e}", file=sys.stderr)
     
     # ========== 8. 筹码结构数据 ==========
@@ -1560,6 +1573,15 @@ def main():
             else:
                 result = fetch_all_data(ths, thscode, pure_code, stock_name)
                 if getattr(ths, "is_cloud", False):
+                    result["wencai_available"] = bool(
+                        getattr(ths, "wencai", None)
+                    )
+                    result["wencai_source"] = getattr(
+                        ths, "wencai_source", ""
+                    )
+                    result["wencai_error"] = getattr(
+                        ths, "wencai_error", ""
+                    )
                     result["finance_source"] = getattr(ths, "finance_source", "")
                     result["finance_error"] = getattr(ths, "finance_error", "")
                     result["holders_source"] = getattr(ths, "holders_source", "")

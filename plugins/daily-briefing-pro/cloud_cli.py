@@ -307,7 +307,8 @@ def doctor(probe: bool = False, dry_run: bool = False) -> int:
         "adobe_note": "Node/Chromium/FFmpeg are only required by the full briefing pipeline.",
     }
     key_sources = {
-        name: bool(os.getenv(name)) for name in API_KEY_ENVS + WENCAI_API_KEY_ENVS
+        name: bool(str(os.getenv(name) or "").strip())
+        for name in API_KEY_ENVS + WENCAI_API_KEY_ENVS
     }
     payload = {
         "ok": all(item.get("exists", True) for item in commands.values() if isinstance(item, dict)),

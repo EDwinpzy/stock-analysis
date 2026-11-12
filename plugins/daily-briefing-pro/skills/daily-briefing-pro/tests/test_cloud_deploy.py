@@ -117,6 +117,24 @@ class CloudDeployContractTests(unittest.TestCase):
         self.assertIn("file: ./secrets/iwencai_api_key", compose)
         self.assertIn("load_secret IWENCAI_API_KEY /run/secrets/iwencai_api_key", entrypoint)
 
+    def test_generic_asr_secret_is_optional_and_loaded_without_changing_text_relay(self):
+        compose = (DEPLOY_ROOT / "compose.yaml").read_text(encoding="utf-8")
+        init_secrets = (DEPLOY_ROOT / "init-secrets.sh").read_text(encoding="utf-8")
+        entrypoint = (DEPLOY_ROOT / "entrypoint.sh").read_text(encoding="utf-8")
+
+        self.assertIn("douyin_asr_api_key", init_secrets)
+        self.assertIn("file: ./secrets/douyin_asr_api_key", compose)
+        self.assertIn("DOUYIN_ASR_BASE_URL: ${DOUYIN_ASR_BASE_URL:-}", compose)
+        self.assertIn("DOUYIN_ASR_MODEL: ${DOUYIN_ASR_MODEL:-}", compose)
+        self.assertIn(
+            "load_secret DOUYIN_ASR_API_KEY /run/secrets/douyin_asr_api_key",
+            entrypoint,
+        )
+        self.assertNotIn(
+            "load_secret DOUYIN_ASR_API_KEY /run/secrets/deepseek_api_key",
+            entrypoint,
+        )
+
     def test_ths_account_secrets_are_created_and_loaded(self):
         compose = (DEPLOY_ROOT / "compose.yaml").read_text(encoding="utf-8")
         init_secrets = (DEPLOY_ROOT / "init-secrets.sh").read_text(encoding="utf-8")

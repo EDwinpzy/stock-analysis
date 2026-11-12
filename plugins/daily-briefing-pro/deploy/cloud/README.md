@@ -7,11 +7,14 @@ Fuyao REST supplies security lookup, sector directory/membership, sector
 snapshots, news and quote fallback. The official iWencai OpenAPI supplies the
 primary real-time quote, financials, valuation, peer metrics, holders,
 fund-flow aggregates and industry fundamentals. It does not use a guest
-`thsdk` account as the report's primary source. Both `FUYAO_API_KEY` and
-`IWENCAI_API_KEY` are required; a missing key exits non-zero instead of
-returning a partial or invented report. The official iWencai endpoint exposes
-only an aggregated daily buy/sell total for large orders, so reports label
-that block `daily_aggregate` / `非逐笔` and never present it as tick data.
+`thsdk` account as the report's primary source. `FUYAO_API_KEY` is required;
+`IWENCAI_API_KEY` is preferred but no longer a startup dependency. When
+Wencai is absent or out of quota, company basics, product
+mix, margin balance and daily net flow are filled from public Eastmoney
+endpoints; reports label those sources and never invent a complete picture.
+The official iWencai endpoint exposes only an aggregated daily buy/sell total
+for large orders. Eastmoney fallback exposes daily net inflow, not ticks, so
+the two modes are labelled `daily_aggregate` and `daily_net_flow`.
 
 The image pins Python 3.12.8, Node 24.18.0, the direct Python dependencies observed in the local baseline environment, Chromium, FFmpeg, and the `hithink-finance` CLI. `PYTHONHASHSEED=2` and CRLF HTML output preserve the 2026-10-10 source report byte-for-byte. The default broadsheet removes the three remote Google Fonts links so an offline cloud host always renders immediately; the benchmark verifier passes `--remote-fonts` to reproduce the original local broadsheet byte-for-byte. `scripts/run_all.py` always builds and visually verifies the default broadsheet edition, and delivers that artifact as the report.
 
@@ -91,11 +94,11 @@ sudo DAILY_BRIEFING_IMAGE=daily-briefing-pro:3.23.19-cloud \
 Linux validation path when no SSH build host is available. It runs the full
 Python test suite, builds the formal AMD64 Dockerfile, then executes
 `doctor --probe`, live market queries, and the stock/industry report gates
-inside that image. Configure repository Actions secrets `FUYAO_API_KEY` and
-`IWENCAI_API_KEY`; the workflow passes them as environment variables and the
-container entrypoint keeps them out of image layers. Evidence is uploaded as
-the `cloud-port-evidence` artifact. The workflow is manual-only and does not
-publish an image or a release.
+inside that image. Configure repository Actions secret `FUYAO_API_KEY`;
+`IWENCAI_API_KEY` is optional. The workflow passes configured values as
+environment variables and the container entrypoint keeps them out of image
+layers. Evidence is uploaded as the `cloud-port-evidence` artifact. The
+workflow is manual-only and does not publish an image or a release.
 
 The secret files are created empty and are ignored by Git and Docker build context. Copy or enter the user's own API keys and platform cookie JSON files directly on the cloud host. The setup command assigns secrets and persistent runtime files to container UID 10001 with mode `0600`. Compose reads the host secret files before mounting them read-only into the container, so run `init-secrets.sh` and the Compose commands with `sudo` unless the deployment user already has Docker access and can read those files. Do not put secrets in the image, repository, command-line arguments, or logs. After copying a data snapshot into `runtime/data/`, or restoring model files under `runtime/models/`, rerun `sh ./init-secrets.sh` so container UID 10001 can update those persistent files.
 
@@ -107,17 +110,18 @@ Recognized secret files:
 | `secrets/openai_api_key` | AI summaries / transcription fallback |
 | `secrets/siliconflow_api_key` | Douyin transcription |
 | `secrets/groq_api_key` | Douyin transcription |
+| `secrets/douyin_asr_api_key` | Generic OpenAI-compatible Douyin ASR; `DOUYIN_ASR_BASE_URL` and `DOUYIN_ASR_MODEL` must also be set |
 | `secrets/ima_openapi_clientid`, `secrets/ima_openapi_apikey` | IMA research search |
 | `secrets/hithink_finance_api_key` | Optional override for the official Tonghuashun finance data CLI |
 | `secrets/fuyao_api_key` | Required for cloud stock/industry reports and Fuyao REST market queries (`FUYAO_API_KEY`); also used by the finance CLI when no separate key is supplied |
-| `secrets/iwencai_api_key` | Required for cloud stock/industry reports and official iWencai OpenAPI queries (`IWENCAI_API_KEY`); separate from the Fuyao market key |
+| `secrets/iwencai_api_key` | Optional official iWencai OpenAPI key (`IWENCAI_API_KEY`); missing/quota-exhausted runs use labelled Eastmoney and thsdk fallbacks |
 | `secrets/ths_username`, `secrets/ths_password`, `secrets/ths_mac` | Optional fixed THS account for `thsdk`-only compatibility queries; not required by the cloud stock/industry report path |
 | `secrets/tgb_cookies.json` | TGB authenticated pages |
 | `secrets/douyin_cookies.json` | Douyin authenticated requests |
 | `secrets/xueqiu_cookies.json` | Xueqiu browser context |
 | `secrets/ths_selfstock.json` | Optional Tonghuashun watchlist input |
 
-The container passes API keys from read-only Compose secrets to the child process environment. A single Fuyao key can serve both the REST market query and the official `hithink-finance` CLI; an explicitly populated `secrets/hithink_finance_api_key` still takes precedence. Wencai uses its own `secrets/iwencai_api_key`; it is not interchangeable with the Fuyao key. Stock/industry reports require both keys and fail closed when either is absent. Cookie files are mounted read-only. The runtime data, reports, and user cache live under `runtime/` and persist across runs.
+The container passes API keys from read-only Compose secrets to the child process environment. A single Fuyao key can serve both the REST market query and the official `hithink-finance` CLI; an explicitly populated `secrets/hithink_finance_api_key` still takes precedence. Wencai uses its own `secrets/iwencai_api_key`; it is not interchangeable with the Fuyao key and is not a startup requirement. Cookie files are mounted read-only. The runtime data, reports, and user cache live under `runtime/` and persist across runs.
 
 The Compose file explicitly maps cookie secrets to `/run/secrets/*.json`; do not remove those `target:` entries. A secret named `tgb_cookies` otherwise appears at `/run/secrets/tgb_cookies` while the collector reads `/run/secrets/tgb_cookies.json`.
 
@@ -178,7 +182,15 @@ sudo docker compose -f compose.yaml run --rm briefing \
 
 The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary credentials or Codex login, the configured Douyin transcription path (local Whisper or API key), TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
 
-Compose sets `DOUYIN_TRANSCRIPT_PROVIDER=auto`: a configured Groq/OpenAI/SiliconFlow key is tried first, then the container falls back to local Whisper. Because the container is limited to 1.5 CPU and 2GB memory, preflight warns when no transcription API key is available. The warning does not bypass the real-transcription requirement or allow title-only substitutes.
+Compose sets `DOUYIN_TRANSCRIPT_PROVIDER=auto`. A generic ASR is used only
+when all of `DOUYIN_ASR_BASE_URL`, `DOUYIN_ASR_API_KEY` and
+`DOUYIN_ASR_MODEL` are set. It is tried before Groq/OpenAI/SiliconFlow, then
+the container's bundled Whisper remains an offline fallback. The bundled
+Whisper runs inside the cloud or Compose container and does not depend on the
+user's Windows machine. The text AI Relay is never treated as an audio
+endpoint. Because the container is limited to 1.5 CPU and 2GB memory,
+preflight warns when no audio service is configured. The warning does not
+bypass the real-transcription requirement or allow title-only substitutes.
 
 The image bakes the `small` Whisper checkpoint into `/opt/whisper-cache`; the
 entrypoint copies it into the named runtime home on first start. This removes

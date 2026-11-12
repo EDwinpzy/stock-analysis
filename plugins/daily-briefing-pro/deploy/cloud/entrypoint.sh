@@ -15,6 +15,7 @@ load_secret DEEPSEEK_API_KEY /run/secrets/deepseek_api_key
 load_secret OPENAI_API_KEY /run/secrets/openai_api_key
 load_secret SILICONFLOW_API_KEY /run/secrets/siliconflow_api_key
 load_secret GROQ_API_KEY /run/secrets/groq_api_key
+load_secret DOUYIN_ASR_API_KEY /run/secrets/douyin_asr_api_key
 load_secret IMA_OPENAPI_CLIENTID /run/secrets/ima_openapi_clientid
 load_secret IMA_OPENAPI_APIKEY /run/secrets/ima_openapi_apikey
 load_secret HITHINK_FINANCE_API_KEY /run/secrets/hithink_finance_api_key

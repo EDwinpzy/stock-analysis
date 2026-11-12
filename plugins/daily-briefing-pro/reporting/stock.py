@@ -299,18 +299,25 @@ def build_stock_report(data: dict[str, Any]) -> str:
     direction_legend = {"1": "买入", "-1": "卖出"}
     if isinstance(data.get("big_orders_direction_legend"), dict):
         direction_legend.update(data["big_orders_direction_legend"])
+    order_scope = str(data.get("big_orders_scope") or "")
     buy_amount = 0.0
     sell_amount = 0.0
-    for item in orders:
-        amount = number(pick(item, "总金额")) or 0.0
-        direction = str(clean(pick(item, "成交方向")) or "")
-        label = str(direction_legend.get(direction, direction))
-        if "买入" in label:
-            buy_amount += amount
-        elif "卖出" in label:
-            sell_amount += amount
+    if order_scope != "daily_net_flow":
+        for item in orders:
+            amount = number(pick(item, "总金额")) or 0.0
+            direction = str(clean(pick(item, "成交方向")) or "")
+            label = str(direction_legend.get(direction, direction))
+            if "买入" in label:
+                buy_amount += amount
+            elif "卖出" in label:
+                sell_amount += amount
     order_total = buy_amount + sell_amount
     buy_share = buy_amount / order_total * 100 if order_total else None
+    order_structure = (
+        "日度净流入口径，未提供买卖拆分"
+        if order_scope == "daily_net_flow"
+        else fpct(buy_share, signed=False)
+    )
 
     holder_names: list[str] = []
     if isinstance(holders_raw, dict):
@@ -340,7 +347,15 @@ def build_stock_report(data: dict[str, Any]) -> str:
         ("股东户数趋势", 2 if holder_trend is not None and holder_trend <= 0 else 1 if holder_trend is not None and holder_trend < 20 else 0, fpct(holder_trend)),
         ("限售股压力", 2 if restricted_shares == 0 else 1 if restricted_shares is not None else 0, fnum(restricted_shares)),
         ("融资余额", 2 if margin_balance is not None else 0, fnum(margin_balance)),
-        ("大单买卖结构", 2 if buy_share is not None and buy_share >= 55 else 1 if buy_share is not None and buy_share >= 45 else 0, fpct(buy_share, signed=False)),
+        (
+            "大单买卖结构",
+            2
+            if buy_share is not None and buy_share >= 55
+            else 1
+            if buy_share is not None and buy_share >= 45
+            else 0,
+            order_structure,
+        ),
     ]
     chip_score = sum(row[1] for row in chip_rows)
     chip_verdict = "稳定" if chip_score >= 9 else "中性" if chip_score >= 5 else "不稳"
@@ -424,6 +439,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
         finance_source = clean(data.get("finance_source"))
         quote_source = clean(data.get("quote_source"))
         big_orders_source = clean(data.get("big_orders_source"))
+        product_source = clean(data.get("product_source"))
         quote_fill_sources = {
             clean(item)
             for item in (data.get("quote_fill_sources") or [])
@@ -450,29 +466,45 @@ def build_stock_report(data: dict[str, Any]) -> str:
             "壁垒",
             "大单日汇总",
         ]
-        if (quote_source and quote_source != "wencai") or quote_fill_sources:
-            wencai_domains.remove("实时行情")
-        if holder_source == "eastmoney":
-            wencai_domains.remove("股东")
-        if peer_source == "eastmoney":
-            wencai_domains.remove("同业")
-        if finance_source == "eastmoney":
-            wencai_domains.remove("财务")
-        if big_orders_source == "thsdk":
-            wencai_domains.remove("大单日汇总")
-        if any(source != "wencai" for source in chip_sources):
-            wencai_domains.remove("筹码")
-        if any(source != "wencai" for source in barrier_sources):
-            wencai_domains.remove("壁垒")
-        wencai_scope = "、".join(wencai_domains[:-1]) + "与" + wencai_domains[-1]
+        removals = {
+            "实时行情": bool(
+                (quote_source and quote_source != "wencai")
+                or quote_fill_sources
+            ),
+            "估值": bool(
+                (quote_source and quote_source != "wencai")
+                or quote_fill_sources
+            ),
+            "股东": holder_source == "eastmoney",
+            "同业": peer_source == "eastmoney",
+            "财务": finance_source == "eastmoney",
+            "产品": product_source == "eastmoney",
+            "筹码": any(source != "wencai" for source in chip_sources),
+            "壁垒": any(source != "wencai" for source in barrier_sources),
+            "大单日汇总": bool(big_orders_source)
+            and big_orders_source != "wencai",
+        }
+        wencai_domains = [
+            domain for domain in wencai_domains if not removals.get(domain)
+        ]
         source_rows = [
             ("扶摇 REST", "证券检索、新闻与公告", "本次采集已返回"),
-            (
-                "官方问财 OpenAPI",
-                wencai_scope,
-                "本次采集已返回",
-            ),
         ]
+        if wencai_domains:
+            wencai_scope = (
+                "、".join(wencai_domains[:-1]) + "与" + wencai_domains[-1]
+            )
+            source_rows.append(
+                (
+                    "官方问财 OpenAPI",
+                    wencai_scope,
+                    (
+                        "本次采集已返回"
+                        if data.get("wencai_available", True)
+                        else "本次不可用或仅部分返回"
+                    ),
+                )
+            )
         if quote_source == "eastmoney" or "eastmoney" in quote_fill_sources:
             source_rows.append(
                 ("东方财富行情", "问财缺失时的实时行情兜底", "本次采集已返回")
@@ -491,15 +523,23 @@ def build_stock_report(data: dict[str, Any]) -> str:
             )
         if finance_source == "eastmoney":
             source_rows.append(
-                ("东方财富 F10", "年度财务指标", "本次采集已返回")
+                ("东方财富 F10", "公司基本资料与年度财务指标", "本次采集已返回")
             )
         elif finance_source == "mixed":
             source_rows.append(
-                ("东方财富 F10", "缺失年度财务指标兜底", "本次采集已返回")
+                ("东方财富 F10", "缺失基本信息与年度财务指标兜底", "本次采集已返回")
+            )
+        if product_source == "eastmoney":
+            source_rows.append(
+                ("东方财富 F10", "主营产品、行业与区域构成", "本次采集已返回")
             )
         if "eastmoney" in chip_sources:
             source_rows.append(
-                ("东方财富 F10", "股东户数、股本结构与股东集中度", "本次采集已返回")
+                (
+                    "东方财富 F10",
+                    "股东户数、股本结构、股东集中度与融资余额",
+                    "本次采集已返回",
+                )
             )
         if "eastmoney" in barrier_sources:
             source_rows.append(
@@ -514,6 +554,14 @@ def build_stock_report(data: dict[str, Any]) -> str:
             thsdk_uses.append("壁垒")
         if big_orders_source == "thsdk":
             thsdk_uses.append("逐笔大单成交（游客或固定账号）")
+        if big_orders_source == "eastmoney":
+            source_rows.append(
+                (
+                    "东方财富行情",
+                    "日度主力/大单/超大单净流入（非逐笔）",
+                    "本次采集已返回",
+                )
+            )
         if thsdk_uses:
             source_rows.append(
                 ("同花顺 thsdk", "、".join(thsdk_uses), "本次采集已返回")
@@ -717,6 +765,8 @@ def build_stock_report(data: dict[str, Any]) -> str:
                         (
                             f"大单日汇总 {len(orders)} 行（非逐笔）"
                             if str(data.get("big_orders_scope") or "") == "daily_aggregate"
+                            else f"日度净流入 {len(orders)} 行（非逐笔）"
+                            if str(data.get("big_orders_scope") or "") == "daily_net_flow"
                             else f"大单样本 {len(orders)} 条"
                         ),
                         "中",

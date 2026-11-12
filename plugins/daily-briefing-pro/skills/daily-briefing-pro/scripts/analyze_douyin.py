@@ -10,11 +10,13 @@
 4. 语音转文字 (多API自动切换，无API Key时自动降级到本地Whisper)
 
 用法:
-    python analyze_douyin.py <抖音分享链接> [--provider auto|local|groq|openai|siliconflow] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
+    python analyze_douyin.py <抖音分享链接> [--provider auto|local|groq|openai|siliconflow|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
 
 说明:
-    --provider auto（默认）会按 Groq → OpenAI → SiliconFlow → 本地Whisper 顺序尝试，
-    未配置任何API Key时自动使用本地Whisper转录。
+    --provider auto（默认）会优先使用显式配置的通用 OpenAI-compatible ASR，
+    然后按 Groq → OpenAI → SiliconFlow → 容器内置 Whisper 顺序尝试。
+    通用 ASR 必须同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、
+    DOUYIN_ASR_MODEL；文本 Relay 不能当作音频接口使用。
 """
 
 import asyncio
@@ -104,6 +106,12 @@ TRANSCRIPT_PROVIDERS = {
         'model': 'FunAudioLLM/SenseVoiceSmall',
         'env_key': 'SILICONFLOW_API_KEY',
         'description': 'SiliconFlow SenseVoice'
+    },
+    'cloud': {
+        'api_base': None,
+        'model': '',
+        'env_key': 'DOUYIN_ASR_API_KEY',
+        'description': 'OpenAI Compatible 云端 ASR'
     },
     'local': {
         'api_base': None,
@@ -712,6 +720,66 @@ def extract_text_from_audio_siliconflow(audio_path: Path, api_key: str) -> str:
             return result.get('text', '')
 
 
+def cloud_asr_config(api_key: str = "") -> tuple[str, str, str] | None:
+    """Return a fully explicit generic ASR config without using text-relay defaults."""
+
+    base_url = os.environ.get('DOUYIN_ASR_BASE_URL', '').strip()
+    key = (api_key or os.environ.get('DOUYIN_ASR_API_KEY', '')).strip()
+    model = os.environ.get('DOUYIN_ASR_MODEL', '').strip()
+    if not (base_url and key and model):
+        return None
+    return base_url, key, model
+
+
+def extract_text_from_audio_cloud(
+    audio_path: Path,
+    api_key: str = "",
+    base_url: str = "",
+    model: str = "",
+) -> str:
+    """Transcribe through any explicitly configured OpenAI-compatible ASR endpoint."""
+    import httpx
+
+    base_url = (
+        base_url or os.environ.get('DOUYIN_ASR_BASE_URL', '')
+    ).strip().rstrip("/")
+    key = (api_key or os.environ.get('DOUYIN_ASR_API_KEY', '')).strip()
+    model = (model or os.environ.get('DOUYIN_ASR_MODEL', '')).strip()
+    if not (base_url and key and model):
+        raise ValueError(
+            "通用云端 ASR 需要同时配置 DOUYIN_ASR_BASE_URL、"
+            "DOUYIN_ASR_API_KEY 和 DOUYIN_ASR_MODEL"
+        )
+    api_base = (
+        base_url
+        if base_url.endswith("/audio/transcriptions")
+        else f"{base_url}/audio/transcriptions"
+    )
+
+    with open(audio_path, 'rb') as handle:
+        files = {
+            'file': (audio_path.name, handle, 'audio/mpeg'),
+            'model': (None, model),
+        }
+        headers = {"Authorization": f"Bearer {key}"}
+        timeout = httpx.Timeout(300.0)
+        with httpx.Client(**httpx_client_kwargs(timeout=timeout)) as client:
+            response = client.post(api_base, files=files, headers=headers)
+            response.raise_for_status()
+            content_type = str(response.headers.get('content-type', '')).lower()
+            text = response.text.strip()
+            if 'json' in content_type or text.startswith('{'):
+                result = response.json()
+                if isinstance(result, dict):
+                    return str(
+                        result.get('text')
+                        or result.get('transcript')
+                        or result.get('result')
+                        or ''
+                    ).strip()
+            return text
+
+
 def extract_text_from_audio_local(audio_path: Path, model_size: str | None = None) -> str:
     """使用本地 Whisper 模型转录 (免费，但需要下载模型)。
 
@@ -745,7 +813,7 @@ def extract_text_from_audio(audio_path: Path, provider: str = 'auto', api_key: s
     
     Args:
         audio_path: 音频文件路径
-        provider: 指定服务 ('groq', 'openai', 'siliconflow', 'local', 'auto')
+        provider: 指定服务 ('cloud', 'groq', 'openai', 'siliconflow', 'local', 'auto')
         api_key: API密钥 (可选，某些服务需要)
     
     Returns:
@@ -755,7 +823,10 @@ def extract_text_from_audio(audio_path: Path, provider: str = 'auto', api_key: s
     
     # 自动模式：按优先级尝试
     if provider == 'auto':
-        providers_order = ['groq', 'openai', 'siliconflow', 'local']
+        providers_order = []
+        if cloud_asr_config(api_key=api_key or ''):
+            providers_order.append('cloud')
+        providers_order.extend(['groq', 'openai', 'siliconflow', 'local'])
     else:
         providers_order = [provider]
     
@@ -763,7 +834,11 @@ def extract_text_from_audio(audio_path: Path, provider: str = 'auto', api_key: s
     
     for prov in providers_order:
         try:
-            if prov == 'groq':
+            if prov == 'cloud':
+                print(f"  [转录] 使用 OpenAI Compatible 云端 ASR...", file=sys.stderr)
+                return extract_text_from_audio_cloud(audio_path, api_key=api_key or '')
+
+            elif prov == 'groq':
                 key = api_key or os.environ.get('GROQ_API_KEY', '')
                 if key:
                     print(f"  [转录] 使用 Groq Whisper...", file=sys.stderr)
@@ -953,8 +1028,8 @@ async def main():
     parser = argparse.ArgumentParser(description="抖音视频内容解析工具 - 多API转录支持")
     parser.add_argument("url", help="抖音分享链接或视频链接")
     parser.add_argument("--provider", default="auto", 
-                        choices=['auto', 'groq', 'openai', 'siliconflow', 'local'],
-                        help="转录服务 (auto自动选择, groq免费快速)")
+                        choices=['auto', 'cloud', 'groq', 'openai', 'siliconflow', 'local'],
+                        help="转录服务 (auto优先通用云端ASR, 再尝试专用API和容器Whisper)")
     parser.add_argument("--api-key", default="", help="API Key (可选，自动从环境变量读取)")
     parser.add_argument("--keep-files", action="store_true", help="保留下载的视频和音频文件")
     parser.add_argument("--output-dir", default="", help="输出目录 (保留文件到此目录)")

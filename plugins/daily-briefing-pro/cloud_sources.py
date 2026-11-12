@@ -52,6 +52,14 @@ EASTMONEY_INDUSTRY_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
     "IndustryAnalysis/PageAjax"
 )
+EASTMONEY_COMPANY_SURVEY_URL = (
+    "https://emweb.securities.eastmoney.com/PC_HSF10/"
+    "CompanySurvey/PageAjax"
+)
+EASTMONEY_BUSINESS_ANALYSIS_URL = (
+    "https://emweb.securities.eastmoney.com/PC_HSF10/"
+    "BusinessAnalysis/PageAjax"
+)
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 TENCENT_QUOTE_URL = "https://qt.gtimg.cn/q="
@@ -71,6 +79,10 @@ EASTMONEY_FINANCE_URL = (
 )
 EASTMONEY_DATACENTER_URL = (
     "https://datacenter.eastmoney.com/securities/api/data/v1/get"
+)
+EASTMONEY_MARGIN_URL = "https://datacenter-web.eastmoney.com/api/data/v1/get"
+EASTMONEY_STOCK_FLOW_URL = (
+    "https://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get"
 )
 INDUSTRY_SNAPSHOT_FIELDS = (
     "涨幅",
@@ -1032,7 +1044,7 @@ def _wencai_client() -> tuple[mq.WencaiClient, str]:
     key, source = mq.wencai_api_key()
     if not key:
         raise CloudSourceError(
-            "云端报告需要 IWENCAI_API_KEY；请通过 secrets/iwencai_api_key 注入问财 OpenAPI 凭据",
+            "官方问财 OpenAPI 未配置 IWENCAI_API_KEY；将使用公开数据源降级",
             "missing_api_key",
         )
     return mq.WencaiClient(key, timeout=WENCAI_TIMEOUT), source or "env"
@@ -1061,7 +1073,9 @@ class CloudStockAdapter:
     _initialized = True
 
     def __init__(self) -> None:
-        self.wencai, self.wencai_source = _wencai_client()
+        self.wencai, self.wencai_source, self.wencai_error = (
+            _optional_wencai_client()
+        )
         self.market, self.market_error = _safe_market_client()
         if not self.market:
             raise CloudSourceError(
@@ -1084,6 +1098,8 @@ class CloudStockAdapter:
         self.quote_fill_sources: list[str] = []
         self.chip_sources: list[str] = []
         self.barrier_sources: list[str] = []
+        self.product_source = ""
+        self.product_error = ""
         self._ths_client: mq.ThsClient | None = None
         self._ths_connect_error = ""
         self._ths_connect_retry_at = 0.0
@@ -1171,6 +1187,8 @@ class CloudStockAdapter:
         return _frame_result(payload)
 
     def _query(self, query: str, skill_id: str = "hithink-finance-query", limit: int = 20) -> SimpleNamespace:
+        if self.wencai is None:
+            return _empty(self.wencai_error or "官方问财 OpenAPI 未配置")
         cache_key = (skill_id, query, int(limit))
         if cache_key in self._cache:
             return _frame_result(self._cache[cache_key])
@@ -1531,23 +1549,30 @@ class CloudStockAdapter:
             result = self._query(query, skill, limit=limit)
             if not result.df.empty:
                 merged.update(result.df.iloc[0].to_dict())
-        wencai_finance = any(
-            re.fullmatch(
-                r"(营业收入|归属于母公司所有者的净利润|归母净利润|销售毛利率|"
-                r"销售净利率|加权净资产收益率|净资产收益率ROE|资产负债率)"
-                r"\[\d{8}\]",
-                str(key),
-            )
-            for key in merged
-        )
+        wencai_fields = dict(merged)
+        basic = self._eastmoney_basic_fallback()
+        for key, value in basic.items():
+            if merged.get(key) in (None, ""):
+                merged[key] = value
         fallback = self._eastmoney_finance_fallback(years)
         if fallback:
             for key, value in fallback.items():
                 if merged.get(key) in (None, ""):
                     merged[key] = value
-            self.finance_source = "mixed" if wencai_finance else "eastmoney"
+        if basic or fallback:
+            self.finance_source = "mixed" if wencai_fields else "eastmoney"
         if not merged:
-            return _empty("问财财务与基本信息查询没有返回数据")
+            return _empty(
+                "; ".join(
+                    item
+                    for item in (
+                        self.wencai_error,
+                        getattr(self, "finance_error", ""),
+                    )
+                    if item
+                )
+                or "问财与东方财富均未返回财务和基本信息"
+            )
         if self.finance_source not in {"mixed", "eastmoney"}:
             self.finance_source = "wencai"
         self.finance_error = ""
@@ -1585,6 +1610,85 @@ class CloudStockAdapter:
         if controlling:
             merged.setdefault("控股股东名称", controlling)
         return SimpleNamespace(df=pd.DataFrame([{key: _json_value(value) for key, value in merged.items()}]), error="")
+
+    def _eastmoney_basic_fallback(self) -> dict[str, Any]:
+        """Fill company identity fields when Wencai basic-info queries are unavailable."""
+
+        if not self._stock_code:
+            return {}
+        prefix = _eastmoney_market_prefix(self._stock_code)
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_COMPANY_SURVEY_URL}?code={prefix}{self._stock_code}"
+            )
+        except Exception:
+            return {}
+        if not isinstance(payload, dict):
+            return {}
+
+        def first_row(key: str) -> dict[str, Any]:
+            value = payload.get(key)
+            if isinstance(value, dict):
+                return dict(value)
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        return dict(item)
+            return {}
+
+        survey = {**first_row("fxxg"), **first_row("jbzl")}
+        output: dict[str, Any] = {}
+        company = _text(survey.get("ORG_NAME"))
+        industry = _text(survey.get("EM2016"))
+        address = _text(survey.get("REG_ADDRESS"))
+        business_scope = _text(survey.get("BUSINESS_SCOPE"))
+        listing = _date_key(survey.get("LISTING_DATE"))
+        if company:
+            output["公司中文名称"] = company
+            output["中文名称"] = company
+        if industry:
+            output["所属同花顺行业"] = industry
+            output["所属行业"] = industry
+        if address:
+            output["注册地址"] = address
+        if business_scope:
+            output["经营范围"] = business_scope
+            output["主营业务"] = business_scope
+        if listing:
+            output["新股上市日期"] = (
+                f"{listing[:4]}-{listing[4:6]}-{listing[6:]}"
+            )
+
+        holder_payload, holder_error = self._f10_payload()
+        if not holder_error:
+            controller_rows = holder_payload.get("sjkzr") or []
+            if isinstance(controller_rows, dict):
+                controller_rows = [controller_rows]
+            controller = next(
+                (
+                    _text(item.get("HOLDER_NAME"))
+                    for item in controller_rows
+                    if isinstance(item, dict) and _text(item.get("HOLDER_NAME"))
+                ),
+                "",
+            )
+            if controller:
+                output["实际控制人"] = controller
+            top_rows = [
+                dict(item)
+                for item in holder_payload.get("sdgd") or []
+                if isinstance(item, dict)
+            ]
+            if top_rows:
+                top_rows.sort(
+                    key=lambda item: _number(item.get("HOLDER_RANK")) or 10**9
+                )
+                holding = _text(top_rows[0].get("HOLDER_NAME"))
+                if holding:
+                    output["控股股东名称"] = holding
+        if output:
+            output["基本信息数据来源"] = "东方财富F10"
+        return output
 
     def _eastmoney_finance_fallback(self, years: list[int]) -> dict[str, Any]:
         """Fill annual finance fields when the Wencai finance query is unavailable."""
@@ -2385,16 +2489,79 @@ class CloudStockAdapter:
         if not thsdk.df.empty:
             self._record_source("chip", "thsdk")
             return thsdk
+        fallback = self._eastmoney_margin_frame()
+        if not fallback.df.empty:
+            self._record_source("chip", "eastmoney")
+            return fallback
         return _empty(
             "; ".join(
                 item
                 for item in (
                     getattr(result, "error", ""),
                     getattr(thsdk, "error", ""),
+                    getattr(fallback, "error", ""),
                 )
                 if item
             )
-            or "问财与 thsdk 均未返回融资余额"
+            or "问财、thsdk 与东方财富均未返回融资余额"
+        )
+
+    def _eastmoney_margin_frame(self) -> SimpleNamespace:
+        if not self._stock_code:
+            return _empty("东方财富融资余额兜底缺少股票代码")
+        params = {
+            "reportName": "RPTA_WEB_RZRQ_GGMX",
+            "columns": "ALL",
+            "filter": f'(SCODE="{self._stock_code}")',
+            "pageNumber": "1",
+            "pageSize": "20",
+            "sortColumns": "DATE",
+            "sortTypes": "-1",
+            "source": "WEB",
+            "client": "WEB",
+        }
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_MARGIN_URL}?{urlencode(params)}",
+                referer="https://data.eastmoney.com/rzrq/",
+            )
+        except Exception as exc:
+            return _empty(f"东方财富融资融券请求失败：{exc}")
+        rows = [
+            dict(item)
+            for item in (((payload or {}).get("result") or {}).get("data") or [])
+            if isinstance(item, dict)
+        ]
+        if not rows:
+            return _empty("东方财富未返回融资融券明细")
+        rows.sort(key=lambda item: _date_key(item.get("DATE")), reverse=True)
+        latest = rows[0]
+        period = _date_key(latest.get("DATE"))
+        if not period:
+            return _empty("东方财富融资融券明细缺少交易日期")
+        output: dict[str, Any] = {
+            "融资融券数据日期": period,
+            "数据来源": "东方财富数据中心",
+        }
+        for label, field in (
+            ("融资余额", "RZYE"),
+            ("融资买入额", "RZMRE"),
+            ("融资偿还额", "RZCHE"),
+            ("融资净买入", "RZJME"),
+            ("融券余额", "RQYE"),
+            ("融资融券余额", "RZRQYE"),
+            ("融资余额占流通市值比", "RZYEZB"),
+        ):
+            value = _number(latest.get(field))
+            if value is not None:
+                output[f"{label}[{period}]"] = value
+        if not any(key.startswith("融资余额[") for key in output):
+            return _empty("东方财富融资融券明细缺少融资余额")
+        return SimpleNamespace(
+            df=pd.DataFrame([output]),
+            error="",
+            source="eastmoney",
+            period=period,
         )
 
     def _eastmoney_rd_fallback(self) -> dict[str, Any]:
@@ -2512,6 +2679,138 @@ class CloudStockAdapter:
         }
         return SimpleNamespace(df=pd.DataFrame([output]), error="")
 
+    def _eastmoney_product_frame(self) -> SimpleNamespace:
+        """Return disclosed product and regional mix from the public F10 page."""
+
+        if not self._stock_code:
+            return _empty("东方财富主营构成兜底缺少股票代码")
+        payload = getattr(self, "_eastmoney_business_cache", None)
+        if payload is None:
+            prefix = _eastmoney_market_prefix(self._stock_code)
+            try:
+                payload = _fetch_eastmoney_json(
+                    f"{EASTMONEY_BUSINESS_ANALYSIS_URL}?code={prefix}{self._stock_code}"
+                )
+            except Exception as exc:
+                return _empty(f"东方财富主营构成请求失败：{exc}")
+            self._eastmoney_business_cache = payload
+        if not isinstance(payload, dict):
+            return _empty("东方财富主营构成返回结构无效")
+
+        rows = [
+            dict(item)
+            for item in payload.get("zygcfx") or []
+            if isinstance(item, dict) and _text(item.get("ITEM_NAME"))
+        ]
+        if not rows:
+            scope_rows = payload.get("zyfw") or []
+            if isinstance(scope_rows, dict):
+                scope_rows = [scope_rows]
+            scope = next(
+                (
+                    _text(item.get("BUSINESS_SCOPE"))
+                    for item in scope_rows
+                    if isinstance(item, dict) and _text(item.get("BUSINESS_SCOPE"))
+                ),
+                "",
+            )
+            if not scope:
+                return _empty("东方财富未返回主营构成或经营范围")
+            return SimpleNamespace(
+                df=pd.DataFrame(
+                    [
+                        {
+                            "所属行业": _text(
+                                next(
+                                    (
+                                        item.get("EM2016")
+                                        for item in payload.get("jbzl") or []
+                                        if isinstance(item, dict)
+                                    ),
+                                    "",
+                                )
+                            ),
+                            "经营范围": scope,
+                            "主营业务": scope,
+                            "数据来源": "东方财富F10",
+                        }
+                    ]
+                ),
+                error="",
+                source="eastmoney",
+            )
+
+        latest_period = max(
+            (_date_key(item.get("REPORT_DATE")) for item in rows),
+            default="",
+        )
+        if latest_period:
+            rows = [
+                item
+                for item in rows
+                if _date_key(item.get("REPORT_DATE")) == latest_period
+            ]
+
+        def composition(kind: str) -> tuple[list[str], list[str]]:
+            selected = [
+                item
+                for item in rows
+                if _text(item.get("MAINOP_TYPE")) == kind
+            ]
+            selected.sort(
+                key=lambda item: _number(item.get("MBI_RATIO")) or -1,
+                reverse=True,
+            )
+            names: list[str] = []
+            lines: list[str] = []
+            for item in selected:
+                name = _text(item.get("ITEM_NAME"))
+                if not name or name in names:
+                    continue
+                names.append(name)
+                income = _number(item.get("MAIN_BUSINESS_INCOME"))
+                ratio = _number(item.get("MBI_RATIO"))
+                details = []
+                if income is not None:
+                    details.append(f"收入{income / 1e8:.2f}亿元")
+                if ratio is not None:
+                    details.append(f"占比{ratio * 100:.2f}%")
+                lines.append(
+                    f"{name}（{'，'.join(details)}）"
+                    if details
+                    else name
+                )
+            return names, lines
+
+        products, product_lines = composition("2")
+        industries, industry_lines = composition("1")
+        regions, region_lines = composition("3")
+        if not any((products, industries, regions)):
+            products = [
+                _text(item.get("ITEM_NAME"))
+                for item in rows
+                if _text(item.get("ITEM_NAME"))
+            ]
+            product_lines = products
+        output: dict[str, Any] = {
+            "主营构成报告期": latest_period or "最新披露",
+            "主营产品名称": "||".join(products[:20]),
+            "主营业务构成": "；".join(product_lines[:20]),
+            "数据来源": "东方财富F10",
+        }
+        if industries:
+            output["行业构成"] = "；".join(industry_lines[:20])
+        if regions:
+            output["经营区域构成"] = "；".join(region_lines[:20])
+        if not output["主营产品名称"] and not output["主营业务构成"]:
+            return _empty("东方财富主营构成没有可展示项目")
+        return SimpleNamespace(
+            df=pd.DataFrame([output]),
+            error="",
+            source="eastmoney",
+            period=latest_period,
+        )
+
     def wencai_nlp(self, query: str) -> SimpleNamespace:
         if "公司全称" in query and "主营业务" in query:
             return self._finance_frame()
@@ -2535,10 +2834,35 @@ class CloudStockAdapter:
             return self._patent_frame(query)
         if "股东户数" in query:
             return self._holder_trend_frame(query)
-        if "主营业务构成" in query or "产品类型" in query or "境内外收入" in query:
+        if (
+            "主营业务构成" in query
+            or "产品类型" in query
+            or "境内外收入" in query
+            or "境外收入" in query
+            or "境内收入" in query
+        ):
             result = self._query(query, "hithink-business-query", limit=10)
             if not result.df.empty:
+                self.product_source = "wencai"
+                self.product_error = ""
                 return result
+            fallback = self._eastmoney_product_frame()
+            if not fallback.df.empty:
+                self.product_source = "eastmoney"
+                self.product_error = ""
+                return fallback
+            self.product_source = ""
+            self.product_error = "; ".join(
+                item
+                for item in (
+                    getattr(result, "error", ""),
+                    getattr(fallback, "error", ""),
+                )
+                if item
+            )
+            return _empty(
+                self.product_error or "问财与东方财富均未返回主营构成"
+            )
         if "市盈率" in query and "市净率" in query:
             return self._peers_frame(query)
         if "行业" in query and "成分股" in query:
@@ -2556,7 +2880,21 @@ class CloudStockAdapter:
             fallback = self._ths_big_order_flow(thscode)
             if not fallback.df.empty:
                 return fallback
-            return result
+            eastmoney = self._eastmoney_big_order_flow(thscode)
+            if not eastmoney.df.empty:
+                return eastmoney
+            return _empty(
+                "; ".join(
+                    item
+                    for item in (
+                        getattr(result, "error", ""),
+                        getattr(fallback, "error", ""),
+                        getattr(eastmoney, "error", ""),
+                    )
+                    if item
+                )
+                or "问财、thsdk 与东方财富均未返回资金流"
+            )
         row = result.df.iloc[0].to_dict()
         buy_amount_key = _first_key(row, "大单买入额[")
         sell_amount_key = _first_key(row, "大单卖出额[")
@@ -2566,7 +2904,20 @@ class CloudStockAdapter:
             fallback = self._ths_big_order_flow(thscode)
             if not fallback.df.empty:
                 return fallback
-            return _empty("问财未返回今日大单买入/卖出金额")
+            eastmoney = self._eastmoney_big_order_flow(thscode)
+            if not eastmoney.df.empty:
+                return eastmoney
+            return _empty(
+                "; ".join(
+                    item
+                    for item in (
+                        "问财未返回今日大单买入/卖出金额",
+                        getattr(fallback, "error", ""),
+                        getattr(eastmoney, "error", ""),
+                    )
+                    if item
+                )
+            )
         period = re.search(r"\[(\d{8})\]", buy_amount_key)
         trade_date = period.group(1) if period else datetime.now(CN_TZ).strftime("%Y%m%d")
         formatted_date = f"{trade_date[:4]}-{trade_date[4:6]}-{trade_date[6:]}"
@@ -2601,6 +2952,62 @@ class CloudStockAdapter:
             scope="daily_aggregate",
             source="wencai",
             main_net_inflow=main_net_inflow,
+        )
+
+    def _eastmoney_big_order_flow(self, thscode: str) -> SimpleNamespace:
+        """Return daily net-flow aggregates when tick-like big orders are unavailable."""
+
+        code = str(thscode)[-6:]
+        if not re.fullmatch(r"\d{6}", code):
+            code = self._stock_code
+        if not re.fullmatch(r"\d{6}", str(code or "")):
+            return _empty("东方财富资金流兜底缺少股票代码")
+        params = {
+            "lmt": "10",
+            "klt": "101",
+            "ut": EASTMONEY_UT,
+            "secid": _eastmoney_secid(str(code)),
+            "fields1": "f1,f2,f3,f7",
+            "fields2": "f51,f52,f53,f54,f55,f56",
+        }
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_STOCK_FLOW_URL}?{urlencode(params)}",
+                referer=EASTMONEY_QUOTE_REFERER,
+            )
+        except Exception as exc:
+            return _empty(f"东方财富资金流请求失败：{exc}")
+        klines = ((payload or {}).get("data") or {}).get("klines") or []
+        rows = []
+        for line in klines:
+            values = str(line).split(",")
+            if len(values) < 6:
+                continue
+            row = {
+                "时间": values[0],
+                "主力净流入": _number(values[1]),
+                "小单净流入": _number(values[2]),
+                "中单净流入": _number(values[3]),
+                "大单净流入": _number(values[4]),
+                "超大单净流入": _number(values[5]),
+                "数据来源": "东方财富",
+            }
+            rows.append(
+                {
+                    key: value
+                    for key, value in row.items()
+                    if value is not None and value != ""
+                }
+            )
+        if not rows:
+            return _empty("东方财富未返回个股日度资金流")
+        latest_main = _number(rows[-1].get("主力净流入"))
+        return SimpleNamespace(
+            df=pd.DataFrame(rows),
+            error="",
+            scope="daily_net_flow",
+            source="eastmoney",
+            main_net_inflow=latest_main,
         )
 
     def _ths_big_order_flow(self, thscode: str) -> SimpleNamespace:
@@ -3058,6 +3465,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         if fallback:
             warnings.append(
                 "问财行业财务数据不完整，已使用东方财富 F10 年报与实时行情补齐"
+                if wencai
+                else "行业财务数据不完整，已使用东方财富 F10 年报与实时行情补齐"
             )
         if fallback_errors:
             warnings.append("东方财富行业兜底未完整成功：" + "；".join(fallback_errors[:5]))
@@ -3072,7 +3481,9 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
     for member in members:
         row = financial_by_code.get(member["ticker"]) or financial_by_name.get(member["name"]) or {}
         fallback_row = fallback.get(member["ticker"], {})
-        if not row:
+        if not row and not fallback_row:
+            warnings.append(f"成分股财务数据不可用：{member['name']}")
+        elif not row and wencai:
             warnings.append(f"问财未返回成分股财务数据：{member['name']}")
         market_cap = _coalesce(
             _number(_first(row, "总市值")),
@@ -3281,6 +3692,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
             thsdk_sector_as_of = _text(thsdk_sector.get("as_of"))
             warnings.append(
                 "问财板块指标不完整，已使用同花顺 thsdk 板块扩展快照补齐"
+                if wencai
+                else "板块指标不完整，已使用同花顺 thsdk 板块扩展快照补齐"
             )
 
     missing_snapshot = [
@@ -3303,6 +3716,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
             eastmoney_sector_as_of = _text(eastmoney_sector.get("as_of"))
             warnings.append(
                 "问财板块指标不完整，已使用东方财富板块行情补齐"
+                if wencai
+                else "板块指标不完整，已使用东方财富板块行情补齐"
             )
 
     missing_snapshot = [
@@ -3327,6 +3742,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
             hithink_sector_as_of = _text(hithink_sector.get("as_of"))
             warnings.append(
                 "问财板块指标不完整，已使用同花顺行业指数日线补齐"
+                if wencai
+                else "板块指标不完整，已使用同花顺行业指数日线补齐"
             )
 
     missing_snapshot = [

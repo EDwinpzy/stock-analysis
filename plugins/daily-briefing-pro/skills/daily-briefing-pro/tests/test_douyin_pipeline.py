@@ -409,5 +409,107 @@ class DouyinDetailApiTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["media_source"], "homepage_list")
 
 
+class GenericCloudAsrTests(unittest.TestCase):
+    def test_generic_cloud_asr_posts_to_explicit_openai_compatible_endpoint(self):
+        captured = {}
+
+        class FakeResponse:
+            text = "云端转录文本"
+            headers = {"content-type": "text/plain"}
+
+            def raise_for_status(self):
+                return None
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                captured["client_kwargs"] = kwargs
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return None
+
+            def post(self, url, files=None, headers=None):
+                captured["url"] = url
+                captured["files"] = files
+                captured["headers"] = headers
+                return FakeResponse()
+
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "sample.mp3"
+            audio.write_bytes(b"audio")
+            with patch.dict(
+                os.environ,
+                {
+                    "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+                    "DOUYIN_ASR_API_KEY": "configured",
+                    "DOUYIN_ASR_MODEL": "whisper-large-v3",
+                },
+                clear=True,
+            ), patch("httpx.Client", FakeClient):
+                text = analyze_douyin.extract_text_from_audio_cloud(audio)
+
+        self.assertEqual(text, "云端转录文本")
+        self.assertEqual(
+            captured["url"],
+            "https://asr.example/v1/audio/transcriptions",
+        )
+        self.assertEqual(captured["files"]["model"], (None, "whisper-large-v3"))
+        self.assertEqual(
+            captured["headers"]["Authorization"],
+            "Bearer configured",
+        )
+
+    def test_auto_uses_generic_cloud_asr_only_when_all_three_values_exist(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+                "DOUYIN_ASR_API_KEY": "configured",
+            },
+            clear=True,
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_cloud",
+            side_effect=AssertionError("incomplete ASR config must not be used"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_local",
+            return_value="本地兜底",
+        ):
+            text = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+            )
+
+        self.assertEqual(text, "本地兜底")
+
+    def test_text_relay_credentials_are_not_reused_as_audio_asr(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DEEPSEEK_BASE_URL": "https://text-relay.example/v1",
+                "DEEPSEEK_API_KEY": "text-only",
+                "DOUYIN_TRANSCRIPT_PROVIDER": "auto",
+            },
+            clear=True,
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_cloud",
+            side_effect=AssertionError("text relay must not be used for audio"),
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_local",
+            return_value="本地兜底",
+        ):
+            text = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+            )
+
+        self.assertEqual(text, "本地兜底")
+
+
 if __name__ == "__main__":
     unittest.main()
