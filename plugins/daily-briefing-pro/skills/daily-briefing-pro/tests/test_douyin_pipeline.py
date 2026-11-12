@@ -246,7 +246,13 @@ class WhisperThreadTests(unittest.TestCase):
         fake_torch = types.SimpleNamespace(set_num_threads=thread_calls.append)
 
         with patch.dict(sys.modules, {"whisper": fake_whisper, "torch": fake_torch}):
-            with patch.dict(os.environ, {"DOUYIN_WHISPER_THREADS": "99"}):
+            with patch.dict(
+                os.environ,
+                {
+                    "DOUYIN_WHISPER_THREADS": "99",
+                    "DOUYIN_LOCAL_ASR_ENGINE": "whisper",
+                },
+            ):
                 result = analyze_douyin.extract_text_from_audio_local(Path("unused.mp3"))
 
         self.assertEqual(result, "测试转录")

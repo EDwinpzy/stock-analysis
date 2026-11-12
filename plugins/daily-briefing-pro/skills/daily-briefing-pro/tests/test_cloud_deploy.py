@@ -102,6 +102,7 @@ class CloudDeployContractTests(unittest.TestCase):
                 self.assertNotIn('"torch==2.7.0+cpu"', source)
         self.assertIn("faster-whisper==1.2.1", requirements)
         self.assertIn("ctranslate2==4.9.0", requirements)
+        self.assertIn("av==17.0.1", requirements)
         self.assertNotIn("openai-whisper==", requirements)
 
     def test_fuyao_secret_is_created_and_loaded(self):

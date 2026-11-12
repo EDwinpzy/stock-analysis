@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -70,7 +71,9 @@ class TranscriptCacheTests(unittest.TestCase):
         model.transcribe.return_value = {'text': '真实转录'}
         whisper = SimpleNamespace(load_model=Mock(return_value=model))
         torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False), set_num_threads=Mock())
-        with patch.dict(sys.modules, {'whisper': whisper, 'torch': torch}), patch.object(analyze.os, 'cpu_count', return_value=16):
+        with patch.dict(sys.modules, {'whisper': whisper, 'torch': torch}), \
+                patch.object(analyze.os, 'cpu_count', return_value=16), \
+                patch.dict(os.environ, {'DOUYIN_LOCAL_ASR_ENGINE': 'whisper'}):
             self.assertEqual(analyze.extract_text_from_audio_local(Path('test.mp3'), 'small'), '真实转录')
         torch.set_num_threads.assert_called_once_with(4)
         whisper.load_model.assert_called_once_with('small')

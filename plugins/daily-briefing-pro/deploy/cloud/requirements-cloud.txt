@@ -8,6 +8,10 @@ scikit-learn==1.9.0
 scipy==1.17.1
 faster-whisper==1.2.1
 ctranslate2==4.9.0
+# faster-whisper 1.2.1 calls av.open(..., metadata_errors="ignore"); av 19
+# removed that keyword and raises TypeError on every transcription. 17.0.1 is
+# the verified ABI for both manylinux x86_64 and aarch64 wheels.
+av==17.0.1
 ffmpeg-python==0.2.0
 beautifulsoup4==4.14.2
 Pillow==12.2.0
