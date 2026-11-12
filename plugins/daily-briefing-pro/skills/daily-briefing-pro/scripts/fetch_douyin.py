@@ -27,6 +27,7 @@ from runtime_paths import get_data_dir
 
 import httpx
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
+import douyin_api
 from playwright.async_api import async_playwright
 from network_config import playwright_launch_options
 
@@ -270,6 +271,112 @@ def parse_video_item(item: dict) -> dict | None:
         'media_urls': media_urls,
         'subtitle_urls': subtitle_urls[:6],
     }
+
+
+async def fill_create_times_from_cloud(
+    videos: list[dict],
+    stop_before_date: str | None = None,
+    max_concurrent: int = 3,
+) -> tuple[list[dict], str]:
+    """Hydrate video metadata through the configured Douyin data API.
+
+    The homepage response now often omits ``create_time``, ``desc`` and every
+    media address.  Resolve the newest entries first and stop once the page
+    order has crossed the requested date window, so an old account does not
+    trigger hundreds of needless API calls.
+    """
+    if not videos or not douyin_api.resolver_enabled():
+        return videos, "未启用（DOUYIN_RESOLVER_ENABLED=0）"
+
+    stop_ts = 0
+    if stop_before_date:
+        try:
+            stop_ts = int(
+                datetime.strptime(stop_before_date, "%Y-%m-%d")
+                .replace(tzinfo=timezone(timedelta(hours=8)))
+                .timestamp()
+            )
+        except ValueError:
+            stop_ts = 0
+
+    semaphore = asyncio.Semaphore(max(1, min(4, int(max_concurrent))))
+    resolver = douyin_api.DouyinResolver()
+    resolved_count = 0
+    errors: list[str] = []
+
+    async def resolve_one(video: dict) -> bool:
+        nonlocal resolved_count
+        async with semaphore:
+            target = str(video.get("url") or video.get("aweme_id") or "").strip()
+            if not target:
+                return False
+            try:
+                info = await resolver.resolve(target)
+            except Exception as exc:
+                errors.append(f"{target}: {type(exc).__name__}: {str(exc)[:160]}")
+                return False
+            created_at = int(info.get("create_time") or 0)
+            if created_at:
+                video["create_time"] = created_at
+            media_urls = [
+                str(value).strip()
+                for value in (info.get("media_urls") or [])
+                if str(value).strip().lower().startswith(("http://", "https://"))
+            ]
+            if media_urls:
+                video["media_urls"] = list(dict.fromkeys(media_urls))
+            subtitle_urls = [
+                str(value).strip()
+                for value in (info.get("subtitle_urls") or [])
+                if str(value).strip().lower().startswith(("http://", "https://"))
+            ]
+            if subtitle_urls:
+                video["subtitle_urls"] = list(dict.fromkeys(subtitle_urls))
+            title = str(info.get("title") or "").strip()
+            if title and (_is_placeholder_title(video.get("title", "")) or len(title) > len(video.get("title", ""))):
+                video["title"] = title
+                video["title_source"] = "抖音解析API"
+            if not video.get("author_name"):
+                video["author_name"] = str(info.get("author_name") or "").strip()
+            if not video.get("digg_count"):
+                video["digg_count"] = int(info.get("digg_count") or 0)
+            video["media_source"] = "douyin_api"
+            resolved_count += 1
+            return True
+
+    try:
+        chunk_size = max(1, min(4, int(max_concurrent)))
+        for start in range(0, len(videos), chunk_size):
+            chunk = videos[start:start + chunk_size]
+            await asyncio.gather(*(resolve_one(video) for video in chunk))
+            if start == 0 and resolved_count == 0:
+                break
+            dated = [
+                int(video.get("create_time") or 0)
+                for video in videos[:start + len(chunk)]
+                if video.get("create_time")
+            ]
+            if stop_ts and dated and min(dated) < stop_ts:
+                print(
+                    f"  [解析API] 已核验 {resolved_count} 条并越过目标日期，"
+                    "停止解析更早视频",
+                    file=sys.stderr,
+                )
+                for skipped in videos[start + len(chunk):]:
+                    skipped["_resolver_skipped"] = True
+                break
+    finally:
+        await resolver.aclose()
+
+    if errors:
+        print(
+            f"  [WARN] 抖音解析API失败 {len(errors)} 条：{errors[0]}",
+            file=sys.stderr,
+        )
+    if not resolved_count:
+        detail = errors[0] if errors else "未返回视频数据"
+        return videos, f"不可用（{detail[:180]}）"
+    return videos, f"已解析 {resolved_count}/{len(videos)} 条"
 
 
 def _is_placeholder_title(title: str) -> bool:
@@ -544,6 +651,27 @@ def transcribe_video(video: str | dict, provider: str = "auto") -> dict:
             subtitle_urls = []
             title = ""
             author_name = ""
+        resolver_error = ""
+        if isinstance(video, dict) and not media_urls and douyin_api.resolver_enabled():
+            try:
+                info = asyncio.run(douyin_api.resolve_video(video_url))
+                media_urls = [
+                    str(value).strip()
+                    for value in (info.get("media_urls") or [])
+                    if str(value).strip().lower().startswith(("http://", "https://"))
+                ]
+                subtitle_urls = [
+                    str(value).strip()
+                    for value in (info.get("subtitle_urls") or [])
+                    if str(value).strip().lower().startswith(("http://", "https://"))
+                ]
+                if not title:
+                    title = str(info.get("title") or "").strip()
+                if not author_name:
+                    author_name = str(info.get("author_name") or "").strip()
+            except Exception as exc:
+                resolver_error = f"{type(exc).__name__}: {str(exc)[:180]}"
+                print(f"  [WARN] 抖音解析API补媒体失败: {resolver_error}", file=sys.stderr)
         child_env = {
             **os.environ,
             "PYTHONIOENCODING": "utf-8",
@@ -595,6 +723,8 @@ def transcribe_video(video: str | dict, provider: str = "auto") -> dict:
             detail = detail or f"分析器退出码 {result.returncode}"
         else:
             detail = detail or "分析器未返回 JSON 结果"
+        if resolver_error:
+            detail = f"解析API: {resolver_error}；{detail}"
         return {"status": "error", "error": detail[:500]}
     except subprocess.TimeoutExpired as exc:
         detail = exc.stderr or exc.output or ""
@@ -937,10 +1067,42 @@ async def fetch_blogger_videos(name: str, share_url_or_secuid: str, browser,
         print(f"  主页无任何视频", file=sys.stderr)
         return []
 
-    # 通过详情页并发核验每条视频的真实 create_time
-    print(f"  主页共 {len(videos)} 条视频，开始核验真实发布时间...", file=sys.stderr)
-    videos = await fill_create_times(videos, browser, max_concurrent=3,
-                                     stop_before_date=resolve_until_date)
+    # Prefer the replaceable cloud data API.  The public mobile feed currently
+    # omits both create_time and media URLs, while a browser detail page can
+    # redirect to unrelated recommendations under a datacenter IP.
+    print(
+        f"  主页共 {len(videos)} 条视频，使用云端解析API补全元数据...",
+        file=sys.stderr,
+    )
+    videos, resolver_status = await fill_create_times_from_cloud(
+        videos,
+        stop_before_date=resolve_until_date,
+        max_concurrent=3,
+    )
+    print(f"  云端解析API: {resolver_status}", file=sys.stderr)
+
+    # Keep the browser detail path only as a cloud-side fallback for entries
+    # the API could not resolve.  It is not a local-machine dependency.
+    missing_dates = [
+        video for video in videos
+        if not video.get("create_time") and not video.get("_resolver_skipped")
+    ]
+    if missing_dates:
+        print(
+            f"  仍有 {len(missing_dates)} 条缺少发布时间，尝试浏览器详情页兜底...",
+            file=sys.stderr,
+        )
+        fallback = await fill_create_times(
+            missing_dates,
+            browser,
+            max_concurrent=3,
+            stop_before_date=resolve_until_date,
+        )
+        by_id = {str(video.get("aweme_id")): video for video in fallback}
+        for index, video in enumerate(videos):
+            replacement = by_id.get(str(video.get("aweme_id")))
+            if replacement:
+                videos[index] = replacement
 
     for v in videos:
         ts = v.get('create_time')

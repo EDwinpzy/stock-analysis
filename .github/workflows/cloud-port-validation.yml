@@ -59,6 +59,10 @@ jobs:
       DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
+      DOUYIN_RESOLVER_BASE_URL: ${{ secrets.DOUYIN_RESOLVER_BASE_URL }}
+      DOUYIN_RESOLVER_API_KEY: ${{ secrets.DOUYIN_RESOLVER_API_KEY }}
+      DOUYIN_RESOLVER_USERNAME: ${{ secrets.DOUYIN_RESOLVER_USERNAME }}
+      DOUYIN_RESOLVER_PASSWORD: ${{ secrets.DOUYIN_RESOLVER_PASSWORD }}
       DOUYIN_TRANSCRIPT_PROVIDER: auto
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
@@ -84,6 +88,8 @@ jobs:
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
             DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
+            DOUYIN_RESOLVER_BASE_URL DOUYIN_RESOLVER_API_KEY \
+            DOUYIN_RESOLVER_USERNAME DOUYIN_RESOLVER_PASSWORD \
             GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY STT_AI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then
@@ -352,6 +358,7 @@ jobs:
             --env BRIEFING_OUTPUT_DIR=/runtime/reports \
             --env DAILY_BRIEFING_RUN_TIMEOUT=4800 \
             --env DOUYIN_TRANSCRIPT_PROVIDER=auto \
+            --env DOUYIN_RESOLVER_ALLOW_DEMO=1 \
             --env DOUYIN_MAX_CONCURRENT=1 \
             --shm-size=1g \
             --volume "$PWD/artifacts/briefing/data:/runtime/data" \
@@ -458,6 +465,10 @@ jobs:
       DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
+      DOUYIN_RESOLVER_BASE_URL: ${{ secrets.DOUYIN_RESOLVER_BASE_URL }}
+      DOUYIN_RESOLVER_API_KEY: ${{ secrets.DOUYIN_RESOLVER_API_KEY }}
+      DOUYIN_RESOLVER_USERNAME: ${{ secrets.DOUYIN_RESOLVER_USERNAME }}
+      DOUYIN_RESOLVER_PASSWORD: ${{ secrets.DOUYIN_RESOLVER_PASSWORD }}
       DOUYIN_TRANSCRIPT_PROVIDER: auto
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
@@ -483,6 +494,8 @@ jobs:
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
             DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
+            DOUYIN_RESOLVER_BASE_URL DOUYIN_RESOLVER_API_KEY \
+            DOUYIN_RESOLVER_USERNAME DOUYIN_RESOLVER_PASSWORD \
             GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY STT_AI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then

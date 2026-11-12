@@ -34,6 +34,11 @@ services:
       DOUYIN_TRANSCRIPT_PROVIDER: auto
       DOUYIN_ASR_BASE_URL: ${DOUYIN_ASR_BASE_URL:-}
       DOUYIN_ASR_MODEL: ${DOUYIN_ASR_MODEL:-}
+      DOUYIN_RESOLVER_BASE_URL: ${DOUYIN_RESOLVER_BASE_URL:-https://demo.douyin.wtf}
+      DOUYIN_RESOLVER_USERNAME: ${DOUYIN_RESOLVER_USERNAME:-}
+      DOUYIN_RESOLVER_PASSWORD: ${DOUYIN_RESOLVER_PASSWORD:-}
+      DOUYIN_RESOLVER_ALLOW_DEMO: ${DOUYIN_RESOLVER_ALLOW_DEMO:-1}
+      DOUYIN_RESOLVER_ENABLED: ${DOUYIN_RESOLVER_ENABLED:-1}
       STT_AI_BASE_URL: ${STT_AI_BASE_URL:-https://api.stt.ai}
       STT_AI_MODEL: ${STT_AI_MODEL:-whisper-large-v3-turbo}
       STT_AI_LANGUAGE: ${STT_AI_LANGUAGE:-zh}
@@ -58,6 +63,7 @@ services:
       - groq_api_key
       - stt_ai_api_key
       - douyin_asr_api_key
+      - douyin_resolver_api_key
       - ima_openapi_clientid
       - ima_openapi_apikey
       - hithink_finance_api_key
@@ -91,6 +97,8 @@ secrets:
     file: ./secrets/stt_ai_api_key
   douyin_asr_api_key:
     file: ./secrets/douyin_asr_api_key
+  douyin_resolver_api_key:
+    file: ./secrets/douyin_resolver_api_key
   ima_openapi_clientid:
     file: ./secrets/ima_openapi_clientid
   ima_openapi_apikey:

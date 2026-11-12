@@ -589,6 +589,45 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
     )
 
 
+def _check_douyin_resolver(env: Mapping[str, str]) -> Check:
+    """Report the replaceable media resolver without treating demo as owned quota."""
+    enabled = str(env.get("DOUYIN_RESOLVER_ENABLED") or "1").strip().lower()
+    if enabled not in {"1", "true", "yes", "on"}:
+        return _warning(
+            "douyin_resolver",
+            "抖音媒体解析API",
+            "已禁用；将回退到云容器内的抖音页面解析",
+            "如需稳定获取媒体地址，设置 DOUYIN_RESOLVER_ENABLED=1",
+        )
+    has_key = bool(str(env.get("DOUYIN_RESOLVER_API_KEY") or "").strip())
+    has_login = bool(
+        str(env.get("DOUYIN_RESOLVER_USERNAME") or "").strip()
+        and str(env.get("DOUYIN_RESOLVER_PASSWORD") or "").strip()
+    )
+    if has_key or has_login:
+        base_url = str(env.get("DOUYIN_RESOLVER_BASE_URL") or "").strip()
+        return _ok(
+            "douyin_resolver",
+            "抖音媒体解析API",
+            f"已配置自有凭据；{base_url or '默认服务地址'}",
+        )
+    allow_demo = str(env.get("DOUYIN_RESOLVER_ALLOW_DEMO") or "1").strip().lower()
+    if allow_demo in {"1", "true", "yes", "on"}:
+        return _warning(
+            "douyin_resolver",
+            "抖音媒体解析API",
+            "未配置自有凭据；使用公开 demo 兜底",
+            "生产环境请配置 DOUYIN_RESOLVER_API_KEY，或设置 "
+            "DOUYIN_RESOLVER_ALLOW_DEMO=0 改走页面兜底",
+        )
+    return _warning(
+        "douyin_resolver",
+        "抖音媒体解析API",
+        "未配置自有凭据，且已关闭 demo 兜底；将尝试云容器内页面解析",
+        "配置 DOUYIN_RESOLVER_API_KEY 可避免抖音页面反爬差异",
+    )
+
+
 def _csv_summary(path: Path, *, date_column: str = "date") -> tuple[int, str]:
     if not path.is_file():
         raise ValueError(f"文件缺失: {path}")
@@ -1066,6 +1105,7 @@ def build_preflight(
         checks.append(hithink_check)
         checks.append(_check_semantic_summary(values))
         checks.append(_check_transcription(values))
+        checks.append(_check_douyin_resolver(values))
         home = Path.home()
         checks.append(
             _check_cookie(

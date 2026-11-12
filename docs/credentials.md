@@ -54,6 +54,9 @@ python tools\credential_manifest.py sync-github --apply
 | `TGB_COOKIE_PATH` | `TGB_COOKIE_GZ_B64` | 淘股吧登录 Cookie 文件 | 重新采集淘股吧 |
 | `DOUYIN_COOKIE_PATH` | `DOUYIN_COOKIE_GZ_B64` | 抖音 Cookie 文件 | 重新采集抖音 |
 | `XUEQIU_COOKIE_PATH` | `XUEQIU_COOKIE_GZ_B64` | 雪球 Cookie 文件 | 重新采集雪球 |
+| `DOUYIN_RESOLVER_BASE_URL` | 同名 | 抖音媒体解析 API 地址 | 用一条真实视频确认返回 MP4/CDN |
+| `DOUYIN_RESOLVER_API_KEY` | 同名 | 抖音媒体解析 API Key；生产推荐 | 同上 |
+| `DOUYIN_RESOLVER_USERNAME` / `DOUYIN_RESOLVER_PASSWORD` | 同名 | 解析服务使用账号登录时的替代凭据 | 同上 |
 | `DOUYIN_ASR_BASE_URL` | 同名 | 通用 OpenAI Compatible ASR 地址 | 配置后跑一条真实抖音视频 |
 | `DOUYIN_ASR_API_KEY` | 同名 | 通用 ASR Key；不能使用文本 Relay Key | 同上 |
 | `DOUYIN_ASR_MODEL` | 同名 | 通用 ASR 服务模型名 | 同上 |
@@ -64,6 +67,11 @@ python tools\credential_manifest.py sync-github --apply
 抖音无字幕视频**必须至少配置一种音频 API**：`DOUYIN_ASR_*` 三项齐全，或
 `GROQ_API_KEY` / `SILICONFLOW_API_KEY` / `OPENAI_API_KEY` 任一。项目不再安装或运行本地
 Whisper，也不会把文本 AI Relay 当作音频接口。
+
+抖音媒体地址优先通过可替换的云端解析 API 获取，不再依赖页面一定暴露
+`play_addr`。生产环境应配置 `DOUYIN_RESOLVER_API_KEY`；未配置时允许使用公开 demo
+账号做有限兜底，但它不保证额度、稳定性或长期可用。设置
+`DOUYIN_RESOLVER_ALLOW_DEMO=0` 可关闭该兜底。
 
 `HITHINK_API_KEY`、`HITHINK_FINANCE_API_KEY` 和 `WENCAI_API_KEY` 是兼容别名，不建议同时维护多份。
 当前推荐只写 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`。
@@ -98,6 +106,8 @@ Whisper，也不会把文本 AI Relay 当作音频接口。
 - 用户提供的百度 Cookie（`BDUSS`、`BAIDUID_BFESS`、`BAIDU_WISE_UID` 等）未被本项目任何采集链路读取，因此不纳入可执行清单；不要把它们混入淘股吧、抖音或雪球 Cookie 文件。
 - `DOUYIN_AI_BASE_URL`、`DOUYIN_AI_API_KEY`、`DOUYIN_AI_MODEL` 是代码未读取的旧变量，保留只会造成漂移。
 - 文本 AI Relay 不支持 `/audio/transcriptions`；`DOUYIN_ASR_*` 必须指向真正的音频接口。
+- 抖音移动页当前可能只返回 `aweme_id`，不返回 `play_addr`、`create_time` 或正文；
+  云端解析 API 是媒体地址的主通道。匿名 demo 只用于兜底，生产需要自有 Key。
 - **当前没有配置带额度的 ASR Key**：`GROQ_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_API_KEY`、
   `STT_AI_API_KEY` 均为空，`DOUYIN_ASR_*` 三项也未配置。无字幕视频会回退到 STT.ai 匿名接口，
   但该接口约 `3 次/日/IP`，不适合 GitHub 共享 Runner 的稳定批量任务；建议补一个 Key。

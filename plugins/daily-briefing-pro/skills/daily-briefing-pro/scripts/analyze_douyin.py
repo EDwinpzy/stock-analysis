@@ -36,6 +36,7 @@ from typing import Optional, List, Sequence
 from urllib.parse import urljoin, urlsplit
 
 import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.env）
+import douyin_api
 from network_config import (
     curl_proxy_args,
     httpx_client_kwargs,
@@ -1260,15 +1261,45 @@ async def analyze_douyin_video(
         print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
         print(f"  → 使用主页列表中的 {len(known_media_urls)} 个媒体地址", file=sys.stderr)
     else:
-        try:
-            video_info = await parse_douyin_share_url(share_url)
-            result["metadata"] = format_video_info_dict(video_info)
-            print(f"  → 标题: {video_info.title}", file=sys.stderr)
-            print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
-        except Exception as e:
-            result["status"] = "error"
-            result["error"] = f"解析链接失败: {str(e)}"
-            return result
+        video_info = None
+        resolver_error = ""
+        if douyin_api.resolver_enabled():
+            try:
+                resolved = await douyin_api.resolve_video(
+                    share_url or f"https://www.douyin.com/video/{_extract_video_id(share_url)}"
+                )
+                video_info = VideoInfo(
+                    video_url=(resolved.get("media_urls") or [""])[0],
+                    video_urls=list(resolved.get("media_urls") or []),
+                    subtitle_urls=list(resolved.get("subtitle_urls") or []),
+                    title=str(resolved.get("title") or "").strip()
+                    or f"douyin_{_extract_video_id(share_url) or 'video'}",
+                    author=VideoAuthor(name=str(resolved.get("author_name") or "")),
+                )
+                result["metadata"] = format_video_info_dict(video_info)
+                result["metadata"]["media_source"] = "douyin_api"
+                print(f"  → 标题: {video_info.title}", file=sys.stderr)
+                print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
+                print(f"  → 使用云端解析API返回的 {len(video_info.video_urls)} 个媒体地址",
+                      file=sys.stderr)
+            except Exception as exc:
+                resolver_error = f"{type(exc).__name__}: {str(exc)[:180]}"
+                print(f"  [WARN] 云端解析API失败，尝试公开页面: {resolver_error}",
+                      file=sys.stderr)
+        if video_info is None:
+            try:
+                video_info = await parse_douyin_share_url(share_url)
+                result["metadata"] = format_video_info_dict(video_info)
+                result["metadata"]["media_source"] = "douyin_page"
+                print(f"  → 标题: {video_info.title}", file=sys.stderr)
+                print(f"  → 作者: {video_info.author.name}", file=sys.stderr)
+            except Exception as e:
+                result["status"] = "error"
+                detail = f"解析链接失败: {str(e)}"
+                if resolver_error:
+                    detail += f"；云端解析API: {resolver_error}"
+                result["error"] = detail
+                return result
 
     # 判断是否为图集（无视频）
     if not video_info.video_url:

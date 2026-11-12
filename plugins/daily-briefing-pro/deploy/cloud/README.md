@@ -112,6 +112,7 @@ Recognized secret files:
 | `secrets/groq_api_key` | Douyin transcription |
 | `secrets/stt_ai_api_key` | Optional STT.ai key; anonymous STT.ai works without this file but is limited to about 3 requests/day/IP. NoteTakers adds a second anonymous route with about 10 requests/day/IP |
 | `secrets/douyin_asr_api_key` | Generic OpenAI-compatible Douyin ASR; `DOUYIN_ASR_BASE_URL` and `DOUYIN_ASR_MODEL` must also be set |
+| `secrets/douyin_resolver_api_key` | Optional dtk/Douyin-TikTok-API key used to resolve signed media URLs when Douyin's own page omits them. Without it, the public demo instance is used as a limited fallback |
 | `secrets/ima_openapi_clientid`, `secrets/ima_openapi_apikey` | IMA research search |
 | `secrets/hithink_finance_api_key` | Optional override for the official Tonghuashun finance data CLI |
 | `secrets/fuyao_api_key` | Required for cloud stock/industry reports and Fuyao REST market queries (`FUYAO_API_KEY`); also used by the finance CLI when no separate key is supplied |
@@ -196,6 +197,13 @@ Whisper endpoint, limited to roughly 10 transcriptions per IP per day; set
 There is no local model fallback: the image contains no Whisper weights,
 torch, CTranslate2 or faster-whisper. The text AI Relay is never treated as an
 audio endpoint, and a missing key cannot allow title-only substitutes.
+
+Douyin media resolution is separate from ASR. Compose calls a replaceable
+`dtk`-compatible API (`DOUYIN_RESOLVER_BASE_URL`) to obtain signed MP4 CDN
+URLs, title and publish time when the mobile feed returns metadata only. Set
+`DOUYIN_RESOLVER_API_KEY` for an owned quota; otherwise the public demo
+account is a best-effort fallback and can change independently of this
+project. `DOUYIN_RESOLVER_ALLOW_DEMO=0` disables that fallback.
 
 ## Verify the reference report
 
