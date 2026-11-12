@@ -97,6 +97,7 @@ jobs:
 
       - name: Generate and gate the stock report
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
@@ -112,6 +113,7 @@ jobs:
 
       - name: Generate and gate the industry report
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
@@ -212,6 +214,7 @@ jobs:
 
       - name: Generate and gate the stock report
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
@@ -227,6 +230,7 @@ jobs:
 
       - name: Generate and gate the industry report
         run: |
+          set -euo pipefail
           docker run --rm \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
