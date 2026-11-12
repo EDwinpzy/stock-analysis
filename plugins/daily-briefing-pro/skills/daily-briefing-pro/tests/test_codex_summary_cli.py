@@ -86,6 +86,26 @@ class ApiSummaryTests(unittest.TestCase):
         self.assertEqual(answer['summaries'][0]['summary'], '中性')
         self.assertEqual(post.call_args.args[0], 'https://summary.example/v1/chat/completions')
         self.assertEqual(post.call_args.kwargs['json']['model'], 'summary-model')
+        self.assertGreaterEqual(post.call_args.kwargs['json']['max_tokens'], 8000)
+
+    def test_api_summary_parses_first_complete_object_from_prose(self):
+        response = SimpleNamespace(
+            status_code=200,
+            json=lambda: {
+                'choices': [{'message': {'content': '说明文字\n{"summaries": [{"index": 0, "summary": "中性"}]}\n多余说明'}}]
+            },
+        )
+        with patch.dict(
+            os.environ,
+            {
+                'DAILY_BRIEFING_AI_API_KEY': 'test-key',
+                'DAILY_BRIEFING_AI_BASE_URL': 'https://summary.example/v1',
+                'DAILY_BRIEFING_AI_MODEL': 'summary-model',
+            },
+            clear=False,
+        ), patch.object(cli.httpx, 'post', return_value=response):
+            answer = cli.call_api_json('输入', {'type': 'object'})
+        self.assertEqual(answer['summaries'][0]['summary'], '中性')
 
     def test_api_summary_uses_fallback_model_after_404(self):
         responses = [

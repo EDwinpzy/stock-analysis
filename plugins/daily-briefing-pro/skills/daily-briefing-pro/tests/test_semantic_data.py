@@ -306,6 +306,59 @@ class SurveySemanticTests(unittest.TestCase):
             self.assertIn("RuntimeError", unsafe[0]["reason"])
             self.assertNotIn("private source sentinel", unsafe[0]["reason"])
 
+    def test_structural_batch_error_is_split_to_keep_valid_items(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "survey.json"
+            tgb = {
+                "platform": "淘股吧", "date": DATE, "data_date": DATE, "status": "ok",
+                "bloggers": {
+                    f"作者{i}": {"posts": [{"title": "观点", "content": f"作者{i}明确讨论A股行业观点及产业订单变化。"}], "replies": []}
+                    for i in range(4)
+                },
+            }
+            calls = []
+
+            def call_json(prompt, _schema, timeout=180):
+                payload = json.loads(prompt.split("\n", 1)[1])
+                calls.append(len(payload))
+                if len(payload) > 1:
+                    raise RuntimeError("AI summary returned invalid JSON")
+                return {"analyses": [semantic_row(index=0)]}
+
+            rows = survey.analyze_sentiment(
+                tgb, {"platform": "雪球", "bloggers": {}}, cache_path=path,
+                available_fn=lambda: True, call_json_fn=call_json,
+            )
+
+            self.assertEqual(len(rows), 4)
+            self.assertTrue(all(row["analysis_method"] == "语义核验" for row in rows))
+            self.assertEqual(calls, [4, 2, 1, 1, 2, 1, 1])
+
+    def test_non_structural_batch_error_is_not_split(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "survey.json"
+            tgb = {
+                "platform": "淘股吧", "date": DATE, "data_date": DATE, "status": "ok",
+                "bloggers": {
+                    f"作者{i}": {"posts": [{"title": "观点", "content": f"作者{i}明确讨论A股行业观点及产业订单变化。"}], "replies": []}
+                    for i in range(4)
+                },
+            }
+            calls = []
+
+            def call_json(_prompt, _schema, timeout=180):
+                calls.append(1)
+                raise RuntimeError("AI summary credentials rejected (HTTP 401)")
+
+            rows = survey.analyze_sentiment(
+                tgb, {"platform": "雪球", "bloggers": {}}, cache_path=path,
+                available_fn=lambda: True, call_json_fn=call_json,
+            )
+
+            self.assertEqual(len(rows), 4)
+            self.assertTrue(all(row["analysis_method"] == "未完成语义核验" for row in rows))
+            self.assertEqual(len(calls), 1)
+
     def test_unavailable_runner_does_not_fall_back_to_keyword_rules(self):
         tgb, xueqiu = survey_sources("文字里有看多和看空字样，但没有可核验的市场观点。")
         rows = survey.analyze_sentiment(tgb, xueqiu,

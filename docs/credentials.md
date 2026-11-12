@@ -47,6 +47,7 @@ python tools\credential_manifest.py sync-github --apply
 | `DAILY_BRIEFING_AI_API_KEY` | 同名 | 语义总结 | 运行一次 `briefing --resume` |
 | `DAILY_BRIEFING_AI_MODEL` | 同名 | 主模型 | 观察 AI 摘要是否成功 |
 | `DAILY_BRIEFING_AI_FALLBACK_MODEL` | 同名 | 回退模型 | 主模型失败时观察日志 |
+| `DAILY_BRIEFING_AI_JSON_MAX_TOKENS` | 无需 Secret | JSON 输出预算（含推理 token） | 大批次语义总结不截断 |
 | `DEEPSEEK_BASE_URL` | 同名 | 抖音/旧调用兼容的 Relay 地址 | `fetch_douyin.py` |
 | `DEEPSEEK_API_KEY` | 同名 | 抖音/旧调用兼容 Key | 同上 |
 | `DEEPSEEK_MODEL` | 同名 | 抖音/旧调用兼容主模型 | 同上 |
@@ -97,15 +98,20 @@ Whisper，也不会把文本 AI Relay 当作音频接口。
 检查命令会读取每个登录标记的 `expires`（兼容 epoch 和 ISO 时间），在 72 小时内提示 `WARN`，已过期提示
 `FAIL`。Cookie 过期不是“没有新帖”，不能当成空结果。
 
-## 当前审计（2026-11-12）
+## 当前审计（2026-11-13）
 
-- 工作流当前引用 20 个 Secret 名称；其中 13 个已存在，7 个 ASR 相关 Secret 未配置。
+- 工作流当前引用 24 个 Secret 名称；其中 13 个已存在，11 个未配置：
+  抖音解析 4 个（`DOUYIN_RESOLVER_*`）、通用 ASR 3 个（`DOUYIN_ASR_*`）、
+  ASR 服务 Key 4 个（`GROQ_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_API_KEY`、`STT_AI_API_KEY`）。
 - 本机配置已经包含两组 Relay 变量；它们当前使用同一个 Key，避免只改一边造成不一致。
 - 淘股吧 Cookie 在 2026-11-13 13:27（北京时间）前后过期，属于近期必须替换项。
 - 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 与音频 ASR 必须分开配置，音频通道不能复用文本 Relay。
 - 用户提供的百度 Cookie（`BDUSS`、`BAIDUID_BFESS`、`BAIDU_WISE_UID` 等）未被本项目任何采集链路读取，因此不纳入可执行清单；不要把它们混入淘股吧、抖音或雪球 Cookie 文件。
 - `DOUYIN_AI_BASE_URL`、`DOUYIN_AI_API_KEY`、`DOUYIN_AI_MODEL` 是代码未读取的旧变量，保留只会造成漂移。
 - 文本 AI Relay 不支持 `/audio/transcriptions`；`DOUYIN_ASR_*` 必须指向真正的音频接口。
+- 当前 Relay 主模型是推理模型，推理 token 也占用 `max_tokens`。JSON 总结默认预算已提高到
+  `8000`（`DAILY_BRIEFING_AI_JSON_MAX_TOKENS`）；仍返回结构错误的批次会自动拆分重试，
+  但不会把未完成作者计入有效观点，也不会降低完整性门禁。
 - 抖音移动页当前可能只返回 `aweme_id`，不返回 `play_addr`、`create_time` 或正文；
   云端解析 API 是媒体地址的主通道。匿名 demo 只用于兜底，生产需要自有 Key。
 - **当前没有配置带额度的 ASR Key**：`GROQ_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_API_KEY`、

@@ -107,20 +107,61 @@ def _parse_api_json(text: str) -> dict:
         if lines and lines[-1].strip() == '```':
             lines = lines[:-1]
         value = '\n'.join(lines).strip()
+
+    def first_object(source: str) -> str | None:
+        """Return the first complete top-level JSON object in a model reply."""
+        start = source.find('{')
+        while start >= 0:
+            depth = 0
+            in_string = False
+            escaped = False
+            for index in range(start, len(source)):
+                char = source[index]
+                if in_string:
+                    if escaped:
+                        escaped = False
+                    elif char == '\\':
+                        escaped = True
+                    elif char == '"':
+                        in_string = False
+                    continue
+                if char == '"':
+                    in_string = True
+                elif char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                    if depth == 0:
+                        return source[start:index + 1]
+            start = source.find('{', start + 1)
+        return None
+
     try:
         answer = json.loads(value)
     except ValueError:
-        start = value.find('{')
-        end = value.rfind('}')
-        if start < 0 or end <= start:
+        candidate = first_object(value)
+        if candidate is None:
             raise RuntimeError('AI summary returned invalid JSON') from None
         try:
-            answer = json.loads(value[start:end + 1])
+            answer = json.loads(candidate)
         except ValueError:
-            raise RuntimeError('AI summary returned invalid JSON') from None
+            try:
+                answer = json.loads(candidate, strict=False)
+            except ValueError:
+                raise RuntimeError('AI summary returned invalid JSON') from None
     if not isinstance(answer, dict):
         raise RuntimeError('AI summary returned a non-object')
     return answer
+
+
+def _json_output_budget() -> int:
+    """Leave room for reasoning tokens before the JSON answer is emitted."""
+    raw = os.environ.get('DAILY_BRIEFING_AI_JSON_MAX_TOKENS', '8000')
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        value = 8000
+    return max(4000, min(value, 32000))
 
 
 def call_api_text(
@@ -211,7 +252,7 @@ def call_api_json(prompt: str, schema: dict, timeout: int = 120) -> dict:
         prompt
         + '\n只输出一个符合以下 JSON Schema 的 JSON 对象，不要输出 Markdown 或解释：\n'
         + schema_text,
-        max_tokens=3000,
+        max_tokens=_json_output_budget(),
         timeout=timeout,
     )
     return _parse_api_json(answer)

@@ -317,7 +317,7 @@ SURVEY_SEMANTIC_SCHEMA = {
 }
 
 SURVEY_SEMANTIC_BATCH_MAX_ITEMS = 12
-SURVEY_SEMANTIC_BATCH_MAX_SOURCE_CHARS = 18_000
+SURVEY_SEMANTIC_BATCH_MAX_SOURCE_CHARS = 12_000
 SURVEY_SEMANTIC_WORKERS = 3
 SURVEY_SEMANTIC_BUDGET_SECONDS = 840
 SURVEY_SEMANTIC_CALL_TIMEOUT_SECONDS = 180
@@ -457,6 +457,42 @@ def _run_survey_semantic_batch(batch: list[dict], call_json_fn, timeout: int) ->
         return {}, _safe_semantic_error(exc)
 
 
+def _survey_batch_error_is_structural(error: str) -> bool:
+    markers = (
+        'AI summary returned invalid JSON',
+        'AI summary returned a non-object',
+        'AI summary returned an empty response',
+        '批次条目数不匹配',
+        '返回项格式错误',
+        '返回序号缺失、越界或重复',
+        '方向、板块或理由字段格式无效',
+        '返回序号不完整',
+    )
+    return any(marker in error for marker in markers)
+
+
+def _run_survey_semantic_batch_resilient(
+    batch: list[dict],
+    call_json_fn,
+    timeout: int,
+) -> tuple[dict[int, dict], str]:
+    """Split a structurally invalid batch so one bad reply cannot drop valid authors."""
+    results, error = _run_survey_semantic_batch(batch, call_json_fn, timeout)
+    if len(results) == len(batch):
+        return results, ''
+    if len(batch) <= 1 or not _survey_batch_error_is_structural(error):
+        return results, error
+
+    middle = len(batch) // 2
+    left, left_error = _run_survey_semantic_batch_resilient(batch[:middle], call_json_fn, timeout)
+    right, right_error = _run_survey_semantic_batch_resilient(batch[middle:], call_json_fn, timeout)
+    merged = dict(left)
+    merged.update({index + middle: value for index, value in right.items()})
+    if len(merged) == len(batch):
+        return merged, ''
+    return merged, left_error or right_error or error
+
+
 def analyze_sentiment(
     tgb_data: dict,
     xueqiu_data: dict,
@@ -561,7 +597,7 @@ def analyze_sentiment(
                             flush=True,
                         )
                         futures = [
-                            executor.submit(_run_survey_semantic_batch, batch, call_json_fn, timeout)
+                            executor.submit(_run_survey_semantic_batch_resilient, batch, call_json_fn, timeout)
                             for batch in wave
                         ]
                         wave_results = []
@@ -602,6 +638,17 @@ def analyze_sentiment(
                             file=sys.stderr,
                             flush=True,
                         )
+                        failed_authors = [
+                            item["blogger"]
+                            for index, item in enumerate(batch)
+                            if index not in batch_results
+                        ]
+                        if failed_authors:
+                            print(
+                                f"  [SEM] 未完成作者：{'、'.join(failed_authors)}",
+                                file=sys.stderr,
+                                flush=True,
+                            )
                     # Only this parent thread mutates the shared summary cache.
                     # Persist after each wave so successful model work survives later timeouts.
                     if wave_succeeded:
