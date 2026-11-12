@@ -9,13 +9,15 @@ def get_recent_trade_date(
     date_str: str,
     *,
     now: datetime | None = None,
-    cutoff_hour: int = 5,
+    cutoff_hour: int = 15,
 ) -> str:
-    """Return the latest weekday for the target date.
+    """Return the latest completed weekday for the target date.
 
-    Before the cutoff, today's target rolls back one calendar day. Explicit historical
-    target dates are not shifted based on the machine's current time. Exchange holidays
-    are not inferred here; collectors keep their existing source-specific validation.
+    Before the A-share close, today's target rolls back one calendar day. This
+    prevents a scheduled run from treating an incomplete trading session as a
+    finished daily snapshot. Explicit historical target dates are not shifted
+    based on the machine's current time. Exchange holidays are not inferred
+    here; collectors keep their existing source-specific validation.
     """
     target = datetime.strptime(date_str, "%Y-%m-%d")
     current = now or datetime.now()

@@ -24,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _hithink  # noqa: E402
+from trading_date import get_recent_trade_date  # noqa: E402
 
 try:  # 同花顺路径不依赖 akshare/pandas，缺它们只影响降级路径
     import akshare as ak
@@ -221,20 +222,6 @@ def get_date():
     if args.date:
         return args.date
     return datetime.now().strftime("%Y-%m-%d")
-
-
-def get_recent_trade_date(date_str):
-    """周末回退到周五，凌晨0-5点回退一天"""
-    from datetime import datetime, timedelta
-    dt = datetime.strptime(date_str, "%Y-%m-%d")
-    now = datetime.now()
-    if date_str == now.strftime("%Y-%m-%d") and now.hour < 5:
-        dt -= timedelta(days=1)
-    if dt.weekday() == 5:
-        dt -= timedelta(days=1)
-    if dt.weekday() == 6:
-        dt -= timedelta(days=2)
-    return dt.strftime("%Y-%m-%d")
 
 
 def safe_float(val, default=0.0):
