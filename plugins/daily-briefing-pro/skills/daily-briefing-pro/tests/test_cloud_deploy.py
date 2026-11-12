@@ -90,20 +90,27 @@ class CloudDeployContractTests(unittest.TestCase):
                 self.assertIn("amd64", source)
                 self.assertIn("MiniRacer", source)
 
-    def test_cloud_runtime_bakes_faster_whisper_without_torch(self):
+    def test_cloud_runtime_uses_only_remote_asr(self):
         dockerfile = (DEPLOY_ROOT / "Dockerfile").read_text(encoding="utf-8")
         bootstrap = (DEPLOY_ROOT / "codex-cloud-bootstrap.sh").read_text(encoding="utf-8")
         requirements = (DEPLOY_ROOT / "requirements-cloud.txt").read_text(encoding="utf-8")
+        compose = (DEPLOY_ROOT / "compose.yaml").read_text(encoding="utf-8")
+        entrypoint = (DEPLOY_ROOT / "entrypoint.sh").read_text(encoding="utf-8")
 
-        for source in (dockerfile, bootstrap):
+        for source in (dockerfile, bootstrap, requirements):
             with self.subTest(source=source.splitlines()[0]):
-                self.assertIn("faster_whisper", source)
-                self.assertIn("small", source)
-                self.assertNotIn('"torch==2.7.0+cpu"', source)
-        self.assertIn("faster-whisper==1.2.1", requirements)
-        self.assertIn("ctranslate2==4.9.0", requirements)
-        self.assertIn("av==17.0.1", requirements)
-        self.assertNotIn("openai-whisper==", requirements)
+                for token in ("faster_whisper", "faster-whisper", "ctranslate2", "openai-whisper"):
+                    self.assertNotIn(token, source)
+        for source in (dockerfile, bootstrap, compose, entrypoint):
+            with self.subTest(source=source.splitlines()[0]):
+                for token in (
+                    "DOUYIN_LOCAL_ASR_ENGINE",
+                    "DOUYIN_FASTER_WHISPER",
+                    "DOUYIN_WHISPER_MODEL",
+                    "DOUYIN_WHISPER_THREADS",
+                ):
+                    self.assertNotIn(token, source)
+        self.assertIn("ffmpeg", dockerfile)
 
     def test_fuyao_secret_is_created_and_loaded(self):
         init_secrets = (DEPLOY_ROOT / "init-secrets.sh").read_text(encoding="utf-8")

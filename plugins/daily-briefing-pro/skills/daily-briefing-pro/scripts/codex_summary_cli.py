@@ -94,6 +94,9 @@ def _model_candidates(config: ApiSummaryConfig) -> list[str]:
 
 
 def codex_available() -> bool:
+    # Cloud runs must never depend on a local Codex CLI installation.
+    if os.environ.get('DAILY_BRIEFING_CLOUD') == '1':
+        return False
     if os.environ.get('DAILY_BRIEFING_CODEX_FALLBACK', '1') == '0':
         return False
     return bool(shutil.which('codex'))

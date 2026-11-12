@@ -272,7 +272,7 @@ tr:hover td{{background:rgba(255,255,255,.02)}}
     if douyin_bloggers:
         total_videos = sum(len(b.get("videos", [])) for b in douyin_bloggers)
         html += f'''<section class="sec fw">
-<div class="sh"><span class="ico">◉</span> 抖音 <span class="meta">{len(douyin_bloggers)}位博主 · {total_videos}条视频 · 本地Whisper转录</span></div>
+<div class="sh"><span class="ico">◉</span> 抖音 <span class="meta">{len(douyin_bloggers)}位博主 · {total_videos}条视频 · 原生字幕/云端ASR</span></div>
 <table>
 <tr><th>博主</th><th>视频</th><th>核心观点</th><th>标的</th><th>方向</th></tr>
 '''
@@ -367,7 +367,7 @@ def main():
     # 6. 淘股吧博主
     data["tgb"] = run_script("tgb_crawl.py")
 
-    # 7. 抖音博主观点（本地Whisper兜底，耗时较长）
+    # 7. 抖音博主观点（原生字幕优先，无字幕时走云端 ASR）
     data["douyin"] = run_script("fetch_douyin.py", timeout=600)
 
     # 生成HTML

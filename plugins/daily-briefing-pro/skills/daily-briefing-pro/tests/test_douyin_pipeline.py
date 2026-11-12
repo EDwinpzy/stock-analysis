@@ -141,7 +141,7 @@ class DouyinSubprocessTests(unittest.TestCase):
             "get_video_transcript_with_fallback",
             return_value={
                 "transcript": "真实语音内容",
-                "transcript_source": "faster-whisper",
+                "transcript_source": "cloud-asr",
             },
         ), patch.object(
             fetch_douyin,
@@ -157,7 +157,7 @@ class DouyinSubprocessTests(unittest.TestCase):
             )
 
         self.assertEqual(result["transcript"], "真实语音内容")
-        self.assertEqual(result["transcript_source"], "faster-whisper")
+        self.assertEqual(result["transcript_source"], "cloud-asr")
 
 
 class DouyinConcurrencyTests(unittest.TestCase):
@@ -236,80 +236,33 @@ class DouyinDownloadTests(unittest.TestCase):
         self.assertEqual(calls, urls)
 
 
-class WhisperThreadTests(unittest.TestCase):
-    def test_thread_limit_is_applied_even_when_cuda_is_available(self):
-        thread_calls = []
-        fake_model = types.SimpleNamespace(
-            transcribe=lambda path, language: {"text": "测试转录"}
-        )
-        fake_whisper = types.SimpleNamespace(load_model=lambda size: fake_model)
-        fake_torch = types.SimpleNamespace(set_num_threads=thread_calls.append)
+class CloudTranscriptionTests(unittest.TestCase):
+    def test_local_provider_is_rejected(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "本地 ASR 已移除"):
+                analyze_douyin.extract_text_from_audio(
+                    Path("unused.mp3"), provider="local"
+                )
 
-        with patch.dict(sys.modules, {"whisper": fake_whisper, "torch": fake_torch}):
-            with patch.dict(
-                os.environ,
-                {
-                    "DOUYIN_WHISPER_THREADS": "99",
-                    "DOUYIN_LOCAL_ASR_ENGINE": "whisper",
-                },
-            ):
-                result = analyze_douyin.extract_text_from_audio_local(Path("unused.mp3"))
+    def test_auto_without_cloud_credentials_fails_with_config_hint(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "GROQ_API_KEY"):
+                analyze_douyin.extract_text_from_audio(
+                    Path("unused.mp3"), provider="auto"
+                )
 
-        self.assertEqual(result, "测试转录")
-        self.assertEqual(thread_calls, [min(4, os.cpu_count() or 4)])
-
-
-class FasterWhisperTests(unittest.TestCase):
-    def test_faster_whisper_is_preferred_and_segments_are_joined(self):
-        captured = {}
-
-        class FakeSegment:
-            def __init__(self, text):
-                self.text = text
-
-        class FakeModel:
-            def __init__(self, *args, **kwargs):
-                captured["init"] = (args, kwargs)
-
-            def transcribe(self, path, **kwargs):
-                captured["transcribe"] = (path, kwargs)
-                return iter([FakeSegment(" 第一段 "), FakeSegment("第二段")]), {}
-
-        fake_module = types.SimpleNamespace(WhisperModel=FakeModel)
-        with tempfile.TemporaryDirectory() as temp:
-            audio = Path(temp) / "sample.mp3"
-            audio.write_bytes(b"audio")
-            with patch.dict(
-                sys.modules,
-                {"faster_whisper": fake_module},
-            ), patch.object(
-                analyze_douyin.importlib.util,
-                "find_spec",
-                return_value=object(),
-            ), patch.dict(
-                os.environ,
-                {
-                    "DOUYIN_FASTER_WHISPER_ROOT": temp,
-                    "DOUYIN_WHISPER_MODEL": "small",
-                },
-                clear=True,
-            ):
-                text = analyze_douyin.extract_text_from_audio_local(audio)
-
-        self.assertEqual(text, "第一段 第二段")
-        self.assertEqual(captured["init"][0], ("small",))
-        self.assertEqual(captured["init"][1]["device"], "cpu")
-        self.assertEqual(captured["init"][1]["compute_type"], "int8")
-        self.assertTrue(captured["transcribe"][1]["vad_filter"])
-
-    def test_auto_records_faster_whisper_as_transcript_source(self):
+    def test_auto_records_cloud_asr_as_transcript_source(self):
         with patch.dict(
             os.environ,
-            {"DOUYIN_LOCAL_ASR_ENGINE": "faster-whisper"},
+            {
+                "DOUYIN_ASR_BASE_URL": "https://asr.example/v1",
+                "DOUYIN_ASR_API_KEY": "configured",
+                "DOUYIN_ASR_MODEL": "whisper-large-v3",
+            },
             clear=True,
         ), patch.object(
             analyze_douyin,
-            "extract_text_from_audio_local",
+            "extract_text_from_audio_cloud",
             return_value="转录文本",
         ):
             text, source = analyze_douyin.extract_text_from_audio(
@@ -319,7 +272,26 @@ class FasterWhisperTests(unittest.TestCase):
             )
 
         self.assertEqual(text, "转录文本")
-        self.assertEqual(source, "faster-whisper")
+        self.assertEqual(source, "cloud-asr")
+
+    def test_auto_uses_groq_when_only_groq_key_is_configured(self):
+        with patch.dict(
+            os.environ,
+            {"GROQ_API_KEY": "configured"},
+            clear=True,
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_groq",
+            return_value="groq 转录",
+        ):
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "groq 转录")
+        self.assertEqual(source, "groq-whisper")
 
 
 class DouyinSubtitleTests(unittest.TestCase):
@@ -610,17 +582,12 @@ class GenericCloudAsrTests(unittest.TestCase):
             analyze_douyin,
             "extract_text_from_audio_cloud",
             side_effect=AssertionError("incomplete ASR config must not be used"),
-        ), patch.object(
-            analyze_douyin,
-            "extract_text_from_audio_local",
-            return_value="本地兜底",
         ):
-            text = analyze_douyin.extract_text_from_audio(
-                Path("unused.mp3"),
-                provider="auto",
-            )
-
-        self.assertEqual(text, "本地兜底")
+            with self.assertRaisesRegex(RuntimeError, "GROQ_API_KEY"):
+                analyze_douyin.extract_text_from_audio(
+                    Path("unused.mp3"),
+                    provider="auto",
+                )
 
     def test_text_relay_credentials_are_not_reused_as_audio_asr(self):
         with patch.dict(
@@ -635,17 +602,12 @@ class GenericCloudAsrTests(unittest.TestCase):
             analyze_douyin,
             "extract_text_from_audio_cloud",
             side_effect=AssertionError("text relay must not be used for audio"),
-        ), patch.object(
-            analyze_douyin,
-            "extract_text_from_audio_local",
-            return_value="本地兜底",
         ):
-            text = analyze_douyin.extract_text_from_audio(
-                Path("unused.mp3"),
-                provider="auto",
-            )
-
-        self.assertEqual(text, "本地兜底")
+            with self.assertRaisesRegex(RuntimeError, "未配置任何云端 ASR"):
+                analyze_douyin.extract_text_from_audio(
+                    Path("unused.mp3"),
+                    provider="auto",
+                )
 
 
 if __name__ == "__main__":

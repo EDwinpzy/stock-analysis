@@ -55,13 +55,6 @@ RUN mkdir -p /opt/playwright-browsers \
     && cp -a /runtime/home/.cache/ms-playwright/. /opt/playwright-browsers/ \
     && chmod -R a+rX /opt/playwright-browsers
 
-# Bake the faster-whisper model into the image. The runtime home is a named
-# volume, so the entrypoint copies this cache into it on first start. CTranslate2
-# int8 is materially cheaper than CPU torch for the 1.5 CPU / 2GB Compose limit.
-RUN mkdir -p /opt/faster-whisper-cache \
-    && python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/faster-whisper-cache', cpu_threads=4, num_workers=1)" \
-    && chmod -R a+rX /opt/faster-whisper-cache
-
 COPY . /opt/daily-briefing-pro/
 
 RUN mkdir -p /runtime/data /runtime/models /runtime/reports /runtime/home/.codex /runtime/home/.config /runtime/home/.cache \

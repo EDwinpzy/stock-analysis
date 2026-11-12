@@ -60,10 +60,9 @@ jobs:
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
       DOUYIN_TRANSCRIPT_PROVIDER: auto
-      DOUYIN_LOCAL_ASR_ENGINE: faster-whisper
-      DOUYIN_FASTER_WHISPER_COMPUTE_TYPE: int8
-      DOUYIN_WHISPER_THREADS: "2"
-      DOUYIN_WHISPER_MODEL: small
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -83,7 +82,8 @@ jobs:
             DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
-            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL; do
+            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
+            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"
@@ -325,6 +325,13 @@ jobs:
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
 
+      - name: Require a cloud ASR key
+        run: |
+          set -euo pipefail
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" "$IMAGE" \
+            python -c "import os,sys; generic=all(os.environ.get(k,'').strip() for k in ('DOUYIN_ASR_BASE_URL','DOUYIN_ASR_API_KEY','DOUYIN_ASR_MODEL')); native=[k for k in ('GROQ_API_KEY','SILICONFLOW_API_KEY','OPENAI_API_KEY') if os.environ.get(k,'').strip()]; print('ASR generic=%s native=%s' % (generic, native)); sys.exit(0 if generic or native else 1)" \
+            || { echo "No cloud ASR credential: set GROQ_API_KEY, SILICONFLOW_API_KEY, OPENAI_API_KEY, or all three DOUYIN_ASR_* secrets." >&2; exit 1; }
+
       - name: Generate the live scheduled briefing with real audio transcription
         run: |
           set -euo pipefail
@@ -345,10 +352,6 @@ jobs:
             --env BRIEFING_OUTPUT_DIR=/runtime/reports \
             --env DAILY_BRIEFING_RUN_TIMEOUT=3600 \
             --env DOUYIN_TRANSCRIPT_PROVIDER=auto \
-            --env DOUYIN_LOCAL_ASR_ENGINE=faster-whisper \
-            --env DOUYIN_FASTER_WHISPER_COMPUTE_TYPE=int8 \
-            --env DOUYIN_WHISPER_THREADS=2 \
-            --env DOUYIN_WHISPER_MODEL=small \
             --env DOUYIN_MAX_CONCURRENT=1 \
             --shm-size=1g \
             --volume "$PWD/artifacts/briefing/data:/runtime/data" \
@@ -383,12 +386,10 @@ jobs:
           assert transcript_count == expected, (transcript_count, expected)
           allowed_sources = {
               "douyin_subtitle",
-              "faster-whisper",
-              "whisper",
               "verified_video_cache",
               "cloud-asr",
               "groq-whisper",
-              "openai-whisper",
+              "openai-asr",
               "siliconflow-sensevoice",
           }
           for blogger in douyin.get("bloggers", []):
@@ -452,10 +453,9 @@ jobs:
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
       DOUYIN_TRANSCRIPT_PROVIDER: auto
-      DOUYIN_LOCAL_ASR_ENGINE: faster-whisper
-      DOUYIN_FASTER_WHISPER_COMPUTE_TYPE: int8
-      DOUYIN_WHISPER_THREADS: "2"
-      DOUYIN_WHISPER_MODEL: small
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -475,7 +475,8 @@ jobs:
             DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
             DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
             DEEPSEEK_FALLBACK_MODEL \
-            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL; do
+            DOUYIN_ASR_BASE_URL DOUYIN_ASR_API_KEY DOUYIN_ASR_MODEL \
+            GROQ_API_KEY SILICONFLOW_API_KEY OPENAI_API_KEY; do
             value="${!name:-}"
             if [ -n "$value" ]; then
               printf '%s=%s\n' "$name" "$value" >> "$env_file"

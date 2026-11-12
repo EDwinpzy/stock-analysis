@@ -105,6 +105,12 @@ def fingerprint(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
 
 
+def _secret_label(value: Any) -> str:
+    if isinstance(value, list):
+        return " / ".join(str(name) for name in value) or "-"
+    return str(value or "-")
+
+
 def is_secret_name(name: str) -> bool:
     return bool(SECRET_NAME_RE.search(name))
 
@@ -313,6 +319,42 @@ def evaluate_env_item(
     return result
 
 
+def evaluate_any_env_item(
+    item: Mapping[str, Any],
+    env_file: Mapping[str, str],
+    environ: Mapping[str, str],
+    *,
+    prefer_process: bool = True,
+) -> dict[str, Any]:
+    """Evaluate a group where at least one environment variable must be set."""
+
+    names = [str(name) for name in item.get("env", []) if str(name).strip()]
+    value, source = resolve_env(
+        names,
+        env_file,
+        environ,
+        prefer_process=prefer_process,
+    )
+    result: dict[str, Any] = {
+        "id": item.get("id"),
+        "label": item.get("label"),
+        "category": item.get("category"),
+        "state": "optional",
+        "detail": "",
+        "source": source,
+        "github_secret": item.get("github_secret"),
+        "required": bool(item.get("required")),
+    }
+    if value:
+        source_name = source.split(":", 1)[-1]
+        result["state"] = "ok"
+        result["detail"] = f"已配置 {source_name}；sha256:{fingerprint(value)}"
+    else:
+        result["state"] = "fail" if item.get("required") else "optional"
+        result["detail"] = "未配置任何一项：" + " / ".join(names)
+    return result
+
+
 def evaluate_item(
     item: Mapping[str, Any],
     env_file: Mapping[str, str],
@@ -332,6 +374,13 @@ def evaluate_item(
         )
     if kind == "env":
         return evaluate_env_item(
+            item,
+            env_file,
+            environ,
+            prefer_process=prefer_process,
+        )
+    if kind == "env_any":
+        return evaluate_any_env_item(
             item,
             env_file,
             environ,
@@ -387,15 +436,29 @@ def apply_github_state(
     secret = result.get("github_secret")
     if not secret:
         return
-    if secret not in github_names:
+    secret_names = [secret] if isinstance(secret, str) else [
+        str(name) for name in secret if str(name).strip()
+    ]
+    if not secret_names:
+        return
+    missing = [name for name in secret_names if name not in github_names]
+    if not missing:
+        result["detail"] = f"{result['detail']}；GitHub Secret 已存在"
+        return
+    if len(secret_names) > 1 and len(missing) < len(secret_names):
+        result["detail"] = f"{result['detail']}；GitHub Secret 至少一个已存在"
+        return
+    if missing:
         required = bool(result.get("required"))
         result["state"] = "fail" if required else (
             "warn" if result.get("state") == "ok" else "optional"
         )
         suffix = "缺失" if required else "缺失（可选）"
-        result["detail"] = f"{result['detail']}；GitHub Secret {secret} {suffix}"
-        return
-    result["detail"] = f"{result['detail']}；GitHub Secret 已存在"
+        result["detail"] = (
+            f"{result['detail']}；GitHub Secret "
+            + " / ".join(missing)
+            + f" {suffix}"
+        )
 
 
 def build_check_rows(
@@ -458,7 +521,7 @@ def render_table(rows: Sequence[Mapping[str, Any]], *, github_checked: bool) -> 
                 marks.get(str(row.get("state")), "?"),
                 str(row.get("label") or row.get("id") or ""),
                 str(row.get("source") or "未设置"),
-                str(row.get("github_secret") or "-"),
+                _secret_label(row.get("github_secret")),
                 str(row.get("detail") or ""),
             ]
         )
@@ -500,7 +563,7 @@ def render_markdown(rows: Sequence[Mapping[str, Any]], *, github_checked: bool) 
             str(row.get("detail") or ""),
         ]
         if github_checked:
-            cells.insert(3, str(row.get("github_secret") or "-"))
+            cells.insert(3, _secret_label(row.get("github_secret")))
         lines.append("| " + " | ".join(cell.replace("|", "\\|") for cell in cells) + " |")
     return "\n".join(lines)
 
@@ -531,6 +594,8 @@ def build_github_payload(
     env_file: Mapping[str, str],
     environ: Mapping[str, str],
 ) -> str | None:
+    if item.get("kind") == "env_any":
+        return None
     secret_name = item.get("github_secret")
     if not secret_name:
         return None
@@ -570,6 +635,8 @@ def sync_github(
         raise CredentialError("清单缺少 project.repository")
     updates: list[tuple[str, str]] = []
     for item in manifest.get("items", []):
+        if item.get("kind") == "env_any":
+            continue
         secret_name = _nonempty(item.get("github_secret"))
         if not secret_name or (only and secret_name not in only):
             continue

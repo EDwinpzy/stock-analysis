@@ -140,21 +140,6 @@ else
   "$VENV/bin/python" -m playwright install chromium
 fi
 
-export XDG_CACHE_HOME="$BASE/cache"
-export DOUYIN_WHISPER_MODEL="small"
-"$VENV/bin/python" - <<'PY'
-import os
-
-from faster_whisper import WhisperModel
-
-WhisperModel(
-    "small",
-    device="cpu",
-    compute_type="int8",
-    download_root=os.path.join(os.environ["XDG_CACHE_HOME"], "faster-whisper"),
-)
-PY
-
 rm -rf "$BASE/cache/pip"
 "$VENV/bin/python" -m pip cache purge || true
 

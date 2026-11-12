@@ -32,13 +32,6 @@ if [ -z "${HITHINK_FINANCE_API_KEY:-}" ]; then
     fi
 fi
 
-# The image carries the faster-whisper CTranslate2 model; the named home
-# volume does not. Copy it once so the first video does not need a download.
-if [ -d /opt/faster-whisper-cache ] && [ ! -e /runtime/home/.cache/faster-whisper ]; then
-    mkdir -p /runtime/home/.cache
-    cp -a /opt/faster-whisper-cache /runtime/home/.cache/faster-whisper
-fi
-
 model_template=/opt/daily-briefing-pro/models/sw_rotation_model
 model_runtime=/runtime/models/sw_rotation_model
 mkdir -p /runtime/models

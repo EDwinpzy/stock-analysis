@@ -180,22 +180,16 @@ sudo docker compose -f compose.yaml run --rm briefing \
   python scripts/run_all.py --date 2026-10-19 --preflight-only
 ```
 
-The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary credentials or Codex login, the configured Douyin transcription path (local Whisper or API key), TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
+The report checks Python dependencies, FFmpeg/Node, `hithink-finance` authentication and calendar access, AI-summary API credentials, the configured Douyin cloud ASR key, TGB/Douyin/Xueqiu cookies, sentiment-panel depth and dates, static rosters, node/rotation history, the rotation model inputs, and writable directories. It reports only credential source/status, never secret values. `run_all.py` writes the same report to `/runtime/data/preflight.json` and stops before collection when any blocker exists. A `--resume` run also validates every dated module and the daily quote before compilation starts.
 
 Compose sets `DOUYIN_TRANSCRIPT_PROVIDER=auto`. A generic ASR is used only
 when all of `DOUYIN_ASR_BASE_URL`, `DOUYIN_ASR_API_KEY` and
-`DOUYIN_ASR_MODEL` are set. It is tried before Groq/OpenAI/SiliconFlow, then
-the container's bundled Whisper remains an offline fallback. The bundled
-Whisper runs inside the cloud or Compose container and does not depend on the
-user's Windows machine. The text AI Relay is never treated as an audio
-endpoint. Because the container is limited to 1.5 CPU and 2GB memory,
-preflight warns when no audio service is configured. The warning does not
+`DOUYIN_ASR_MODEL` are set. It is tried before Groq/OpenAI/SiliconFlow. There
+is no local model fallback: the image contains no Whisper weights, torch,
+CTranslate2 or faster-whisper. Preflight fails when no cloud ASR credential is
+configured, and the scheduled-briefing gate refuses to start without one. The
+text AI Relay is never treated as an audio endpoint. A missing key cannot
 bypass the real-transcription requirement or allow title-only substitutes.
-
-The image bakes the `small` faster-whisper CTranslate2 checkpoint into `/opt/faster-whisper-cache`; the
-entrypoint copies it into the named runtime home on first start. This removes
-the build-time-only download gap that previously made the first cloud video
-transcription fail or take many minutes.
 
 ## Verify the reference report
 
@@ -373,12 +367,10 @@ The Fuyao REST contract uses `600519.SH`; `thsdk` uses `USHA600519`. The CLI acc
 The installed skill documents remain in `/opt/daily-briefing-pro/skills/`.
 `briefing --scheduled` runs the complete daily pipeline in the container. The
 OpenAI-compatible Relay is used only for textual semantic summaries; it is not
-an audio transcription endpoint. Audio must come from one of these real
-paths:
+an audio transcription endpoint. Cloud mode also disables the local Codex CLI
+summary fallback. Audio must come from one of these real paths:
 
 - a native Douyin subtitle, when the video actually exposes one;
-- `faster-whisper` / CTranslate2 CPU `int8` in the image, or the compatible
-  `openai-whisper` fallback;
 - an explicitly configured OpenAI-compatible audio ASR, Groq, OpenAI, or
   SiliconFlow endpoint.
 

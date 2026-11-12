@@ -60,6 +60,14 @@ class CodexSummaryTests(unittest.TestCase):
         self.assertTrue(available)
         self.assertEqual(source, 'api-key:openai')
 
+    def test_cloud_mode_never_uses_local_codex_cli(self):
+        with patch.dict(
+            os.environ,
+            {'DAILY_BRIEFING_CLOUD': '1', 'DAILY_BRIEFING_CODEX_FALLBACK': '1'},
+            clear=False,
+        ), patch.object(cli.shutil, 'which', return_value='codex'):
+            self.assertFalse(cli.codex_available())
+
     def test_api_summary_parses_fenced_json(self):
         response = SimpleNamespace(
             status_code=200,

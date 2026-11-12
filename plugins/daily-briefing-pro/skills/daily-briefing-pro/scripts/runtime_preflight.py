@@ -56,7 +56,6 @@ PANEL_COLUMNS = (
     "bomb_rate", "yday_limitup_ret", "yday_lianban_ret", "p12", "p23", "p3p",
     "board2", "board3", "board4p", "source",
 )
-WHISPER_MIN_BYTES = 50 * 1024 * 1024
 TRANSCRIPTION_KEY_BY_PROVIDER = {
     "cloud": "DOUYIN_ASR_API_KEY",
     "groq": "GROQ_API_KEY",
@@ -470,164 +469,79 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
     )
 
 
-def _module_available(name: str) -> bool:
-    try:
-        return importlib.util.find_spec(name) is not None
-    except (AttributeError, ImportError, ValueError):
-        return False
+ASR_CONFIG_HINT = (
+    "配置 GROQ_API_KEY、SILICONFLOW_API_KEY、OPENAI_API_KEY 之一，"
+    "或同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
+)
 
 
-def _whisper_cache_path(model_name: str, env: Mapping[str, str]) -> Path:
-    cache_home = str(env.get("XDG_CACHE_HOME") or "").strip()
-    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
-    return base / "whisper" / f"{model_name}.pt"
-
-
-def _faster_whisper_cache_root(env: Mapping[str, str]) -> Path:
-    configured = str(env.get("DOUYIN_FASTER_WHISPER_ROOT") or "").strip()
-    if configured:
-        return Path(configured).expanduser()
-    cache_home = str(env.get("XDG_CACHE_HOME") or "").strip()
-    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
-    return base / "faster-whisper"
-
-
-def _faster_whisper_ready(env: Mapping[str, str]) -> tuple[bool, str]:
-    """Verify the CTranslate2 runtime and the requested model artifact."""
-    if not (_module_available("faster_whisper") and _module_available("ctranslate2")):
-        return False, "faster-whisper/ctranslate2 未安装"
-    model_name = (
-        str(env.get("DOUYIN_FASTER_WHISPER_MODEL") or "").strip()
-        or str(env.get("DOUYIN_WHISPER_MODEL") or "small").strip()
-        or "small"
-    )
-    root = _faster_whisper_cache_root(env)
-    candidates = [
-        root / model_name / "model.bin",
-        root / f"models--Systran--faster-whisper-{model_name}" / "model.bin",
-    ]
-    artifact = next((path for path in candidates if path.is_file()), None)
-    if artifact is None:
-        artifact = next((
-            path for path in root.rglob("model.bin")
-            if model_name in path.as_posix()
-        ), None)
-    if artifact is None:
-        return False, f"faster-whisper 模型权重未下载: {root}"
-    if artifact.stat().st_size < WHISPER_MIN_BYTES:
-        return False, f"faster-whisper 模型权重不完整: {artifact} ({artifact.stat().st_size} bytes)"
-    return True, f"faster-whisper {model_name} 权重已就绪 ({artifact.stat().st_size / 1024 / 1024:.0f} MB)"
-
-
-def _whisper_ready(env: Mapping[str, str]) -> tuple[bool, str]:
-    """Verify both the Python packages and the actual model weights."""
-    faster_ready, faster_detail = _faster_whisper_ready(env)
-    if faster_ready:
-        return True, faster_detail
-    if not (_module_available("whisper") and _module_available("torch")):
-        return False, f"{faster_detail}；openai-whisper/torch 未安装"
-    try:
-        import torch  # noqa: F401
-    except Exception as exc:  # noqa: BLE001
-        return False, f"torch 导入失败 ({type(exc).__name__})"
-    model_name = str(env.get("DOUYIN_WHISPER_MODEL") or "small").strip() or "small"
-    path = _whisper_cache_path(model_name, env)
-    if not path.is_file():
-        return False, f"模型权重未下载: {path}"
-    if path.stat().st_size < WHISPER_MIN_BYTES:
-        return False, f"模型权重不完整: {path} ({path.stat().st_size} bytes)"
-    return True, f"{model_name} 权重已就绪 ({path.stat().st_size / 1024 / 1024:.0f} MB)"
+def _configured_asr_providers(env: Mapping[str, str]) -> list[str]:
+    configured = []
+    if all(
+        str(env.get(name) or "").strip()
+        for name in ("DOUYIN_ASR_BASE_URL", "DOUYIN_ASR_API_KEY", "DOUYIN_ASR_MODEL")
+    ):
+        configured.append("cloud")
+    for name, key_name in TRANSCRIPTION_KEY_BY_PROVIDER.items():
+        if name == "cloud":
+            continue
+        if str(env.get(key_name) or "").strip():
+            configured.append(name)
+    return configured
 
 
 def _check_transcription(env: Mapping[str, str]) -> Check:
     """Verify the configured Douyin transcription path before downloading video."""
-    provider = str(env.get("DOUYIN_TRANSCRIPT_PROVIDER") or "local").strip().lower()
-    cloud_runtime = str(env.get("DAILY_BRIEFING_CLOUD") or "") == "1"
-    supported = ("local", "auto", *TRANSCRIPTION_KEY_BY_PROVIDER)
+    provider = str(env.get("DOUYIN_TRANSCRIPT_PROVIDER") or "auto").strip().lower()
+    if provider in {"local", "whisper", "faster-whisper", "openai-whisper"}:
+        return _error(
+            "transcription",
+            "抖音转录",
+            "本地 ASR 已移除，抖音转录只允许云端 API",
+            ASR_CONFIG_HINT,
+        )
+    supported = ("auto", *TRANSCRIPTION_KEY_BY_PROVIDER)
     if provider not in supported:
         return _error(
             "transcription",
             "抖音转录",
             f"未知的 DOUYIN_TRANSCRIPT_PROVIDER={provider}",
-            "改为 local、auto、cloud、groq、openai 或 siliconflow",
+            "改为 auto、cloud、groq、openai 或 siliconflow",
         )
 
-    whisper_ready, whisper_detail = _whisper_ready(env)
-    cloud_missing = [
-        name
-        for name in (
-            "DOUYIN_ASR_BASE_URL",
-            "DOUYIN_ASR_API_KEY",
-            "DOUYIN_ASR_MODEL",
-        )
-        if not str(env.get(name) or "").strip()
-    ]
-    cloud_ready = not cloud_missing
-    cloud_detail = (
-        "通用云端 ASR 三项配置齐全"
-        if cloud_ready
-        else "通用云端 ASR 缺少 " + "、".join(cloud_missing)
-    )
-    configured = [
-        name for name, key in TRANSCRIPTION_KEY_BY_PROVIDER.items()
-        if name != "cloud" and str(env.get(key) or "").strip()
-    ]
-    if cloud_ready:
-        configured.insert(0, "cloud")
-    if provider == "local":
-        if whisper_ready:
-            if cloud_runtime:
-                return _warning(
-                    "transcription",
-                    "抖音转录",
-                    f"云端显式使用容器内置本地 Whisper（{whisper_detail}）；1.5 CPU / 2GB 限制下可能超时",
-                    "如已配置通用 ASR 或音频 API Key，改为 DOUYIN_TRANSCRIPT_PROVIDER=auto",
-                )
-            return _ok("transcription", "抖音转录", f"本地 Whisper（{whisper_detail}）")
-        return _error(
-            "transcription",
-            "抖音转录",
-            f"DOUYIN_TRANSCRIPT_PROVIDER=local，但{whisper_detail}",
-            "安装 faster-whisper 并预下载模型权重，或安装 openai-whisper 与 CPU torch，"
-            "或配置 DOUYIN_ASR_* / 专用音频转录 Key",
-        )
+    configured = _configured_asr_providers(env)
     if provider == "auto":
         if configured:
             return _ok("transcription", "抖音转录", f"API Key 可用: {', '.join(configured)}")
-        if whisper_ready:
-            if cloud_runtime:
-                return _warning(
-                    "transcription",
-                    "抖音转录",
-                    f"未配置通用/专用转录 API，将回退到 1.5 CPU 的容器内置本地 Whisper（{whisper_detail}），可能超时",
-                    "配置 DOUYIN_ASR_*，或 GROQ_API_KEY、OPENAI_API_KEY、SILICONFLOW_API_KEY",
-                )
-            return _ok("transcription", "抖音转录", f"未配置 API Key，将使用本地 Whisper（{whisper_detail}）")
         return _error(
             "transcription",
             "抖音转录",
-            f"未配置通用 ASR 或 Groq/OpenAI/SiliconFlow Key，且{whisper_detail}",
-            "安装 faster-whisper 并预下载模型，或安装 openai-whisper 与 CPU torch，"
-            "或配置 DOUYIN_ASR_* / 专用音频转录 Key",
+            "未配置任何云端 ASR Key",
+            ASR_CONFIG_HINT,
         )
 
-    key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
     if provider == "cloud":
-        if cloud_ready:
-            return _ok("transcription", "抖音转录", cloud_detail)
+        missing = [
+            name
+            for name in ("DOUYIN_ASR_BASE_URL", "DOUYIN_ASR_API_KEY", "DOUYIN_ASR_MODEL")
+            if not str(env.get(name) or "").strip()
+        ]
+        if not missing:
+            return _ok("transcription", "抖音转录", "通用云端 ASR 三项配置齐全")
         return _error(
             "transcription",
             "抖音转录",
-            f"DOUYIN_TRANSCRIPT_PROVIDER=cloud，但{cloud_detail}",
+            f"DOUYIN_TRANSCRIPT_PROVIDER=cloud，但缺少 " + "、".join(missing),
             "同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL",
         )
+    key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
     if str(env.get(key_name) or "").strip():
         return _ok("transcription", "抖音转录", f"{provider} API Key 可用")
     return _error(
         "transcription",
         "抖音转录",
         f"DOUYIN_TRANSCRIPT_PROVIDER={provider}，但 {key_name} 未配置",
-        f"在云端 secrets 中配置 {key_name}，或把 provider 改为 local/auto",
+        f"在云端 secrets 中配置 {key_name}，或把 provider 改为 auto",
     )
 
 

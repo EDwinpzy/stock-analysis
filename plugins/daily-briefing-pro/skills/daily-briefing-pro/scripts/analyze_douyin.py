@@ -7,21 +7,19 @@
 1. 解析分享链接 → 获取无水印视频地址、标题、作者、封面
 2. 下载视频 (MP4)
 3. 提取音频 (MP3)
-4. 语音转文字 (原生字幕优先；多API自动切换，无API Key时降级到本地faster-whisper/Whisper)
+4. 语音转文字 (原生字幕优先；无字幕时调用云端 ASR API，不在本机或容器内跑模型)
 
 用法:
-    python analyze_douyin.py <抖音分享链接> [--provider auto|local|groq|openai|siliconflow|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
+    python analyze_douyin.py <抖音分享链接> [--provider auto|groq|openai|siliconflow|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
 
 说明:
     --provider auto（默认）会优先使用抖音原生字幕；没有字幕时优先使用显式配置的
-    通用 OpenAI-compatible ASR，然后按 Groq → OpenAI → SiliconFlow →
-    容器内置 faster-whisper（兼容旧 Whisper）顺序尝试。
+    通用 OpenAI-compatible ASR，然后按 Groq → OpenAI → SiliconFlow 顺序尝试。
     通用 ASR 必须同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、
     DOUYIN_ASR_MODEL；文本 Relay 不能当作音频接口使用。
 """
 
 import asyncio
-import importlib.util
 import json
 import os
 import re
@@ -88,7 +86,7 @@ MOBILE_HEADERS = {
 DESKTOP_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 # 多种语音转文字 API 配置
-# auto 优先级：通用 ASR > Groq > OpenAI > SiliconFlow > 本地 faster-whisper
+# auto 优先级：通用 ASR > Groq > OpenAI > SiliconFlow
 
 TRANSCRIPT_PROVIDERS = {
     'groq': {
@@ -114,12 +112,6 @@ TRANSCRIPT_PROVIDERS = {
         'model': '',
         'env_key': 'DOUYIN_ASR_API_KEY',
         'description': 'OpenAI Compatible 云端 ASR'
-    },
-    'local': {
-        'api_base': None,
-        'model': 'small',
-        'env_key': None,
-        'description': '本地 faster-whisper（兼容旧 openai-whisper）'
     }
 }
 
@@ -906,112 +898,19 @@ def extract_text_from_audio_cloud(
             return text
 
 
-def _faster_whisper_cache_root() -> Path:
-    configured = os.environ.get("DOUYIN_FASTER_WHISPER_ROOT", "").strip()
-    if configured:
-        return Path(configured).expanduser()
-    cache_home = os.environ.get("XDG_CACHE_HOME", "").strip()
-    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
-    return base / "faster-whisper"
+ASR_CONFIG_HINT = (
+    "请配置 GROQ_API_KEY、SILICONFLOW_API_KEY、OPENAI_API_KEY 之一，"
+    "或同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、DOUYIN_ASR_MODEL"
+)
 
 
-def _local_cpu_threads() -> int:
-    try:
-        threads = int(os.environ.get("DOUYIN_WHISPER_THREADS", "4"))
-    except ValueError:
-        threads = 4
-    return max(1, min(4, threads, os.cpu_count() or 4))
-
-
-def extract_text_from_audio_faster_whisper(
-    audio_path: Path,
-    model_size: str | None = None,
-) -> str:
-    """Transcribe with CTranslate2 Whisper, avoiding torch and GPU needs."""
-    try:
-        from faster_whisper import WhisperModel
-    except ImportError as exc:
-        raise ImportError(
-            "请先安装 faster-whisper: pip install faster-whisper"
-        ) from exc
-
-    model_size = (
-        model_size
-        or os.environ.get("DOUYIN_FASTER_WHISPER_MODEL")
-        or os.environ.get("DOUYIN_WHISPER_MODEL")
-        or "small"
-    )
-    compute_type = os.environ.get("DOUYIN_FASTER_WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
-    cache_root = _faster_whisper_cache_root()
-    cache_root.mkdir(parents=True, exist_ok=True)
-    model = WhisperModel(
-        model_size,
-        device="cpu",
-        compute_type=compute_type,
-        download_root=str(cache_root),
-        cpu_threads=_local_cpu_threads(),
-        num_workers=1,
-    )
-    segments, _info = model.transcribe(
-        str(audio_path),
-        language="zh",
-        beam_size=5,
-        vad_filter=True,
-        condition_on_previous_text=False,
-    )
-    text = " ".join(
-        str(getattr(segment, "text", "") or "").strip()
-        for segment in segments
-        if str(getattr(segment, "text", "") or "").strip()
-    )
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def extract_text_from_audio_local(audio_path: Path, model_size: str | None = None) -> str:
-    """Use faster-whisper when available, with openai-whisper as compatibility fallback."""
-    engine = os.environ.get("DOUYIN_LOCAL_ASR_ENGINE", "auto").strip().lower() or "auto"
-    if engine in {"auto", "faster", "faster-whisper"}:
-        if importlib.util.find_spec("faster_whisper") is not None:
-            return extract_text_from_audio_faster_whisper(audio_path, model_size=model_size)
-        if engine in {"faster", "faster-whisper"}:
-            raise ImportError(
-                "DOUYIN_LOCAL_ASR_ENGINE=faster-whisper，但未安装 faster-whisper"
-            )
-    if engine not in {"auto", "whisper", "openai-whisper"}:
-        raise ValueError(
-            "DOUYIN_LOCAL_ASR_ENGINE 只能是 auto、faster-whisper 或 whisper"
-        )
-
-    model_size = model_size or os.environ.get("DOUYIN_WHISPER_MODEL", "small")
-    try:
-        import whisper
-        import torch
-    except ImportError as exc:
-        raise ImportError(
-            "本地 ASR 不可用：请安装 faster-whisper，或安装 openai-whisper 与 CPU torch"
-        ) from exc
-
-    # Bound CPU preprocessing/decoding threads on both CPU and CUDA runs.
-    # Parallel analyzer processes otherwise each inherit PyTorch's large
-    # machine-wide default and compete with the Whisper GPU workload.
-    torch.set_num_threads(_local_cpu_threads())
-    model = whisper.load_model(model_size)
-    # 财经口播里中英混说常见，显式指定语言可减少自动检测带来的漂移。
-    result = model.transcribe(str(audio_path), language="zh")
-    return result["text"]
-
-
-def _local_asr_source() -> str:
-    engine = os.environ.get("DOUYIN_LOCAL_ASR_ENGINE", "auto").strip().lower()
-    if engine in {"whisper", "openai-whisper"}:
-        return "whisper"
-    if engine in {"faster", "faster-whisper"}:
-        return "faster-whisper"
-    return (
-        "faster-whisper"
-        if importlib.util.find_spec("faster_whisper") is not None
-        else "whisper"
-    )
+def _provider_has_credentials(provider: str, api_key: str = "") -> bool:
+    if provider == "cloud":
+        return cloud_asr_config(api_key=api_key or "") is not None
+    if api_key:
+        return True
+    env_key = TRANSCRIPT_PROVIDERS[provider].get("env_key")
+    return bool(env_key and os.environ.get(str(env_key), "").strip())
 
 
 def extract_text_from_audio(
@@ -1025,7 +924,7 @@ def extract_text_from_audio(
     
     Args:
         audio_path: 音频文件路径
-        provider: 指定服务 ('cloud', 'groq', 'openai', 'siliconflow', 'local', 'auto')
+        provider: 指定服务 ('cloud', 'groq', 'openai', 'siliconflow', 'auto')
         api_key: API密钥 (可选，某些服务需要)
     
     Returns:
@@ -1033,14 +932,24 @@ def extract_text_from_audio(
     """
     import os
     
-    # 自动模式：按优先级尝试
+    provider = (provider or 'auto').strip().lower()
+    if provider in {'local', 'whisper', 'faster-whisper', 'openai-whisper'}:
+        raise ValueError(f"本地 ASR 已移除，抖音转录只走云端 API；{ASR_CONFIG_HINT}")
+
+    # 自动模式：只按已配置的云端 API 顺序尝试，不做任何本地推理。
     if provider == 'auto':
-        providers_order = []
-        if cloud_asr_config(api_key=api_key or ''):
-            providers_order.append('cloud')
-        providers_order.extend(['groq', 'openai', 'siliconflow', 'local'])
-    else:
+        providers_order = [
+            name for name in ('cloud', 'groq', 'openai', 'siliconflow')
+            if _provider_has_credentials(name, api_key)
+        ]
+        if not providers_order:
+            raise RuntimeError(f"未配置任何云端 ASR；{ASR_CONFIG_HINT}")
+    elif provider in TRANSCRIPT_PROVIDERS:
         providers_order = [provider]
+    else:
+        raise ValueError(
+            f"未知的转录服务 {provider}；可选 auto、cloud、groq、openai、siliconflow"
+        )
     
     errors = []
     
@@ -1063,7 +972,7 @@ def extract_text_from_audio(
                 if key:
                     print(f"  [转录] 使用 OpenAI Whisper...", file=sys.stderr)
                     text = extract_text_from_audio_openai(audio_path, key)
-                    return (text, "openai-whisper") if return_source else text
+                    return (text, "openai-asr") if return_source else text
                     
             elif prov == 'siliconflow':
                 key = api_key or os.environ.get('SILICONFLOW_API_KEY', '')
@@ -1071,19 +980,15 @@ def extract_text_from_audio(
                     print(f"  [转录] 使用 SiliconFlow SenseVoice...", file=sys.stderr)
                     text = extract_text_from_audio_siliconflow(audio_path, key)
                     return (text, "siliconflow-sensevoice") if return_source else text
-                    
-            elif prov == 'local':
-                print(f"  [转录] 使用本地 Whisper...", file=sys.stderr)
-                text = extract_text_from_audio_local(audio_path)
-                source = _local_asr_source()
-                return (text, source) if return_source else text
-                
+
         except Exception as e:
             errors.append(f"{prov}: {str(e)[:50]}")
             continue
-    
+
+    if not errors:
+        raise RuntimeError(f"未配置所选云端 ASR 的凭证；{ASR_CONFIG_HINT}")
     # 所有服务都失败
-    raise Exception(f"所有转录服务均失败: {'; '.join(errors)}")
+    raise RuntimeError(f"所有云端转录服务均失败: {'; '.join(errors)}")
 
 
 def format_video_info_dict(video_info: VideoInfo) -> dict:
@@ -1285,8 +1190,8 @@ async def main():
     parser = argparse.ArgumentParser(description="抖音视频内容解析工具 - 多API转录支持")
     parser.add_argument("url", help="抖音分享链接或视频链接")
     parser.add_argument("--provider", default="auto", 
-                        choices=['auto', 'cloud', 'groq', 'openai', 'siliconflow', 'local'],
-                        help="转录服务 (auto优先通用云端ASR, 再尝试专用API和容器Whisper)")
+                        choices=['auto', 'cloud', 'groq', 'openai', 'siliconflow'],
+                        help="云端转录服务 (auto 优先通用 ASR，再尝试 Groq/OpenAI/SiliconFlow)")
     parser.add_argument("--api-key", default="", help="API Key (可选，自动从环境变量读取)")
     parser.add_argument("--keep-files", action="store_true", help="保留下载的视频和音频文件")
     parser.add_argument("--output-dir", default="", help="输出目录 (保留文件到此目录)")

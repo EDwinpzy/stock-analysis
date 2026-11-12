@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 抖音博主观点抓取（每日简报Pro专用）
-使用 Playwright 拦截博主主页 API 获取最新视频，再用本地 Whisper / API 转录，
-未配置任何 API Key 时自动降级到本地 Whisper。
+使用 Playwright 拦截博主主页 API 获取最新视频，再用云端 ASR API 转录；
+不在本机或容器内运行任何语音模型。
 
 v3.5.5 改进（修复 create_time 缺失 + 只取今日 + 并发转录）：
 - 抖音列表 API 已不再返回 create_time，改为抓取详情页补全发布时间
 - 利用 min_cursor 快速判断博主今日是否更新，减少无效详情页请求
 - 只抓取博主主页中**今日发布**的视频，按北京时间（UTC+8）过滤
-- 转录改为**并发执行**，默认最多 3 条同时转录，避免本地 Whisper 资源耗尽
+- 转录改为**并发执行**，默认串行调用云端 ASR，避免触发供应商限流
 - 转录失败/为空时，自动用视频标题+话题标签兜底提取观点和标的
 - 扩大标的/板块关键词库，覆盖 A 股、港股、美股常见科技与消费标的
 - 输出新增 warning 字段标注哪些视频使用了兜底摘要
@@ -30,8 +30,7 @@ import env_config  # noqa: F401  注入本机凭证（~/.codex/daily-briefing.en
 from playwright.async_api import async_playwright
 from network_config import playwright_launch_options
 
-# 本地 Whisper 会为每个 analyzer 进程单独加载模型。8GB 显存机器上并发
-# 会让小模型同时争用 GPU，因此默认串行；用户可显式调到2，最大不超过2。
+# 云端 ASR 通常按账号限流；默认串行，用户可显式调到 2。
 def resolve_max_concurrent_transcripts(value: str | None = None) -> int:
     raw = value if value is not None else os.environ.get("DOUYIN_MAX_CONCURRENT", "1")
     try:
@@ -522,7 +521,7 @@ def summarize_with_deepseek(text: str) -> str:
     return ""
 
 
-def transcribe_video(video: str | dict, provider: str = "local") -> dict:
+def transcribe_video(video: str | dict, provider: str = "auto") -> dict:
     """调用 analyze_douyin.py 转录单个视频"""
     try:
         if isinstance(video, dict):
@@ -616,7 +615,7 @@ def get_video_transcript_with_fallback(video: dict) -> dict:
     title = video.get("title", "")
 
     cached = load_video_transcript(video)
-    data = cached or transcribe_video(video, os.environ.get("DOUYIN_TRANSCRIPT_PROVIDER", "local"))
+    data = cached or transcribe_video(video, os.environ.get("DOUYIN_TRANSCRIPT_PROVIDER", "auto"))
     title = _resolve_video_title(title, data)
     transcript = data.get("transcript", "") if isinstance(data, dict) else ""
 
@@ -651,7 +650,7 @@ def _video_cache_identity(video: dict) -> dict | None:
     if not match:
         return None
     return {'id': match.group(1), 'url': url, 'create_time': video.get('create_time'),
-            'model': os.environ.get('DOUYIN_WHISPER_MODEL', 'small'), 'version': 1}
+            'asr': os.environ.get('DOUYIN_TRANSCRIPT_PROVIDER', 'auto'), 'version': 2}
 
 
 def load_video_transcript(video: dict) -> dict | None:
@@ -666,7 +665,7 @@ def load_video_transcript(video: dict) -> dict | None:
         if not isinstance(data, dict) or not str(data.get('transcript') or '').strip() or data.get('warning') or data.get('error'):
             return None
         original_source = str(data.get('transcript_source') or '').strip()
-        # Keep the real producer (native subtitle, faster-whisper, etc.) intact
+        # Keep the real producer (native subtitle, cloud ASR, etc.) intact
         # for auditing.  Only legacy cache entries without provenance use the
         # generic cache label.
         source = original_source or 'verified_video_cache'

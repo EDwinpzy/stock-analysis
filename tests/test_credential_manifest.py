@@ -55,11 +55,13 @@ def _cookie_item() -> dict:
 
 def _manifest_env_names() -> set[str]:
     manifest = _manifest()
-    names = {
-        item["env"]
-        for item in manifest["items"]
-        if item.get("env")
-    }
+    names: set[str] = set()
+    for item in manifest["items"]:
+        raw = item.get("env")
+        if isinstance(raw, list):
+            names.update(str(name) for name in raw)
+        elif raw:
+            names.add(str(raw))
     for item in manifest["items"]:
         names.update(item.get("aliases", []))
     names.update(
@@ -84,11 +86,13 @@ def test_manifest_github_secrets_match_workflow():
     manifest = _manifest()
     workflow = (ROOT / manifest["project"]["workflow"]).read_text(encoding="utf-8")
     workflow_secrets = set(re.findall(r"secrets\.([A-Z0-9_]+)", workflow))
-    manifest_secrets = {
-        item["github_secret"]
-        for item in manifest["items"]
-        if item.get("github_secret")
-    }
+    manifest_secrets: set[str] = set()
+    for item in manifest["items"]:
+        raw = item.get("github_secret")
+        if isinstance(raw, list):
+            manifest_secrets.update(str(name) for name in raw)
+        elif raw:
+            manifest_secrets.add(str(raw))
     assert manifest_secrets == workflow_secrets
 
 

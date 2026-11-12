@@ -1,14 +1,11 @@
 from pathlib import Path
-import os
 import sys
 import tempfile
-from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import fetch_douyin as fetch
-import analyze_douyin as analyze
 
 
 class TranscriptCacheTests(unittest.TestCase):
@@ -37,20 +34,20 @@ class TranscriptCacheTests(unittest.TestCase):
     def test_cache_keeps_the_real_transcript_producer(self):
         fetch.save_video_transcript(
             self.video,
-            {'transcript': '真实转录文本', 'transcript_source': 'faster-whisper'},
+            {'transcript': '真实转录文本', 'transcript_source': 'cloud-asr'},
         )
 
         loaded = fetch.load_video_transcript(self.video)
 
-        self.assertEqual(loaded['transcript_source'], 'faster-whisper')
-        self.assertEqual(loaded['original_transcript_source'], 'faster-whisper')
+        self.assertEqual(loaded['transcript_source'], 'cloud-asr')
+        self.assertEqual(loaded['original_transcript_source'], 'cloud-asr')
         self.assertTrue(loaded['transcript_cache_hit'])
 
-    def test_daily_collector_defaults_to_local_even_with_cloud_keys(self):
+    def test_daily_collector_defaults_to_auto_even_with_cloud_keys(self):
         with patch.dict(fetch.os.environ, {'GROQ_API_KEY': 'unused-test-key'}, clear=True), \
              patch.object(fetch, 'transcribe_video', return_value={'transcript': '真实转录'}) as transcribe:
             fetch.get_video_transcript_with_fallback(self.video)
-        transcribe.assert_called_once_with(self.video, 'local')
+        transcribe.assert_called_once_with(self.video, 'auto')
 
     def test_different_publication_timestamp_cannot_reuse_cache(self):
         fetch.save_video_transcript(self.video, {'transcript': '真实转录文本'})
@@ -65,20 +62,6 @@ class TranscriptCacheTests(unittest.TestCase):
     def test_urls_cannot_escape_cache_directory(self):
         fetch.save_video_transcript({'url': '../../outside'}, {'transcript': 'text'})
         self.assertEqual(list(Path(self.temp.name).iterdir()), [])
-
-    def test_cpu_threads_are_bounded_without_changing_model(self):
-        model = Mock()
-        model.transcribe.return_value = {'text': '真实转录'}
-        whisper = SimpleNamespace(load_model=Mock(return_value=model))
-        torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False), set_num_threads=Mock())
-        with patch.dict(sys.modules, {'whisper': whisper, 'torch': torch}), \
-                patch.object(analyze.os, 'cpu_count', return_value=16), \
-                patch.dict(os.environ, {'DOUYIN_LOCAL_ASR_ENGINE': 'whisper'}):
-            self.assertEqual(analyze.extract_text_from_audio_local(Path('test.mp3'), 'small'), '真实转录')
-        torch.set_num_threads.assert_called_once_with(4)
-        whisper.load_model.assert_called_once_with('small')
-        model.transcribe.assert_called_once_with('test.mp3', language='zh')
-
 
 if __name__ == '__main__':
     unittest.main()
