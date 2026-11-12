@@ -70,6 +70,32 @@ def load_douyin_cookies() -> list[dict]:
         return []
 
 
+def _douyin_cookie_header() -> str:
+    """Build a request Cookie header without emitting cookie values."""
+    pairs = []
+    for cookie in load_douyin_cookies():
+        name = str(cookie.get("name") or "").strip()
+        value = str(cookie.get("value") or "").strip()
+        if not name or not value or any(char in name + value for char in "\r\n"):
+            continue
+        pairs.append(f"{name}={value}")
+    return "; ".join(pairs)
+
+
+def _detail_page_candidates(share_url: str, video_id: str) -> list[str]:
+    """Return stable, deduplicated detail-page entry points."""
+    candidates = []
+    if video_id:
+        candidates.extend([
+            f"https://www.douyin.com/share/video/{video_id}/",
+            f"https://m.douyin.com/share/video/{video_id}",
+            f"https://www.iesdouyin.com/share/video/{video_id}",
+            f"https://www.douyin.com/video/{video_id}",
+        ])
+    candidates.append(share_url)
+    return list(dict.fromkeys(item for item in candidates if item))
+
+
 async def new_douyin_context(browser, **kwargs):
     context = await browser.new_context(**kwargs)
     cookies = load_douyin_cookies()
@@ -512,13 +538,27 @@ async def _parse_douyin_with_browser(share_url: str, video_id: str) -> VideoInfo
         )
         try:
             errors = []
-            # The current mobile page often returns an empty shell. Desktop renders
-            # the detail endpoint and its aweme JSON reliably, so try it first.
-            desktop_url = f"https://www.douyin.com/video/{video_id}" if video_id else share_url
-            mobile_url = f"https://m.douyin.com/share/video/{video_id}" if video_id else share_url
+            # The public share page currently hydrates the aweme item even when
+            # www.douyin.com/video/<id> returns an empty application shell.
             browser_attempts = [
-                ("desktop", desktop_url, DESKTOP_USER_AGENT, {"width": 1280, "height": 900}),
-                ("mobile", mobile_url, MOBILE_HEADERS["User-Agent"], {"width": 390, "height": 844}),
+                (
+                    "share",
+                    _detail_page_candidates(share_url, video_id)[0],
+                    MOBILE_HEADERS["User-Agent"],
+                    {"width": 390, "height": 844},
+                ),
+                (
+                    "desktop",
+                    f"https://www.douyin.com/video/{video_id}" if video_id else share_url,
+                    DESKTOP_USER_AGENT,
+                    {"width": 1280, "height": 900},
+                ),
+                (
+                    "mobile",
+                    f"https://m.douyin.com/share/video/{video_id}" if video_id else share_url,
+                    MOBILE_HEADERS["User-Agent"],
+                    {"width": 390, "height": 844},
+                ),
             ]
             for label, target_url, user_agent, viewport in browser_attempts:
                 context = await new_douyin_context(
@@ -619,21 +659,15 @@ async def parse_douyin_share_url(share_text: str) -> VideoInfo:
     video_id = _extract_video_id(share_url)
     http_errors = []
 
-    # The same video is exposed through several entry points. During upstream
-    # incidents one host can return 503 while another still serves the SSR item.
-    endpoint_candidates = [share_url]
-    if video_id:
-        endpoint_candidates.extend([
-            f"https://www.douyin.com/video/{video_id}",
-            f"https://www.iesdouyin.com/share/video/{video_id}",
-            f"https://m.douyin.com/share/video/{video_id}",
-        ])
-    endpoints = []
-    seen_endpoints = set()
-    for endpoint in endpoint_candidates:
-        if endpoint and endpoint not in seen_endpoints:
-            seen_endpoints.add(endpoint)
-            endpoints.append(endpoint)
+    # The direct /video/ page can be an empty shell. Public share pages still
+    # serve the SSR item, so try them before the direct page.
+    endpoints = _detail_page_candidates(share_url, video_id)
+    headers = dict(MOBILE_HEADERS)
+    cookie_header = _douyin_cookie_header()
+    if cookie_header:
+        headers["Cookie"] = cookie_header
+    headers["Referer"] = "https://www.douyin.com/"
+    headers["Accept-Language"] = "zh-CN,zh;q=0.9"
 
     # Two bounded rounds give transient 503s a chance to recover without
     # multiplying every request into an unbounded retry loop.
@@ -643,7 +677,7 @@ async def parse_douyin_share_url(share_text: str) -> VideoInfo:
         for round_index in range(2):
             for endpoint in endpoints:
                 try:
-                    response = await client.get(endpoint, headers=MOBILE_HEADERS)
+                    response = await client.get(endpoint, headers=headers)
                     if response.status_code >= 500 or response.status_code == 429:
                         http_errors.append(f"{endpoint}: HTTP {response.status_code}")
                         continue

@@ -350,7 +350,7 @@ jobs:
             --env DEEPSEEK_MODEL \
             --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
             --env BRIEFING_OUTPUT_DIR=/runtime/reports \
-            --env DAILY_BRIEFING_RUN_TIMEOUT=3600 \
+            --env DAILY_BRIEFING_RUN_TIMEOUT=4800 \
             --env DOUYIN_TRANSCRIPT_PROVIDER=auto \
             --env DOUYIN_MAX_CONCURRENT=1 \
             --shm-size=1g \
@@ -425,6 +425,10 @@ jobs:
             --volume "$PWD/artifacts/replay/reports:/runtime/reports" \
             "$IMAGE" \
             sh /opt/daily-briefing-pro/deploy/cloud/verify-fixed-replay.sh 2026-11-11
+
+      - name: Normalize report evidence permissions
+        if: always()
+        run: sudo chmod -R a+rX artifacts || true
 
       - name: Upload report evidence
         if: always()
@@ -666,6 +670,10 @@ jobs:
             --volume "$PWD/artifacts-arm64/replay/reports:/runtime/reports" \
             "$IMAGE" \
             sh /opt/daily-briefing-pro/deploy/cloud/verify-fixed-replay.sh 2026-11-11
+
+      - name: Normalize ARM64 evidence permissions
+        if: always()
+        run: sudo chmod -R a+rX artifacts-arm64 || true
 
       - name: Upload ARM64 evidence
         if: always()

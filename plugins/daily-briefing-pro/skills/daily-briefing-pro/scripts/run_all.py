@@ -270,7 +270,10 @@ def run_group_b(date: str) -> dict:
         # Includes both platform collection (up to 420s) and the bounded
         # parallel semantic review (840s). Keep the outer budget above their
         # sum so completed/checkpointed batches are not killed prematurely.
-        ("fetch_sentiment_survey.py", ["--date", get_recent_trade_date(date)], 1300),
+        # TGB and Xueqiu each crawl 50 accounts before the bounded semantic
+        # stage. Keep this above their combined collection and AI windows;
+        # otherwise a slow platform page silently removes a required section.
+        ("fetch_sentiment_survey.py", ["--date", get_recent_trade_date(date)], 2400),
     ]
 
     results = {}

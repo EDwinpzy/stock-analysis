@@ -57,6 +57,31 @@ class DouyinCookieTests(unittest.TestCase):
 
             self.assertEqual([cookie["name"] for cookie in context.cookies], ["sessionid"])
 
+    def test_http_cookie_header_uses_runtime_cookie_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            cookie_path = Path(temp) / "douyin_cookies.json"
+            cookie_path.write_text(json.dumps({"cookies": [
+                {"name": "s_v_web_id", "value": "web-id", "domain": ".douyin.com", "path": "/"},
+                {"name": "MONITOR_WEB_ID", "value": "monitor-id", "domain": ".douyin.com", "path": "/"},
+            ]}), encoding="utf-8")
+
+            with patch.object(analyze_douyin, "COOKIE_PATH", cookie_path):
+                header = analyze_douyin._douyin_cookie_header()
+
+            self.assertEqual(header, "s_v_web_id=web-id; MONITOR_WEB_ID=monitor-id")
+
+    def test_detail_page_candidates_prefer_public_share_pages(self):
+        candidates = analyze_douyin._detail_page_candidates(
+            "https://m.douyin.com/share/video/123456789012",
+            "123456789012",
+        )
+
+        self.assertEqual(candidates[0], "https://www.douyin.com/share/video/123456789012/")
+        self.assertIn("https://www.iesdouyin.com/share/video/123456789012", candidates)
+        self.assertIn("https://m.douyin.com/share/video/123456789012", candidates)
+        self.assertEqual(candidates[-1], "https://www.douyin.com/video/123456789012")
+        self.assertEqual(len(candidates), len(set(candidates)))
+
 
 class DouyinSubprocessTests(unittest.TestCase):
     def test_transcription_uses_active_python_and_parses_json(self):
