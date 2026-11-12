@@ -430,47 +430,57 @@ def summarize_with_deepseek(text: str) -> str:
         return ""
     base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2")
     model = os.environ.get("DEEPSEEK_MODEL", "xopqwen35397b")
+    models = []
+    for raw in (model, os.environ.get("DEEPSEEK_FALLBACK_MODEL", "")):
+        for part in str(raw).split(","):
+            name = part.strip()
+            if name and name not in models:
+                models.append(name)
     import httpx
     import time as _time
     last_error = ""
-    for attempt, backoff in enumerate((0, 4, 12), start=1):
-        if backoff:
-            _time.sleep(backoff)
-        try:
-            resp = httpx.post(
-                f"{base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {key}"},
-                json={
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": (
-                            "你是财经短视频观点提炼助手。输入是抖音财经博主口播的语音转写，"
-                            "常见同音错字（例如“偷看”=token、“米子”=小米、“存主”=存储、"
-                            "“布恩斯坦”=伯恩斯坦）。请在内部按上下文纠正转写错误，"
-                            "只输出提炼后的结论：1-2句话，包含明确判断（看多/看空/中性）、"
-                            "核心逻辑，涉及的标的/板块用【】标注，80字以内。"
-                            "禁止输出纠错清单、错字对照，或用“内容杂乱/无法提炼”之类套话敷衍。"
-                            "只能使用转录里确实出现过的标的与板块，不要补充原文没提到的个股。"
-                            "若通篇确实没有可辨识的投资观点，只回复“无明确观点”。")},
-                        {"role": "user", "content": text}
-                    ],
-                    "temperature": 0.3
-                },
-                timeout=60
-            )
-            resp.raise_for_status()
-            content = resp.json()["choices"][0]["message"]["content"].strip()
-            if content:
-                return content
-            last_error = "返回内容为空"
-        except Exception as e:
-            last_error = f"{type(e).__name__}: {e}"
-            last_error = last_error.splitlines()[0][:120]
-            # 4xx 多为参数/鉴权问题，重试没有意义
-            status = getattr(getattr(e, "response", None), "status_code", None)
-            if status and 400 <= status < 500:
-                break
-            print(f"  DeepSeek总结第{attempt}次失败: {last_error}", file=sys.stderr)
+    for model_name in models:
+        for attempt, backoff in enumerate((0, 4, 12), start=1):
+            if backoff:
+                _time.sleep(backoff)
+            try:
+                resp = httpx.post(
+                    f"{base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {key}"},
+                    json={
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": (
+                                "你是财经短视频观点提炼助手。输入是抖音财经博主口播的语音转写，"
+                                "常见同音错字（例如“偷看”=token、“米子”=小米、“存主”=存储、"
+                                "“布恩斯坦”=伯恩斯坦）。请在内部按上下文纠正转写错误，"
+                                "只输出提炼后的结论：1-2句话，包含明确判断（看多/看空/中性）、"
+                                "核心逻辑，涉及的标的/板块用【】标注，80字以内。"
+                                "禁止输出纠错清单、错字对照，或用“内容杂乱/无法提炼”之类套话敷衍。"
+                                "只能使用转录里确实出现过的标的与板块，不要补充原文没提到的个股。"
+                                "若通篇确实没有可辨识的投资观点，只回复“无明确观点”。")},
+                            {"role": "user", "content": text}
+                        ],
+                        "temperature": 0.3
+                    },
+                    timeout=60
+                )
+                resp.raise_for_status()
+                content = resp.json()["choices"][0]["message"]["content"].strip()
+                if content:
+                    return content
+                last_error = "返回内容为空"
+            except Exception as e:
+                last_error = f"{type(e).__name__}: {e}"
+                last_error = last_error.splitlines()[0][:120]
+                status = getattr(getattr(e, "response", None), "status_code", None)
+                # A missing model can succeed on the configured fallback.
+                if status == 404:
+                    break
+                # 4xx 多为参数/鉴权问题，重试没有意义
+                if status and 400 <= status < 500:
+                    break
+                print(f"  DeepSeek总结第{attempt}次失败: {last_error}", file=sys.stderr)
     if last_error:
         print(f"  DeepSeek总结失败: {last_error}", file=sys.stderr)
     return ""

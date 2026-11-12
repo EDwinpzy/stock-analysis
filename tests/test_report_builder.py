@@ -18,10 +18,22 @@ def stock_fixture() -> dict:
             "name": "贵州茅台",
             "price": 1402.3,
             "change_pct": -2.55,
+            "change_amt": -36.7,
+            "volume": 3000000,
+            "amount": 4500000000,
             "market_cap": 1752989400000.0,
+            "circulating_cap": 1752989400000.0,
             "pe_ttm": 21.34,
+            "amplitude": 1.63,
             "main_net_inflow": -227229380.0,
+            "main_net_pct": -0.0015,
             "turnover_rate": 0.32,
+            "high": 1420.0,
+            "low": 1390.0,
+            "open_change": 0.2,
+            "prev_close": 1439.0,
+            "limit_up": 1582.9,
+            "limit_down": 1295.1,
             "5d_change": -3.05,
         },
         "finance_raw": {
@@ -37,9 +49,16 @@ def stock_fixture() -> dict:
             "归属于母公司所有者的净利润[20231231]": 74730000000,
             "归属于母公司所有者的净利润[20241231]": 86230000000,
             "归属于母公司所有者的净利润[20251231]": 90000000000,
+            "销售毛利率[20231231]": 91.0,
+            "销售毛利率[20241231]": 91.1,
             "销售毛利率[20251231]": 91.2,
+            "净资产收益率[20231231]": 29.0,
+            "净资产收益率[20241231]": 29.8,
             "净资产收益率[20251231]": 30.2,
+            "资产负债率[20231231]": 19.0,
+            "资产负债率[20241231]": 19.8,
             "资产负债率[20251231]": 20.1,
+            "市净率": 8.1,
         },
         "peers_raw": [
             {
@@ -52,14 +71,33 @@ def stock_fixture() -> dict:
                 "净资产收益率": 20.0,
             }
         ],
-        "holders_raw": {"前十大流通股东名称": "股东甲||股东乙"},
+        "holders_raw": {
+            "前十大流通股东名称": "股东甲||股东乙",
+            "机构持股占流通股比例[20251231]": 70.0,
+        },
         "big_orders": [{"总金额": 1000000, "成交方向": "1"}],
         "news": [{"Time": 1790006400, "Title": "公司公告"}],
         "product_raw": {"主营产品名称": "茅台酒||系列酒"},
-        "chip_structure": {"concentration": {"前十大股东持股比例合计": 58.0}},
+        "chip_structure": {
+            "holder_count_trend": {
+                "股东户数[20250630]": 1000,
+                "股东户数[20251231]": 900,
+            },
+            "share_structure": {
+                "总股本[20251231]": 100000000,
+                "流通a股[20251231]": 90000000,
+                "限售a股[20251231]": 10000000,
+            },
+            "unlock_data": {"未来解禁安排": "无公开待解禁记录"},
+            "concentration": {"前十大股东持股比例合计": 58.0},
+            "margin": {"融资余额[20251231]": 1000000},
+        },
         "blogger_opinions": {"tgb": [{"text": "样本观点"}]},
         "barrier_data": {
-            "rd_raw": {"研发投入占比": 5.0},
+            "rd_raw": {
+                "研发投入占营业收入的比重[20251231]": 5.0,
+                "专利数量合计[20251231]": 100,
+            },
             "customer_concentration": {"value": "10.1", "period": "20251231"},
             "supplier_concentration": {"value": "35.43", "period": "20241231"},
         },
@@ -309,7 +347,8 @@ def test_generated_industry_report_passes_source_fact_gate(tmp_path):
     html = path.read_text(encoding="utf-8")
     assert "风险提示：" in html
     assert "风险观察" in html
-    assert html.count("观察方式") == 1
+    assert "<th>观察方式</th>" in html
+    assert 'data-label="观察方式"' in html
 
 
 def test_report_builder_cli_writes_verified_stock_report(tmp_path, capsys):

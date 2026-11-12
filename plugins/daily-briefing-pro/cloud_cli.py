@@ -35,6 +35,13 @@ for stream in (sys.stdout, sys.stderr):
 
 PLUGIN_ROOT = Path(__file__).resolve().parent
 SKILLS = PLUGIN_ROOT / "skills"
+DAILY_SCRIPTS = SKILLS / "daily-briefing-pro" / "scripts"
+if str(DAILY_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(DAILY_SCRIPTS))
+try:
+    import env_config  # noqa: F401  Load the local credential file when present.
+except ImportError:
+    pass
 MARKET = SKILLS / "market-query" / "scripts" / "market_query.py"
 STOCK = SKILLS / "stock-analysis" / "scripts" / "fetch_stock_data.py"
 INDUSTRY = SKILLS / "industry-analysis" / "scripts" / "fetch_industry_data.py"

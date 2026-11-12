@@ -565,6 +565,15 @@ tr:hover td{background:rgba(140,28,19,.035)}
 .sh .meta{flex-basis:100%;margin-left:0;line-height:1.5}
 .dy{display:block}
 .dyt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;white-space:normal;padding-bottom:6px}
+table{display:block;width:100%}
+table colgroup{display:none}
+table thead{display:none}
+table tbody{display:block}
+table tr{display:block;border-bottom:1px solid rgba(27,25,21,.12);padding:4px 0}
+table td{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;width:auto!important;padding:6px 12px;border-bottom:none;font-size:12.5px}
+table td::before{content:attr(data-label);color:var(--t3);font-size:10.5px;font-weight:700;letter-spacing:.06em;line-height:1.7}
+table td[colspan]{display:block;padding:10px 12px;text-align:center}
+table td[colspan]::before{content:none}
 }
 </style>
 </head>

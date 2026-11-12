@@ -58,7 +58,11 @@ class RunAllRegressionTests(unittest.TestCase):
             {"title": "研报甲", "logic": "已缓存的核验逻辑"},
             {"title": "研报乙", "logic": ""},
         ]
-        with patch.dict(os.environ, {'DEEPSEEK_API_KEY': '', 'OPENAI_API_KEY': ''}), \
+        with patch.dict(os.environ, {
+            'DAILY_BRIEFING_AI_API_KEY': '',
+            'DEEPSEEK_API_KEY': '',
+            'OPENAI_API_KEY': '',
+        }), \
              patch.object(build_briefing, 'summarize_tasks', return_value=['新生成逻辑']) as summarize:
             results = build_briefing.ai_summarize_yanbao_parallel(reports)
         self.assertEqual(results, ['已缓存的核验逻辑', '新生成逻辑'])
@@ -98,7 +102,11 @@ class RunAllRegressionTests(unittest.TestCase):
             "fetch_douyin.py": {"bloggers": [{"videos": [{"transcript": "真实转录"}]}]},
         }
 
-        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "", "OPENAI_API_KEY": ""}):
+        with patch.dict(os.environ, {
+            "DAILY_BRIEFING_AI_API_KEY": "",
+            "DEEPSEEK_API_KEY": "",
+            "OPENAI_API_KEY": "",
+        }):
             self.assertTrue(run_all.required_modules_ready(results, target_date))
 
     def test_missing_compiler_is_reported_by_preflight(self):

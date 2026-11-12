@@ -21,6 +21,22 @@ INDUSTRY_CSS = r"""
 *{margin:0;padding:0;box-sizing:border-box}body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.75;font-size:13.5px;font-variant-numeric:tabular-nums}.c{max-width:1280px;margin:0 auto;padding:20px 24px 40px}.np-mast{margin:4px 0 20px;padding:14px 0 11px;border-top:1px solid var(--ink);border-bottom:3px double var(--ink);text-align:center}.np-mast-kicker{font-size:11px;font-weight:700;letter-spacing:.3em;color:var(--a);margin-bottom:6px}.np-mast-title{font-size:44px;line-height:1.12;font-weight:900;letter-spacing:.2em;text-indent:.2em}.np-mast-sub{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--t2)}.g{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}.sec{background:var(--bg2);border:1px solid var(--bd);border-top:2px solid var(--ink);overflow:hidden}.sh{display:flex;align-items:center;gap:8px;padding:11px 16px 10px;border-bottom:1px solid var(--ink)}.sh .icon{font-size:12px;color:var(--a)}.sh h2{font-size:15.5px;font-weight:700;letter-spacing:.03em}.sb{padding:14px 16px}.sc{margin-bottom:18px}.sc:last-child{margin-bottom:0}.sch{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-left:3px solid var(--a);margin-bottom:12px}.sch h3{font-size:13.5px;font-weight:700}.sch .tag{font-size:10.5px;font-weight:700;padding:2px 8px;border:1px solid var(--bd2);color:var(--t2);margin-left:auto}.kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}.kvi{background:var(--bg3);border:1px solid var(--bd);border-top:2px solid var(--ink);padding:12px 14px}.kvk{font-size:11px;color:var(--t3);margin-bottom:4px;letter-spacing:.08em}.kvv{font-size:21px;font-weight:700;line-height:1.2}.kvv.up{color:var(--up)}.kvv.dn{color:var(--dn)}.kvv.gold{color:var(--gld)}.kvsub{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.55}.dt{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px}.dt th{padding:8px 10px;text-align:left;font-weight:700;color:var(--t3);font-size:11px;border-bottom:1px solid var(--ink);white-space:nowrap}.dt td{padding:7px 10px;border-bottom:1px solid rgba(27,25,21,.10);color:var(--t2);line-height:1.5}.dt tr:hover td{background:rgba(140,28,19,.045)}.up{color:var(--up);font-weight:600}.dn{color:var(--dn)}.gold{color:var(--gld);font-weight:700}.lb{border:1px solid var(--bd);border-left:3px solid var(--a);background:rgba(140,28,19,.05);padding:14px 18px;margin-bottom:16px}.lb.warn{border-left-color:var(--dn);background:rgba(28,107,70,.05)}.lb .li{padding:4px 0;display:flex;gap:8px}.lb .li::before{content:'—';color:var(--a);font-weight:700}.cf{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.cfi{flex:1 1 150px;background:var(--bg3);border:1px solid var(--bd);border-top:2px solid var(--ink);padding:12px;text-align:center}.cfn{font-weight:700;margin-bottom:4px}.cfd{font-size:11px;color:var(--t3)}.src{font-size:11px;color:var(--t3);margin:8px 0 16px}.ft{text-align:center;padding:28px 0 12px;font-size:11.5px;color:var(--t3);border-top:1px solid var(--ink);margin-top:24px;line-height:2}@media(max-width:960px){.c{padding:14px}.np-mast-title{font-size:29px}.kv{grid-template-columns:repeat(2,minmax(0,1fr))}.dt{display:block;overflow-x:auto}}
 """
 
+MOBILE_TABLE_CSS = r"""
+@media(max-width:768px){
+.dt{display:block;width:100%;border-collapse:collapse}
+.dt thead{display:none}
+.dt tbody{display:block}
+.dt tr{display:block;border-bottom:1px solid var(--bd);padding:4px 0}
+.dt td{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;width:auto!important;padding:6px 10px;border-bottom:none;font-size:12px}
+.dt td::before{content:attr(data-label);color:var(--t3);font-size:10.5px;font-weight:700;letter-spacing:.05em;line-height:1.6}
+.dt td[colspan]{display:block;text-align:center}
+.dt td[colspan]::before{content:none}
+.dt.kv tr{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;padding:6px 10px}
+.dt.kv td{display:block;padding:0;border:none}
+.dt.kv td::before{content:none}
+}
+"""
+
 
 def esc(value: Any) -> str:
     return html.escape("" if value is None else str(value), quote=True)
@@ -158,12 +174,19 @@ def table(headers: Iterable[Any], rows: Iterable[Iterable[Any]], empty: str = "�
     body_rows = [tuple(row) for row in rows]
     if body_rows:
         body = "".join(
-            "<tr>" + "".join(f"<td>{esc(item)}</td>" for item in row) + "</tr>"
+            "<tr>"
+            + "".join(
+                f'<td data-label="{esc(header_tuple[index]) if index < len(header_tuple) else ""}">'
+                f"{esc(item)}</td>"
+                for index, item in enumerate(row)
+            )
+            + "</tr>"
             for row in body_rows
         )
     else:
         body = f'<tr><td colspan="{len(header_tuple)}">{esc(empty)}</td></tr>'
-    return f'<table class="dt"><thead><tr>{header_html}</tr></thead><tbody>{body}</tbody></table>'
+    css_class = "dt kv" if header_tuple == ("项目", "内容") else "dt"
+    return f'<table class="{css_class}"><thead><tr>{header_html}</tr></thead><tbody>{body}</tbody></table>'
 
 
 def kv_grid(items: Iterable[tuple[str, str, str, str]]) -> str:
@@ -215,7 +238,7 @@ def stock_css() -> str:
 
 
 def document(kind: str, title: str, body: str) -> str:
-    css = stock_css() if kind == "stock" else INDUSTRY_CSS
+    css = (stock_css() if kind == "stock" else INDUSTRY_CSS) + MOBILE_TABLE_CSS
     return (
         '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1.0">'

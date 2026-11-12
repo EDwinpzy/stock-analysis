@@ -1566,6 +1566,15 @@ def main():
                     result["holders_error"] = getattr(ths, "holders_error", "")
                     result["peers_source"] = getattr(ths, "peers_source", "")
                     result["peers_error"] = getattr(ths, "peers_error", "")
+                    result["quote_fill_sources"] = list(
+                        getattr(ths, "quote_fill_sources", []) or []
+                    )
+                    result["chip_source"] = "+".join(
+                        getattr(ths, "chip_sources", []) or []
+                    )
+                    result["barrier_source"] = "+".join(
+                        getattr(ths, "barrier_sources", []) or []
+                    )
                 result["runtime"] = {
                     "platform": sys.platform,
                     "python": sys.version.split()[0],
@@ -1578,7 +1587,7 @@ def main():
             with open(output_file, "w", encoding="utf-8") as handle:
                 json.dump(result, handle, ensure_ascii=False, default=str)
 
-            print(output_file)
+        print(output_file, flush=True)
 
     except Exception as exc:
         elapsed = time.time() - start_time
@@ -1596,7 +1605,7 @@ def main():
                 json.dump(error_result, handle, ensure_ascii=False, default=str)
         except OSError:
             print(json.dumps(error_result, ensure_ascii=False), file=sys.stderr)
-        print(output_file)
+        print(output_file, flush=True)
         sys.exit(1)
 
 

@@ -11,6 +11,27 @@ import codex_summary_cli as cli
 
 
 class CodexSummaryTests(unittest.TestCase):
+    def setUp(self):
+        self._env_isolation = patch.dict(
+            os.environ,
+            {
+                'DAILY_BRIEFING_AI_API_KEY': '',
+                'DAILY_BRIEFING_AI_BASE_URL': '',
+                'DAILY_BRIEFING_AI_MODEL': '',
+                'DAILY_BRIEFING_AI_FALLBACK_MODEL': '',
+                'DEEPSEEK_API_KEY': '',
+                'DEEPSEEK_BASE_URL': '',
+                'DEEPSEEK_MODEL': '',
+                'DEEPSEEK_FALLBACK_MODEL': '',
+                'OPENAI_API_KEY': '',
+                'OPENAI_BASE_URL': '',
+                'OPENAI_MODEL': '',
+            },
+            clear=False,
+        )
+        self._env_isolation.start()
+        self.addCleanup(self._env_isolation.stop)
+
     def test_api_provider_configuration_prefers_generic_endpoint(self):
         config = cli.api_summary_config({
             'DAILY_BRIEFING_AI_API_KEY': 'test-generic-key',
@@ -60,6 +81,34 @@ class CodexSummaryTests(unittest.TestCase):
         self.assertEqual(post.call_args.args[0], 'https://summary.example/v1/chat/completions')
         self.assertEqual(post.call_args.kwargs['json']['model'], 'summary-model')
 
+    def test_api_summary_uses_fallback_model_after_404(self):
+        responses = [
+            SimpleNamespace(status_code=404, text='missing model'),
+            SimpleNamespace(
+                status_code=200,
+                json=lambda: {'choices': [{'message': {'content': '可用'}}]},
+            ),
+        ]
+        models = []
+
+        def fake_post(*args, **kwargs):
+            models.append(kwargs['json']['model'])
+            return responses[len(models) - 1]
+
+        with patch.dict(
+            os.environ,
+            {
+                'DAILY_BRIEFING_AI_API_KEY': 'test-key',
+                'DAILY_BRIEFING_AI_BASE_URL': 'https://summary.example/v1',
+                'DAILY_BRIEFING_AI_MODEL': 'summary-model',
+                'DAILY_BRIEFING_AI_FALLBACK_MODEL': 'fallback-model',
+            },
+            clear=False,
+        ), patch.object(cli.httpx, 'post', side_effect=fake_post):
+            answer = cli.call_api_text('输入')
+        self.assertEqual(answer, '可用')
+        self.assertEqual(models, ['summary-model', 'fallback-model'])
+
     def test_api_auth_failure_does_not_echo_response_body(self):
         response = SimpleNamespace(status_code=401, text='private upstream response')
         with patch.dict(
@@ -87,6 +136,22 @@ class CodexSummaryTests(unittest.TestCase):
     def test_duplicate_or_missing_results_are_not_delivered(self):
         with patch.object(cli, 'call_codex_json', return_value={'summaries': [{'index': 0, 'summary': 'A'}, {'index': 0, 'summary': 'B'}]}):
             self.assertEqual(cli.summarize_tasks([('原文甲', ''), ('原文乙', '')]), ['', ''])
+
+    def test_invalid_batch_is_split_to_keep_valid_items(self):
+        calls = []
+
+        def fake_batch(batch, schema):
+            calls.append([index for index, _, _ in batch])
+            if len(batch) > 1:
+                raise cli.SummaryBatchError('Incomplete summary batch')
+            index = batch[0][0]
+            return {index: f'摘要{index}'}
+
+        with patch.object(cli, '_summarize_batch', side_effect=fake_batch):
+            result = cli.summarize_tasks([('原文甲', ''), ('原文乙', '')])
+
+        self.assertEqual(result, ['摘要0', '摘要1'])
+        self.assertEqual(calls, [[0, 1], [0], [1]])
 
     def test_cli_is_ephemeral_schema_bound_and_does_not_log_source(self):
         def fake_run(command, input_text, **kwargs):

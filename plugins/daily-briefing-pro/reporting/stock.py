@@ -296,7 +296,9 @@ def build_stock_report(data: dict[str, Any]) -> str:
         for item in order_news
     ]
 
-    direction_legend = data.get("big_orders_direction_legend") if isinstance(data.get("big_orders_direction_legend"), dict) else {}
+    direction_legend = {"1": "买入", "-1": "卖出"}
+    if isinstance(data.get("big_orders_direction_legend"), dict):
+        direction_legend.update(data["big_orders_direction_legend"])
     buy_amount = 0.0
     sell_amount = 0.0
     for item in orders:
@@ -422,6 +424,21 @@ def build_stock_report(data: dict[str, Any]) -> str:
         finance_source = clean(data.get("finance_source"))
         quote_source = clean(data.get("quote_source"))
         big_orders_source = clean(data.get("big_orders_source"))
+        quote_fill_sources = {
+            clean(item)
+            for item in (data.get("quote_fill_sources") or [])
+            if clean(item)
+        }
+        chip_sources = {
+            clean(item)
+            for item in re.split(r"[+,]", clean(data.get("chip_source")) or "")
+            if clean(item)
+        }
+        barrier_sources = {
+            clean(item)
+            for item in re.split(r"[+,]", clean(data.get("barrier_source")) or "")
+            if clean(item)
+        }
         wencai_domains = [
             "实时行情",
             "财务",
@@ -433,7 +450,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
             "壁垒",
             "大单日汇总",
         ]
-        if quote_source == "eastmoney":
+        if (quote_source and quote_source != "wencai") or quote_fill_sources:
             wencai_domains.remove("实时行情")
         if holder_source == "eastmoney":
             wencai_domains.remove("股东")
@@ -443,6 +460,10 @@ def build_stock_report(data: dict[str, Any]) -> str:
             wencai_domains.remove("财务")
         if big_orders_source == "thsdk":
             wencai_domains.remove("大单日汇总")
+        if any(source != "wencai" for source in chip_sources):
+            wencai_domains.remove("筹码")
+        if any(source != "wencai" for source in barrier_sources):
+            wencai_domains.remove("壁垒")
         wencai_scope = "、".join(wencai_domains[:-1]) + "与" + wencai_domains[-1]
         source_rows = [
             ("扶摇 REST", "证券检索、新闻与公告", "本次采集已返回"),
@@ -452,9 +473,13 @@ def build_stock_report(data: dict[str, Any]) -> str:
                 "本次采集已返回",
             ),
         ]
-        if quote_source == "eastmoney":
+        if quote_source == "eastmoney" or "eastmoney" in quote_fill_sources:
             source_rows.append(
                 ("东方财富行情", "问财缺失时的实时行情兜底", "本次采集已返回")
+            )
+        if "tencent" in quote_fill_sources:
+            source_rows.append(
+                ("腾讯行情", "实时行情缺失字段兜底", "本次采集已返回")
             )
         if holder_source == "eastmoney":
             source_rows.append(
@@ -472,9 +497,26 @@ def build_stock_report(data: dict[str, Any]) -> str:
             source_rows.append(
                 ("东方财富 F10", "缺失年度财务指标兜底", "本次采集已返回")
             )
-        if big_orders_source == "thsdk":
+        if "eastmoney" in chip_sources:
             source_rows.append(
-                ("同花顺 thsdk", "逐笔大单成交（游客或固定账号）", "本次采集已返回")
+                ("东方财富 F10", "股东户数、股本结构与股东集中度", "本次采集已返回")
+            )
+        if "eastmoney" in barrier_sources:
+            source_rows.append(
+                ("东方财富数据中心", "研发费用与客户/供应商集中度", "本次采集已返回")
+            )
+        thsdk_uses = []
+        if "thsdk" in quote_fill_sources:
+            thsdk_uses.append("实时行情")
+        if "thsdk" in chip_sources:
+            thsdk_uses.append("筹码")
+        if "thsdk" in barrier_sources:
+            thsdk_uses.append("壁垒")
+        if big_orders_source == "thsdk":
+            thsdk_uses.append("逐笔大单成交（游客或固定账号）")
+        if thsdk_uses:
+            source_rows.append(
+                ("同花顺 thsdk", "、".join(thsdk_uses), "本次采集已返回")
             )
         source_rows = tuple(source_rows)
     else:

@@ -48,9 +48,60 @@ jobs:
       IMAGE: daily-briefing-pro:3.23.19-cloud-amd64-ci
       FUYAO_API_KEY: ${{ secrets.FUYAO_API_KEY }}
       IWENCAI_API_KEY: ${{ secrets.IWENCAI_API_KEY }}
+      DAILY_BRIEFING_AI_BASE_URL: ${{ secrets.DAILY_BRIEFING_AI_BASE_URL }}
+      DAILY_BRIEFING_AI_API_KEY: ${{ secrets.DAILY_BRIEFING_AI_API_KEY }}
+      DAILY_BRIEFING_AI_MODEL: ${{ secrets.DAILY_BRIEFING_AI_MODEL }}
+      DAILY_BRIEFING_AI_FALLBACK_MODEL: ${{ secrets.DAILY_BRIEFING_AI_FALLBACK_MODEL }}
+      DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
+      DEEPSEEK_FALLBACK_MODEL: ${{ secrets.DEEPSEEK_FALLBACK_MODEL }}
+      TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
+      DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
+      XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
     steps:
       - name: Check out the task branch
         uses: actions/checkout@v4
+
+      - name: Prepare private runtime environment
+        run: |
+          set -euo pipefail
+          umask 077
+          env_file="$RUNNER_TEMP/briefing.env"
+          : > "$env_file"
+          for name in \
+            FUYAO_API_KEY IWENCAI_API_KEY \
+            DAILY_BRIEFING_AI_BASE_URL DAILY_BRIEFING_AI_API_KEY \
+            DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
+            DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
+            DEEPSEEK_FALLBACK_MODEL; do
+            value="${!name:-}"
+            if [ -n "$value" ]; then
+              printf '%s=%s\n' "$name" "$value" >> "$env_file"
+            fi
+          done
+          python - <<'PY'
+          import base64
+          import gzip
+          import os
+
+          root = os.path.join(os.environ["RUNNER_TEMP"], "briefing-secrets")
+          os.makedirs(root, exist_ok=True)
+          for env_name, file_name in (
+              ("TGB_COOKIE_GZ_B64", "tgb_cookies.json"),
+              ("DOUYIN_COOKIE_GZ_B64", "douyin_cookies.json"),
+              ("XUEQIU_COOKIE_GZ_B64", "xueqiu_cookies.json"),
+          ):
+              encoded = os.environ.get(env_name, "").strip()
+              if not encoded:
+                  continue
+              payload = gzip.decompress(base64.b64decode(encoded))
+              with open(os.path.join(root, file_name), "wb") as handle:
+                  handle.write(payload)
+          os.chmod(root, 0o755)
+          for name in os.listdir(root):
+              os.chmod(os.path.join(root, name), 0o644)
+          PY
 
       - name: Build the formal AMD64 image
         run: |
@@ -70,6 +121,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -83,15 +136,15 @@ jobs:
       - name: Query live market data
         run: |
           set -euo pipefail
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             realtime 600519 --mode cloud --compact \
             | tee artifacts/market-realtime.json
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             candle 600519 --mode cloud --count 3 --compact \
             | tee artifacts/market-candle.json
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             sector --target 白酒 --mode cloud --compact \
             | tee artifacts/market-sector.json
@@ -100,6 +153,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -116,6 +171,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -160,6 +217,8 @@ jobs:
             -C artifacts/replay/data --strip-components=1
           chmod -R 777 artifacts/replay
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
             --env BRIEFING_OUTPUT_DIR=/runtime/reports \
             --volume "$PWD/artifacts/replay/data:/runtime/data" \
@@ -184,9 +243,60 @@ jobs:
       IMAGE: daily-briefing-pro:3.23.19-cloud-arm64-ci
       FUYAO_API_KEY: ${{ secrets.FUYAO_API_KEY }}
       IWENCAI_API_KEY: ${{ secrets.IWENCAI_API_KEY }}
+      DAILY_BRIEFING_AI_BASE_URL: ${{ secrets.DAILY_BRIEFING_AI_BASE_URL }}
+      DAILY_BRIEFING_AI_API_KEY: ${{ secrets.DAILY_BRIEFING_AI_API_KEY }}
+      DAILY_BRIEFING_AI_MODEL: ${{ secrets.DAILY_BRIEFING_AI_MODEL }}
+      DAILY_BRIEFING_AI_FALLBACK_MODEL: ${{ secrets.DAILY_BRIEFING_AI_FALLBACK_MODEL }}
+      DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
+      DEEPSEEK_FALLBACK_MODEL: ${{ secrets.DEEPSEEK_FALLBACK_MODEL }}
+      TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
+      DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
+      XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
     steps:
       - name: Check out the task branch
         uses: actions/checkout@v4
+
+      - name: Prepare private runtime environment
+        run: |
+          set -euo pipefail
+          umask 077
+          env_file="$RUNNER_TEMP/briefing.env"
+          : > "$env_file"
+          for name in \
+            FUYAO_API_KEY IWENCAI_API_KEY \
+            DAILY_BRIEFING_AI_BASE_URL DAILY_BRIEFING_AI_API_KEY \
+            DAILY_BRIEFING_AI_MODEL DAILY_BRIEFING_AI_FALLBACK_MODEL \
+            DEEPSEEK_BASE_URL DEEPSEEK_API_KEY DEEPSEEK_MODEL \
+            DEEPSEEK_FALLBACK_MODEL; do
+            value="${!name:-}"
+            if [ -n "$value" ]; then
+              printf '%s=%s\n' "$name" "$value" >> "$env_file"
+            fi
+          done
+          python - <<'PY'
+          import base64
+          import gzip
+          import os
+
+          root = os.path.join(os.environ["RUNNER_TEMP"], "briefing-secrets")
+          os.makedirs(root, exist_ok=True)
+          for env_name, file_name in (
+              ("TGB_COOKIE_GZ_B64", "tgb_cookies.json"),
+              ("DOUYIN_COOKIE_GZ_B64", "douyin_cookies.json"),
+              ("XUEQIU_COOKIE_GZ_B64", "xueqiu_cookies.json"),
+          ):
+              encoded = os.environ.get(env_name, "").strip()
+              if not encoded:
+                  continue
+              payload = gzip.decompress(base64.b64decode(encoded))
+              with open(os.path.join(root, file_name), "wb") as handle:
+                  handle.write(payload)
+          os.chmod(root, 0o755)
+          for name in os.listdir(root):
+              os.chmod(os.path.join(root, name), 0o644)
+          PY
 
       - name: Build the formal ARM64 image
         run: |
@@ -206,6 +316,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -219,15 +331,15 @@ jobs:
       - name: Query live market data
         run: |
           set -euo pipefail
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             realtime 600519 --mode cloud --compact \
             | tee artifacts-arm64/market-realtime.json
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             candle 600519 --mode cloud --count 3 --compact \
             | tee artifacts-arm64/market-candle.json
-          docker run --rm --env FUYAO_API_KEY "$IMAGE" \
+          docker run --rm --env-file "$RUNNER_TEMP/briefing.env" --env FUYAO_API_KEY "$IMAGE" \
             python /opt/daily-briefing-pro/skills/market-query/scripts/market_query.py \
             sector --target 白酒 --mode cloud --compact \
             | tee artifacts-arm64/market-sector.json
@@ -236,6 +348,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -252,6 +366,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env FUYAO_API_KEY \
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
@@ -296,6 +412,8 @@ jobs:
             -C artifacts-arm64/replay/data --strip-components=1
           chmod -R 777 artifacts-arm64/replay
           docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
             --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
             --env BRIEFING_OUTPUT_DIR=/runtime/reports \
             --volume "$PWD/artifacts-arm64/replay/data:/runtime/data" \

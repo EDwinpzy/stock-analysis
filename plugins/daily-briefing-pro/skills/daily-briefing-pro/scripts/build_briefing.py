@@ -2622,6 +2622,26 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
 })();
 </script>"""
     chart_js = chart_js + node_zoom_js
+    table_mobile_js = """<script>
+document.querySelectorAll('table').forEach(function(table){
+  var first=table.rows[0];if(!first)return;
+  var hasHeaders=Array.prototype.some.call(first.cells,function(cell){return cell.tagName==='TH';});
+  if(!hasHeaders)return;
+  if(first.parentElement.tagName!=='THEAD'){
+    var thead=document.createElement('thead');
+    first.parentElement.insertBefore(thead,first);
+    thead.appendChild(first);
+  }
+  Array.prototype.forEach.call(table.rows,function(row){
+    if(row.parentElement.tagName==='THEAD')return;
+    Array.prototype.forEach.call(row.cells,function(cell,index){
+      if(cell.hasAttribute('colspan')||cell.dataset.label)return;
+      var header=first.cells[index];
+      if(header)cell.dataset.label=(header.textContent||'').trim();
+    });
+  });
+});
+</script>"""
 
     # ===== 组装完整HTML =====
     # 报头里的板块计数：真实渲染出来的板块数（含策略），不写死
@@ -2664,6 +2684,7 @@ document.querySelectorAll('.mc').forEach(c=>{{c.addEventListener('mousemove',e=>
 <div class="ft">每日简报 · <span>v3.22</span> · {today_display} · 数据仅为信息整理，不构成投资建议</div>
 </main>
 {chart_js}
+{table_mobile_js}
 </body>
 </html>"""
 

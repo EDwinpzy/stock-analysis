@@ -73,9 +73,41 @@ def test_report_gate_rejects_short_temporary_data_marker(tmp_path):
     assert "暂无" in " ".join(result["placeholders"])
 
 
+def test_report_gate_rejects_public_data_placeholder(tmp_path):
+    path = tmp_path / "bad.html"
+    path.write_text(
+        make_html(STOCK_SECTIONS, 6) + "<p>公开数据未覆盖</p>",
+        encoding="utf-8",
+    )
+    result = verify.verify_report(path, "stock")
+
+    assert result["ok"] is False
+    assert "公开数据未覆盖" in " ".join(result["placeholders"])
+
+
 def test_data_gate_checks_required_fields(tmp_path):
     data = {
-        "quote": {"last_price": 1},
+        "quote": {
+            "price": 10,
+            "change_pct": 1,
+            "change_amt": 0.1,
+            "volume": 100,
+            "amount": 1000,
+            "market_cap": 100000,
+            "circulating_cap": 90000,
+            "pe_ttm": 20,
+            "turnover_rate": 0.5,
+            "amplitude": 2.0,
+            "main_net_inflow": 100,
+            "main_net_pct": 0.1,
+            "high": 10.2,
+            "low": 9.8,
+            "open_change": 0.2,
+            "prev_close": 9.9,
+            "limit_up": 10.89,
+            "limit_down": 8.91,
+            "5d_change": -1.2,
+        },
         "finance_raw": {
             "pe": 20,
             "营业收入[20251231]": 10000000000,
@@ -86,9 +118,29 @@ def test_data_gate_checks_required_fields(tmp_path):
         "big_orders": [{"amount": 1}],
         "news": [{"title": "news"}],
         "product_raw": {"product": "main"},
-        "chip_structure": {"cost": 10},
+        "chip_structure": {
+            "holder_count_trend": {
+                "股东户数[20250630]": 1000,
+                "股东户数[20251231]": 900,
+            },
+            "share_structure": {
+                "总股本[20251231]": 100000000,
+                "流通a股[20251231]": 90000000,
+                "限售a股[20251231]": 10000000,
+            },
+            "unlock_data": {"未来解禁安排": "无公开待解禁记录"},
+            "concentration": {"前十大股东持股比例合计": 66.0},
+            "margin": {"融资余额[20251231]": 1000000},
+        },
         "blogger_opinions": [{"text": "view"}],
-        "barrier_data": {"moat": "brand"},
+        "barrier_data": {
+            "rd_raw": {
+                "研发投入占营业收入的比重[20251231]": 5.0,
+                "专利数量合计[20251231]": 100,
+            },
+            "customer_concentration": {"value": 10.0, "period": "20251231"},
+            "supplier_concentration": {"value": 20.0, "period": "20251231"},
+        },
         "research_reports": [{"title": "report"}],
         "warnings": [],
     }
@@ -105,6 +157,62 @@ def test_data_gate_reports_missing_field(tmp_path):
     result = verify.verify_data(path, "stock")
     assert result["ok"] is False
     assert "行情" in result["missing_or_empty"]
+
+
+def test_data_gate_rejects_empty_chip_and_barrier_blocks(tmp_path):
+    data = {
+        "quote": {
+            "price": 10,
+            "change_pct": 1,
+            "change_amt": 0.1,
+            "volume": 100,
+            "amount": 1000,
+            "market_cap": 100000,
+            "circulating_cap": 90000,
+            "pe_ttm": 20,
+            "turnover_rate": 0.5,
+            "amplitude": 2.0,
+            "main_net_inflow": 100,
+            "main_net_pct": 0.1,
+            "high": 10.2,
+            "low": 9.8,
+            "open_change": 0.2,
+            "prev_close": 9.9,
+            "limit_up": 10.89,
+            "limit_down": 8.91,
+            "5d_change": -1.2,
+        },
+        "finance_raw": {"营业收入[20251231]": 10000000000},
+        "peers_raw": [{"name": "peer"}],
+        "holders_raw": [{"name": "holder"}],
+        "big_orders": [{"amount": 1}],
+        "news": [{"title": "news"}],
+        "product_raw": {"product": "main"},
+        "chip_structure": {
+            "holder_count_trend": {},
+            "share_structure": {},
+            "unlock_data": {},
+            "concentration": {},
+            "margin": {},
+        },
+        "blogger_opinions": [{"text": "view"}],
+        "barrier_data": {
+            "rd_raw": {},
+            "customer_concentration": {},
+            "supplier_concentration": {},
+        },
+        "research_reports": [{"title": "report"}],
+        "warnings": [],
+    }
+    path = tmp_path / "stock.json"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    result = verify.verify_data(path, "stock")
+
+    assert result["ok"] is False
+    problems = " ".join(result["problems"])
+    assert "筹码子项为空" in problems
+    assert "壁垒子项为空" in problems
 
 
 def test_data_gate_treats_quote_error_object_as_missing(tmp_path):

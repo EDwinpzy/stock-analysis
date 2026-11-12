@@ -69,6 +69,9 @@ EASTMONEY_FINANCE_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
     "NewFinanceAnalysis/ZYZBAjaxNew"
 )
+EASTMONEY_DATACENTER_URL = (
+    "https://datacenter.eastmoney.com/securities/api/data/v1/get"
+)
 INDUSTRY_SNAPSHOT_FIELDS = (
     "涨幅",
     "5日涨幅",
@@ -141,6 +144,24 @@ def _coalesce(*values: Any) -> Any:
         if value is not None and value != "":
             return value
     return None
+
+
+def _is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and math.isnan(value):
+        return True
+    text = str(value).strip()
+    return not text or text in {"暂无", "暂无数据", "--", "-", "None", "null", "nan"}
+
+
+def _fill_missing(target: dict[str, Any], source: dict[str, Any]) -> list[str]:
+    filled: list[str] = []
+    for key, value in source.items():
+        if _is_missing(target.get(key)) and not _is_missing(value):
+            target[key] = value
+            filled.append(key)
+    return filled
 
 
 def _first_key(row: dict[str, Any], *prefixes: str) -> str | None:
@@ -340,12 +361,22 @@ def _scaled_quote_number(value: Any) -> float | None:
     return number / 100 if number is not None else None
 
 
+def _cap_yuan(value: Any) -> float | None:
+    """Normalize public market-cap values that may be expressed in 亿元."""
+
+    number = _number(value)
+    if number is None:
+        return None
+    return number * 1e8 if abs(number) < 1e8 else number
+
+
 def _eastmoney_stock_quote(code: str) -> dict[str, Any]:
     """Fetch one quote through the endpoint that remains available when ulist fails."""
 
     payload = _fetch_eastmoney_json(
         f"{EASTMONEY_STOCK_URL}?secid={_eastmoney_secid(code)}"
-        "&fields=f43,f57,f58,f116,f117,f162,f167,f170,f25",
+        "&fields=f43,f44,f45,f46,f47,f48,f51,f52,f57,f58,f60,f62,"
+        "f84,f85,f116,f117,f162,f164,f167,f168,f170,f171,f184",
         referer=EASTMONEY_QUOTE_REFERER,
     )
     data = (payload or {}).get("data") if isinstance(payload, dict) else None
@@ -357,13 +388,28 @@ def _eastmoney_stock_quote(code: str) -> dict[str, Any]:
     return {
         "f2": _scaled_quote_number(data.get("f43")),
         "f3": _scaled_quote_number(data.get("f170")),
+        "f5": _number(data.get("f47")),
+        "f6": _number(data.get("f48")),
+        "f7": _scaled_quote_number(data.get("f171")),
+        "f8": _scaled_quote_number(data.get("f168")),
         "f9": _scaled_quote_number(data.get("f162")),
         "f12": quote_code,
         "f14": re.sub(r"\s+", "", _text(data.get("f58"))),
+        "f15": _scaled_quote_number(data.get("f44")),
+        "f16": _scaled_quote_number(data.get("f45")),
+        "f17": _scaled_quote_number(data.get("f46")),
+        "f18": _scaled_quote_number(data.get("f60")),
         "f20": _number(data.get("f116")),
         "f21": _number(data.get("f117")),
         "f23": _scaled_quote_number(data.get("f167")),
         "f25": _scaled_quote_number(data.get("f25")),
+        "f51": _scaled_quote_number(data.get("f51")),
+        "f52": _scaled_quote_number(data.get("f52")),
+        "f62": _number(data.get("f62")),
+        "f84": _number(data.get("f84")),
+        "f85": _number(data.get("f85")),
+        "f164": _scaled_quote_number(data.get("f164")),
+        "f184": _scaled_quote_number(data.get("f184")),
     }
 
 
@@ -375,7 +421,10 @@ def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]
         text = _text(code)[-6:]
         if re.fullmatch(r"\d{6}", text) and text not in unique:
             unique.append(text)
-    fields = "f2,f3,f9,f12,f14,f20,f21,f23,f25"
+    fields = (
+        "f2,f3,f5,f6,f7,f8,f9,f12,f14,f15,f16,f17,f18,"
+        "f20,f21,f23,f51,f52,f62,f84,f85,f164,f168,f170,f171"
+    )
     output: dict[str, dict[str, Any]] = {}
     errors: list[str] = []
     for start in range(0, len(unique), 40):
@@ -413,7 +462,7 @@ def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]
 
 
 def _tencent_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]:
-    """Fetch quote, valuation, market cap and YTD fields from Tencent."""
+    """Fetch a complete quote snapshot from Tencent's public response."""
 
     unique: list[str] = []
     for code in codes:
@@ -449,16 +498,42 @@ def _tencent_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]:
             code = _text(fields[2])
             if not re.fullmatch(r"\d{6}", code):
                 continue
-            market_cap_yi = _number(fields[44])
+
+            def field(index: int) -> Any:
+                return fields[index] if index < len(fields) else None
+
+            market_cap_yi = _number(field(44))
+            circulating_cap_yi = _number(field(45))
+            volume_lots = _number(field(36))
+            amount_wan = _number(field(37))
             output[code] = {
-                "price": _number(fields[3]),
-                "change_pct": _number(fields[32]),
-                "pe": _number(fields[39]),
-                "pb": _number(fields[46]),
+                "name": re.sub(r"\s+", "", _text(field(1))),
+                "price": _number(field(3)),
+                "prev_close": _number(field(4)),
+                "open": _number(field(5)),
+                "volume": volume_lots * 100 if volume_lots is not None else None,
+                "amount": amount_wan * 10000 if amount_wan is not None else None,
+                "change_pct": _number(field(32)),
+                "high": _number(field(33)),
+                "low": _number(field(34)),
+                "turnover_rate": _number(field(38)),
+                "pe": _number(field(39)),
+                "amplitude": _number(field(43)),
                 "market_cap": (
                     market_cap_yi * 1e8 if market_cap_yi is not None else None
                 ),
-                "ytd_change": _number(fields[62]),
+                "circulating_cap": (
+                    circulating_cap_yi * 1e8
+                    if circulating_cap_yi is not None
+                    else None
+                ),
+                "pb": _number(field(46)),
+                "limit_up": _number(field(47)),
+                "limit_down": _number(field(48)),
+                "ytd_change": _number(field(62)),
+                "5d_change": _number(field(63)),
+                "total_shares": _number(field(73)),
+                "float_shares": _number(field(72)),
             }
     return output
 
@@ -1006,15 +1081,94 @@ class CloudStockAdapter:
         self.finance_error = ""
         self.quote_source = ""
         self.quote_fallback_error = ""
+        self.quote_fill_sources: list[str] = []
+        self.chip_sources: list[str] = []
+        self.barrier_sources: list[str] = []
+        self._ths_client: mq.ThsClient | None = None
+        self._ths_connect_error = ""
+        self._ths_connect_retry_at = 0.0
+        self._last_ths_query_at = 0.0
+        self._f10_payload_cache: dict[str, Any] | None = None
+        self._f10_payload_error = ""
 
     def __enter__(self) -> "CloudStockAdapter":
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._reset_ths_client()
         return None
+
+    def _reset_ths_client(self) -> None:
+        client = getattr(self, "_ths_client", None)
+        self._ths_client = None
+        if client is not None:
+            try:
+                client.__exit__(None, None, None)
+            except Exception:
+                pass
 
     def connect(self, max_retries: int = 1) -> SimpleNamespace:
         return SimpleNamespace(error="", connected=True)
+
+    def _record_source(self, domain: str, source: str) -> None:
+        attribute = f"{domain}_sources"
+        values = list(getattr(self, attribute, []) or [])
+        if source and source not in values:
+            values.append(source)
+        setattr(self, attribute, values)
+
+    def _ths_connection(self) -> mq.ThsClient | None:
+        client = getattr(self, "_ths_client", None)
+        if client is not None:
+            return client
+        now = time.monotonic()
+        retry_at = getattr(self, "_ths_connect_retry_at", 0.0)
+        if retry_at and now < retry_at:
+            return None
+        client = None
+        try:
+            client = mq.ThsClient()
+            client.__enter__()
+        except Exception as exc:
+            self._ths_connect_error = f"同花顺 thsdk 连接失败：{exc}"
+            self._ths_connect_retry_at = now + 60.0
+            return None
+        self._ths_client = client
+        self._ths_connect_error = ""
+        self._ths_connect_retry_at = 0.0
+        return client
+
+    def _ths_wencai_frame(self, query: str, limit: int = 20) -> SimpleNamespace:
+        client = self._ths_connection()
+        if client is None:
+            return _empty(
+                getattr(self, "_ths_connect_error", "")
+                or "同花顺 thsdk 不可用"
+            )
+        last_query_at = getattr(self, "_last_ths_query_at", 0.0)
+        wait = 0.6 - (time.monotonic() - last_query_at)
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            payload = client.wencai(query, page=1, limit=limit)
+        except Exception as exc:
+            message = str(exc)
+            if "请先连接" not in message and "not connect" not in message.lower():
+                return _empty(f"同花顺 thsdk 问财查询失败：{message}")
+            self._reset_ths_client()
+            client = self._ths_connection()
+            if client is None:
+                return _empty(
+                    getattr(self, "_ths_connect_error", "")
+                    or "同花顺 thsdk 重连失败"
+                )
+            try:
+                payload = client.wencai(query, page=1, limit=limit)
+            except Exception as retry_exc:
+                return _empty(f"同花顺 thsdk 问财重连后失败：{retry_exc}")
+        finally:
+            self._last_ths_query_at = time.monotonic()
+        return _frame_result(payload)
 
     def _query(self, query: str, skill_id: str = "hithink-finance-query", limit: int = 20) -> SimpleNamespace:
         cache_key = (skill_id, query, int(limit))
@@ -1091,72 +1245,184 @@ class CloudStockAdapter:
         row_two = second.df.iloc[0].to_dict() if not second.df.empty else {}
         return row_one, row_two
 
+    def _thsdk_quote_fallback(self, thscode: str) -> dict[str, Any]:
+        client = self._ths_connection()
+        if client is None:
+            return {}
+        try:
+            payload = client.realtime([thscode])
+        except Exception as exc:
+            self.quote_fallback_error = f"同花顺 thsdk 行情兜底失败：{exc}"
+            return {}
+        data = payload.get("data") if isinstance(payload, dict) else {}
+        item = (data or {}).get(thscode)
+        if not isinstance(item, dict):
+            item = next(
+                (
+                    value
+                    for value in (data or {}).values()
+                    if isinstance(value, dict)
+                ),
+                {},
+            )
+        raw = item.get("raw") if isinstance(item.get("raw"), dict) else {}
+        price = _number(raw.get("价格")) or _number(item.get("last_price"))
+        prev_close = _number(raw.get("昨收价")) or _number(item.get("prev_close"))
+        open_change = _number(raw.get("开盘涨幅"))
+        open_price = None
+        if open_change is not None and prev_close not in (None, 0):
+            open_price = prev_close * (1 + open_change / 100)
+        return {
+            "价格": price,
+            "涨幅": _number(raw.get("涨幅")) or _number(
+                item.get("price_change_ratio_pct")
+            ),
+            "涨跌": (
+                price - prev_close
+                if price is not None and prev_close is not None
+                else None
+            ),
+            "成交量": _number(raw.get("成交量")) or _number(item.get("volume")),
+            "总金额": _number(raw.get("总金额")) or _number(item.get("turnover")),
+            "总市值": _number(raw.get("总市值")),
+            "流通市值": _number(raw.get("流通市值")),
+            "市盈率TTM": _number(raw.get("市盈率TTM")),
+            "换手率": _number(raw.get("换手率")),
+            "振幅": _number(raw.get("振幅")),
+            "主力净流入": _number(raw.get("主力净流入")),
+            "主力净量": _number(raw.get("主力净量")),
+            "最高价": _number(raw.get("最高价")) or _number(item.get("high_price")),
+            "最低价": _number(raw.get("最低价")) or _number(item.get("low_price")),
+            "开盘价": open_price,
+            "开盘涨幅": open_change,
+            "昨收价": prev_close,
+            "涨停价": _number(raw.get("涨停价")),
+            "跌停价": _number(raw.get("跌停价")),
+            "名称": _text(raw.get("名称")) or _text(item.get("name")),
+            "5日涨幅": _number(raw.get("5日涨幅")),
+        }
+
     def _eastmoney_quote_fallback(self, thscode: str) -> dict[str, Any]:
-        """Return a real quote when the official Wencai quote query is empty."""
+        """Fill quote fields from independent public sources."""
 
         code = str(thscode)[-6:]
         if not re.fullmatch(r"\d{6}", code):
             return {}
-        quote: dict[str, Any] = {}
+        output: dict[str, Any] = {}
+        errors: list[str] = []
+
+        thsdk = self._thsdk_quote_fallback(thscode)
+        if _fill_missing(output, thsdk):
+            self._record_source("quote_fill", "thsdk")
+
+        eastmoney: dict[str, Any] = {}
         try:
             quote = _eastmoney_stock_quote(code) or {}
+            price = _number(quote.get("f2"))
+            prev_close = _number(quote.get("f18"))
+            change_pct = _number(quote.get("f3"))
+            if prev_close is None and price is not None and change_pct is not None:
+                ratio = 1 + change_pct / 100
+                if abs(ratio) > 1e-9:
+                    prev_close = price / ratio
+            open_price = _number(quote.get("f17"))
+            eastmoney = {
+                "价格": price,
+                "涨幅": change_pct,
+                "涨跌": (
+                    price - prev_close
+                    if price is not None and prev_close is not None
+                    else None
+                ),
+                "成交量": _number(quote.get("f5")),
+                "总金额": _number(quote.get("f6")),
+                "总市值": _number(quote.get("f20")),
+                "流通市值": _number(quote.get("f21")),
+                "市盈率TTM": _number(quote.get("f164")),
+                "换手率": _number(quote.get("f8")),
+                "振幅": _number(quote.get("f7")),
+                "主力净流入": _number(quote.get("f62")),
+                "主力净量": _number(quote.get("f184")),
+                "最高价": _number(quote.get("f15")),
+                "最低价": _number(quote.get("f16")),
+                "开盘价": open_price,
+                "开盘涨幅": (
+                    (open_price / prev_close - 1) * 100
+                    if open_price is not None and prev_close not in (None, 0)
+                    else None
+                ),
+                "昨收价": prev_close,
+                "涨停价": _number(quote.get("f51")),
+                "跌停价": _number(quote.get("f52")),
+                "名称": _text(quote.get("f14")),
+                "总股本": _number(quote.get("f84")),
+                "流通a股": _number(quote.get("f85")),
+                "限售a股": (
+                    _number(quote.get("f84")) - _number(quote.get("f85"))
+                    if _number(quote.get("f84")) is not None
+                    and _number(quote.get("f85")) is not None
+                    else None
+                ),
+            }
         except Exception as exc:
-            self.quote_fallback_error = f"东方财富行情兜底失败：{exc}"
-        tencent: dict[str, Any] = {}
-        if _number(quote.get("f2")) is None:
-            try:
-                tencent = _tencent_quote_snapshot([code]).get(code) or {}
-            except Exception as exc:
-                self.quote_fallback_error = f"腾讯行情兜底失败：{exc}"
-        price = _coalesce(_number(quote.get("f2")), _number(tencent.get("price")))
-        change_pct = _coalesce(
-            _number(quote.get("f3")),
-            _number(tencent.get("change_pct")),
-        )
-        prev_close = None
-        if price is not None and change_pct is not None:
-            ratio = 1 + change_pct / 100
-            if abs(ratio) > 1e-9:
-                prev_close = price / ratio
-        return {
-            "最新价": price,
-            "最新涨跌幅": change_pct,
-            "涨跌": price - prev_close
-            if price is not None and prev_close is not None
-            else None,
-            "总市值": _coalesce(
-                _number(quote.get("f20")),
-                _number(tencent.get("market_cap")),
+            errors.append(f"东方财富行情兜底失败：{exc}")
+        if _fill_missing(output, eastmoney):
+            self._record_source("quote_fill", "eastmoney")
+
+        try:
+            tencent = _tencent_quote_snapshot([code]).get(code) or {}
+        except Exception as exc:
+            errors.append(f"腾讯行情兜底失败：{exc}")
+            tencent = {}
+        tencent_quote = {
+            "价格": _number(tencent.get("price")),
+            "涨幅": _number(tencent.get("change_pct")),
+            "成交量": _number(tencent.get("volume")),
+            "总金额": _number(tencent.get("amount")),
+            "总市值": _number(tencent.get("market_cap")),
+            "流通市值": _number(tencent.get("circulating_cap")),
+            "市盈率TTM": _number(tencent.get("pe")),
+            "换手率": _number(tencent.get("turnover_rate")),
+            "振幅": _number(tencent.get("amplitude")),
+            "最高价": _number(tencent.get("high")),
+            "最低价": _number(tencent.get("low")),
+            "开盘价": _number(tencent.get("open")),
+            "昨收价": _number(tencent.get("prev_close")),
+            "涨停价": _number(tencent.get("limit_up")),
+            "跌停价": _number(tencent.get("limit_down")),
+            "名称": _text(tencent.get("name")),
+            "5日涨幅": _number(tencent.get("5d_change")),
+            "总股本": _number(tencent.get("total_shares")),
+            "流通a股": _number(tencent.get("float_shares")),
+            "限售a股": (
+                _number(tencent.get("total_shares"))
+                - _number(tencent.get("float_shares"))
+                if _number(tencent.get("total_shares")) is not None
+                and _number(tencent.get("float_shares")) is not None
+                else None
             ),
-            "流通市值": _number(quote.get("f21")),
-            "市盈率TTM": _coalesce(
-                _number(quote.get("f9")),
-                _number(tencent.get("pe")),
-            ),
-            "昨收价": prev_close,
-            "名称": _text(quote.get("f14")),
         }
+        if _fill_missing(output, tencent_quote):
+            self._record_source("quote_fill", "tencent")
+
+        price = _number(output.get("价格"))
+        prev_close = _number(output.get("昨收价"))
+        open_price = _number(output.get("开盘价"))
+        if _is_missing(output.get("涨跌")) and price is not None and prev_close is not None:
+            output["涨跌"] = price - prev_close
+        if _is_missing(output.get("开盘涨幅")) and open_price is not None and prev_close not in (None, 0):
+            output["开盘涨幅"] = (open_price / prev_close - 1) * 100
+        self.quote_fallback_error = "；".join(errors) if errors and not output else ""
+        return output
 
     def market_data_cn(self, thscode: str, query_key: str) -> SimpleNamespace:
         name = self._name_for(thscode)
         self.quote_source = ""
+        self.quote_fill_sources = []
+        self.quote_fallback_error = ""
         first, second = self._quote_rows(name)
         merged = {**second, **first}
-        fallback: dict[str, Any] = {}
-        if _number(_first(merged, "最新价")) is None:
-            fallback = self._eastmoney_quote_fallback(thscode)
-            if fallback:
-                merged = {**fallback, **merged}
-                self.quote_source = "eastmoney"
-        if not merged:
-            return _empty("问财行情查询没有返回数据")
         price = _number(_first(merged, "最新价"))
-        if price is None:
-            return _empty(
-                self.quote_fallback_error or "问财与东方财富行情均没有返回数据"
-            )
-        if not self.quote_source:
-            self.quote_source = "wencai"
         prev_close = _previous_close(merged)
         open_price = _number(_first(merged, "开盘价"))
         amount = _number(_first(merged, "成交额"))
@@ -1181,7 +1447,7 @@ class CloudStockAdapter:
             "换手率": _number(_first(merged, "换手率")),
             "振幅": _number(_first(merged, "振幅")),
             "主力净流入": main_inflow,
-            "主力净量": (main_inflow / amount * 100) if main_inflow is not None and amount else None,
+            "主力净量": _number(_first(merged, "主力净量")),
             "最高价": _number(_first(merged, "最高价")),
             "最低价": _number(_first(merged, "最低价")),
             "开盘价": open_price,
@@ -1196,7 +1462,49 @@ class CloudStockAdapter:
             "名称": _text(_first(merged, "股票简称", "name")) or name,
             "5日涨幅": _number(merged.get(five_day_key)) if five_day_key else None,
         }
-        normalized = {key: "暂无" if value is None else value for key, value in row.items()}
+        required_quote_fields = (
+            "价格",
+            "涨幅",
+            "成交量",
+            "总金额",
+            "总市值",
+            "流通市值",
+            "市盈率TTM",
+            "换手率",
+            "振幅",
+            "主力净流入",
+            "最高价",
+            "最低价",
+            "昨收价",
+            "涨停价",
+            "跌停价",
+            "5日涨幅",
+        )
+        fallback: dict[str, Any] = {}
+        if any(_is_missing(row.get(key)) for key in required_quote_fields):
+            fallback = self._eastmoney_quote_fallback(thscode)
+        _fill_missing(row, fallback)
+        price = _number(row.get("价格"))
+        if price is None:
+            return _empty(
+                self.quote_fallback_error or "问财与公开行情源均没有返回数据"
+            )
+        prev_close = _number(row.get("昨收价"))
+        open_price = _number(row.get("开盘价"))
+        if price is not None and prev_close is not None:
+            row["涨跌"] = price - prev_close
+        if open_price is not None and prev_close not in (None, 0):
+            row["开盘涨幅"] = (open_price / prev_close - 1) * 100
+        if _is_missing(row.get("主力净量")):
+            row["主力净量"] = None
+        if _is_missing(_number(_first(merged, "最新价"))):
+            self.quote_source = self.quote_fill_sources[0]
+        else:
+            self.quote_source = "wencai"
+        normalized = {
+            key: "暂无" if _is_missing(value) else value
+            for key, value in row.items()
+        }
         return SimpleNamespace(df=pd.DataFrame([normalized]), error="")
 
     def _finance_frame(self) -> SimpleNamespace:
@@ -1351,13 +1659,27 @@ class CloudStockAdapter:
         )
         return _empty(self.holders_error)
 
-    def _eastmoney_holders_frame(self) -> SimpleNamespace:
+    def _f10_payload(self) -> tuple[dict[str, Any], str]:
+        if getattr(self, "_f10_payload_cache", None) is not None:
+            return self._f10_payload_cache, ""
+        cached_error = getattr(self, "_f10_payload_error", "")
+        if cached_error:
+            return {}, cached_error
         if not self._stock_code:
-            return _empty("东方财富股东兜底缺少股票代码")
+            return {}, "东方财富 F10 兜底缺少股票代码"
         try:
             payload = _fetch_eastmoney_holder_payload(self._stock_code)
         except Exception as exc:
-            return _empty(f"东方财富股东兜底请求失败：{exc}")
+            self._f10_payload_error = f"东方财富 F10 请求失败：{exc}"
+            return {}, self._f10_payload_error
+        self._f10_payload_cache = payload
+        self._f10_payload_error = ""
+        return payload, ""
+
+    def _eastmoney_holders_frame(self) -> SimpleNamespace:
+        payload, error = self._f10_payload()
+        if error:
+            return _empty(error)
 
         free_holders = [
             dict(item)
@@ -1457,6 +1779,177 @@ class CloudStockAdapter:
             period=holder_date,
         )
 
+    def _eastmoney_holder_trend_frame(self) -> SimpleNamespace:
+        payload, error = self._f10_payload()
+        if error:
+            return _empty(error)
+        rows = [
+            dict(item)
+            for item in payload.get("gdrs") or []
+            if isinstance(item, dict)
+        ]
+        records = []
+        for item in rows:
+            period = _date_key(item.get("END_DATE"))
+            count = _number(item.get("HOLDER_TOTAL_NUM"))
+            if period and count is not None:
+                records.append((period, count))
+        if not records:
+            return _empty("东方财富 F10 未返回股东户数")
+        records.sort()
+        output: dict[str, Any] = {
+            "股票代码": (
+                f"{self._stock_code}.{_eastmoney_market_prefix(self._stock_code)}"
+                if self._stock_code
+                else ""
+            ),
+            "股票简称": self.stock_name,
+        }
+        for period, count in records:
+            output[f"股东户数(报告期)[{period}]"] = count
+        return SimpleNamespace(df=pd.DataFrame([output]), error="")
+
+    def _eastmoney_share_structure_frame(self) -> SimpleNamespace:
+        if not self._stock_code:
+            return _empty("股本结构兜底缺少股票代码")
+        try:
+            tencent = _tencent_quote_snapshot([self._stock_code]).get(
+                self._stock_code
+            ) or {}
+        except Exception:
+            tencent = {}
+        total = _number(tencent.get("total_shares"))
+        floating = _number(tencent.get("float_shares"))
+        period = datetime.now(CN_TZ).strftime("%Y%m%d")
+        source = "tencent"
+        if total is None or floating is None:
+            source = "eastmoney"
+            payload, error = self._f10_payload()
+            if error:
+                return _empty(error)
+            rows = [
+                dict(item)
+                for item in payload.get("ltgf") or []
+                if isinstance(item, dict)
+            ]
+            if not rows:
+                return _empty("东方财富 F10 未返回股本结构")
+            latest = max(rows, key=lambda item: _date_key(item.get("END_DATE")))
+            period = _date_key(latest.get("END_DATE")) or period
+            limited = _number(latest.get("LIMITED_SHARES")) or 0.0
+            held = _number(latest.get("HOLD_NUM_COUNT"))
+            other_unlimited = _number(latest.get("OTHER_UNLIMITED_SHARES"))
+            floating = _number(latest.get("FREE_SHARES"))
+            total = _number(latest.get("TOTAL_SHARES"))
+            if held is not None and other_unlimited is not None:
+                total = held + limited + other_unlimited
+                floating = total - limited
+            if total is None and limited is not None and floating is not None:
+                total = floating + limited
+            if floating is None and total is not None and limited is not None:
+                floating = total - limited
+        else:
+            limited = total - floating
+        if total is None or floating is None:
+            return _empty("公开数据源未返回完整股本结构")
+        if limited is None:
+            limited = total - floating
+        output = {
+            f"总股本[{period}]": total,
+            f"流通a股[{period}]": floating,
+            f"限售a股[{period}]": max(0, limited),
+            "股票代码": (
+                f"{self._stock_code}.{_eastmoney_market_prefix(self._stock_code)}"
+                if self._stock_code
+                else ""
+            ),
+            "股票简称": self.stock_name,
+        }
+        return SimpleNamespace(df=pd.DataFrame([output]), error="", source=source)
+
+    def _eastmoney_concentration_frame(self) -> SimpleNamespace:
+        payload, error = self._f10_payload()
+        if error:
+            return _empty(error)
+        holder_rows = [
+            dict(item)
+            for item in payload.get("gdrs") or []
+            if isinstance(item, dict)
+        ]
+        top_rows = [
+            dict(item)
+            for item in payload.get("sdgd") or []
+            if isinstance(item, dict)
+        ]
+        if not top_rows:
+            return _empty("东方财富 F10 未返回前十大股东")
+        top_rows.sort(
+            key=lambda item: _number(item.get("HOLDER_RANK")) or 10**9
+        )
+        first = top_rows[0]
+        latest_holder = (
+            max(holder_rows, key=lambda item: _date_key(item.get("END_DATE")))
+            if holder_rows
+            else {}
+        )
+        period = _date_key(first.get("END_DATE"))
+        price = _number(latest_holder.get("PRICE"))
+        hold_num = _number(first.get("HOLD_NUM"))
+        row = {
+            "前十大股东持股比例合计": _number(
+                latest_holder.get("HOLD_RATIO_TOTAL")
+            ),
+            "大股东公告日期": period,
+            "大股东名称": _text(first.get("HOLDER_NAME")),
+            "大股东持股市值": (
+                hold_num * price
+                if hold_num is not None and price is not None
+                else None
+            ),
+            "大股东持股数量": hold_num,
+            "大股东持股比例": _number(first.get("HOLD_NUM_RATIO")),
+            "大股东排名": _number(first.get("HOLDER_RANK")),
+            "大股东股份类别": _text(first.get("SHARES_TYPE")),
+            "最新户均持股市值": _number(latest_holder.get("AVG_HOLD_AMT")),
+            "最新户均持股数量": _number(latest_holder.get("AVG_FREE_SHARES")),
+            "股票代码": (
+                f"{self._stock_code}.{_eastmoney_market_prefix(self._stock_code)}"
+                if self._stock_code
+                else ""
+            ),
+            "股票简称": self.stock_name,
+        }
+        if row["前十大股东持股比例合计"] is None:
+            return _empty("东方财富 F10 未返回前十大股东持股比例合计")
+        return SimpleNamespace(df=pd.DataFrame([row]), error="")
+
+    def _eastmoney_unlock_frame(self) -> SimpleNamespace:
+        payload, error = self._f10_payload()
+        if error:
+            return _empty(error)
+        rows = [
+            dict(item)
+            for item in payload.get("xsjj") or []
+            if isinstance(item, dict)
+        ]
+        if rows:
+            latest = max(rows, key=lambda item: _date_key(item.get("END_DATE")))
+            output = {
+                "下次解禁日期": _date_key(latest.get("END_DATE")),
+                "下次解禁数量": _number(latest.get("LIMITED_SHARES")),
+                "下次解禁股数占流通股比例": _number(
+                    latest.get("LIMITED_SHARES_RATIO")
+                ),
+                "解禁股类型": _text(latest.get("SHARES_TYPE")),
+                "数据来源": "东方财富F10",
+            }
+        else:
+            output = {
+                "未来解禁安排": "截至采集时点，东方财富 F10 公告口径未返回待解禁记录",
+                "数据来源": "东方财富F10",
+            }
+        return SimpleNamespace(df=pd.DataFrame([output]), error="")
+
     def _peers_frame(self, query: str) -> SimpleNamespace:
         """Use Wencai first, then disclosed Eastmoney peer data when quota is exhausted."""
 
@@ -1528,9 +2021,15 @@ class CloudStockAdapter:
         else:
             quote_error = ""
 
+        try:
+            tencent_quotes = _tencent_quote_snapshot(codes)
+        except Exception:
+            tencent_quotes = {}
+
         rows_by_code: dict[str, dict[str, Any]] = {}
         for code in codes:
             quote = quotes.get(code) or {}
+            tencent = tencent_quotes.get(code) or {}
             valuation = valuation_rows.get(code) or {}
             size = size_rows.get(code) or {}
             ratio = ratio_rows.get(code) or {}
@@ -1549,27 +2048,47 @@ class CloudStockAdapter:
                 continue
             revenue = _number(size.get("TOTAL_OPERATEINCOME"))
             profit = _number(size.get("NETPROFIT"))
+            tencent_used = False
+            pe = _coalesce(
+                _number(quote.get("f9")),
+                _number(valuation.get("PE_TTM")),
+                _number(valuation.get("PE")),
+            )
+            if pe is None and _number(tencent.get("pe")) is not None:
+                pe = _number(tencent.get("pe"))
+                tencent_used = True
+            pb = _coalesce(
+                _number(quote.get("f23")),
+                _number(valuation.get("PB_MRQ")),
+                _number(valuation.get("PB")),
+            )
+            if pb is None and _number(tencent.get("pb")) is not None:
+                pb = _number(tencent.get("pb"))
+                tencent_used = True
+            market_cap = _coalesce(
+                _number(quote.get("f20")),
+                _cap_yuan(size.get("TOTAL_CAP")),
+            )
+            if market_cap is None and _number(tencent.get("market_cap")) is not None:
+                market_cap = _number(tencent.get("market_cap"))
+                tencent_used = True
+            circulating_cap = _coalesce(
+                _number(quote.get("f21")),
+                _cap_yuan(size.get("FREECAP")),
+            )
+            if (
+                circulating_cap is None
+                and _number(tencent.get("circulating_cap")) is not None
+            ):
+                circulating_cap = _number(tencent.get("circulating_cap"))
+                tencent_used = True
             row = {
                 "股票代码": f"{code}.{_eastmoney_market_prefix(code)}",
                 "股票简称": name,
-                "市盈率(pe)": _coalesce(
-                    _number(quote.get("f9")),
-                    _number(valuation.get("PE_TTM")),
-                    _number(valuation.get("PE")),
-                ),
-                "市净率(pb)": _coalesce(
-                    _number(quote.get("f23")),
-                    _number(valuation.get("PB_MRQ")),
-                    _number(valuation.get("PB")),
-                ),
-                "总市值": _coalesce(
-                    _number(quote.get("f20")),
-                    _number(size.get("TOTAL_CAP")),
-                ),
-                "流通市值": _coalesce(
-                    _number(quote.get("f21")),
-                    _number(size.get("FREECAP")),
-                ),
+                "市盈率(pe)": pe,
+                "市净率(pb)": pb,
+                "总市值": market_cap,
+                "流通市值": circulating_cap,
                 "净资产收益率": _number(ratio.get("ROE_AVG")),
                 "营业收入": revenue,
                 "净利润": profit,
@@ -1580,7 +2099,11 @@ class CloudStockAdapter:
                 ),
                 "最新价": _number(quote.get("f2")),
                 "最新涨跌幅": _number(quote.get("f3")),
-                "数据来源": "东方财富F10/行情",
+                "数据来源": (
+                    "东方财富F10/行情+腾讯行情"
+                    if tencent_used
+                    else "东方财富F10/行情"
+                ),
             }
             rows_by_code[code] = (
                 {
@@ -1656,43 +2179,134 @@ class CloudStockAdapter:
             "第一大股东名称 户均持股数量 户均持股市值"
         )
         result = self._query(query, "hithink-finance-query", limit=5)
-        if result.df.empty:
-            return result
-        row = result.df.iloc[0].to_dict()
-        total_key = next(
-            (str(key) for key in row if str(key).startswith("持股比例[")),
-            None,
-        )
-        total = _number(row.get(total_key)) if total_key else None
+        row: dict[str, Any] = {}
+        if not result.df.empty:
+            row.update(result.df.iloc[0].to_dict())
+            self._record_source("chip", "wencai")
+
+        if _number(row.get("前十大股东持股比例合计")) is None:
+            thsdk = self._ths_wencai_frame(query, limit=5)
+            if not thsdk.df.empty and _fill_missing(row, thsdk.df.iloc[0].to_dict()):
+                self._record_source("chip", "thsdk")
+
+        if _number(row.get("前十大股东持股比例合计")) is None:
+            fallback = self._eastmoney_concentration_frame()
+            if not fallback.df.empty and _fill_missing(
+                row, fallback.df.iloc[0].to_dict()
+            ):
+                self._record_source("chip", "eastmoney")
+
+        total = _number(row.get("前十大股东持股比例合计"))
+        if total is None:
+            total_key = next(
+                (
+                    str(key)
+                    for key in row
+                    if str(key).startswith("前十大股东持股比例合计[")
+                ),
+                None,
+            )
+            candidate = _number(row.get(total_key)) if total_key else None
+            if candidate is not None and 0 < candidate <= 1:
+                total = candidate
+        if total is None:
+            total_key = next(
+                (
+                    str(key)
+                    for key in row
+                    if str(key).startswith("持股比例[")
+                ),
+                None,
+            )
+            candidate = _number(row.get(total_key)) if total_key else None
+            if candidate is not None and 0 < candidate <= 1:
+                total = candidate
         if total is not None and 0 < total <= 1:
             total *= 100
         row["前十大股东持股比例合计"] = total
-        row["第一大股东持股比例"] = _number(_first(row, "持股比例"))
-        row["第一大股东名称"] = _text(_first(row, "名称", "第一大股东名称"))
-        quantity_key = _first_key(row, "户均持股数量[")
-        value_key = _first_key(row, "户均持股市值[")
+        first_ratio = _number(
+            _first(
+                row,
+                "大股东持股比例",
+                "第一大股东持股比例",
+                "持股比例",
+            )
+        )
+        first_name = _text(
+            _first(row, "大股东名称", "第一大股东名称", "名称")
+        )
+        row["第一大股东持股比例"] = first_ratio
+        row["第一大股东名称"] = first_name
+        quantity_key = _first_key(row, "最新户均持股数量[", "户均持股数量[")
+        value_key = _first_key(row, "最新户均持股市值[", "户均持股市值[")
         if quantity_key:
             row["户均持股数量"] = row.get(quantity_key)
         if value_key:
             row["户均持股市值"] = row.get(value_key)
+        if total is None:
+            return _empty("问财、thsdk 与东方财富 F10 均未返回股东集中度")
         return SimpleNamespace(df=pd.DataFrame([row]), error="")
 
     def _patent_frame(self, query: str) -> SimpleNamespace:
         result = self._query(query, "hithink-finance-query", limit=5)
-        if result.df.empty:
-            return result
-        row = result.df.iloc[0].to_dict()
+        row: dict[str, Any] = {}
+        if not result.df.empty:
+            row.update(result.df.iloc[0].to_dict())
+            self._record_source("barrier", "wencai")
+
+        def has_patents() -> bool:
+            return any("专利数量" in str(key) for key in row)
+
+        def has_rd_ratio() -> bool:
+            return any(
+                "研发投入占营业收入的比重" in str(key)
+                or "研发投入占比" in str(key)
+                for key in row
+            )
+
+        if not (has_patents() and has_rd_ratio()):
+            thsdk = self._ths_wencai_frame(query, limit=5)
+            if not thsdk.df.empty:
+                if _fill_missing(row, thsdk.df.iloc[0].to_dict()):
+                    self._record_source("barrier", "thsdk")
+        if not (has_patents() and has_rd_ratio()):
+            rd = self._eastmoney_rd_fallback()
+            if rd and _fill_missing(row, rd):
+                self._record_source("barrier", "eastmoney")
         for key, value in list(row.items()):
             text = str(key)
             if text.startswith("专利数量["):
                 row[f"专利数量合计{text[len('专利数量') :]}"] = value
+        if not row:
+            return _empty("问财、thsdk 与东方财富均未返回研发专利数据")
         return SimpleNamespace(df=pd.DataFrame([row]), error="")
 
     def _holder_trend_frame(self, query: str) -> SimpleNamespace:
         result = self._query(query, "hithink-finance-query", limit=5)
-        if result.df.empty:
-            return result
-        row = result.df.iloc[0].to_dict()
+        row: dict[str, Any] = {}
+        if not result.df.empty:
+            row.update(result.df.iloc[0].to_dict())
+            self._record_source("chip", "wencai")
+        if not any(
+            re.search(r"(股东户数|总户数)(?:\([^)]*\))?\[\d{8}\]", str(key))
+            for key in row
+        ):
+            fallback = self._eastmoney_holder_trend_frame()
+            if not fallback.df.empty and _fill_missing(
+                row, fallback.df.iloc[0].to_dict()
+            ):
+                self._record_source("chip", "eastmoney")
+        if not any(
+            re.search(r"(股东户数|总户数)(?:\([^)]*\))?\[\d{8}\]", str(key))
+            for key in row
+        ):
+            thsdk = self._ths_wencai_frame(query, limit=5)
+            if not thsdk.df.empty and _fill_missing(
+                row, thsdk.df.iloc[0].to_dict()
+            ):
+                self._record_source("chip", "thsdk")
+        if not row:
+            return _empty("问财、东方财富 F10 与 thsdk 均未返回股东户数")
         today = datetime.now(CN_TZ).strftime("%Y%m%d")
         filtered: dict[str, Any] = {}
         for key, value in row.items():
@@ -1702,6 +2316,202 @@ class CloudStockAdapter:
             filtered[str(key)] = value
         return SimpleNamespace(df=pd.DataFrame([filtered]), error="")
 
+    def _share_structure_frame(self, query: str) -> SimpleNamespace:
+        result = self._query(query, "hithink-finance-query", limit=5)
+        if not result.df.empty:
+            row = result.df.iloc[0].to_dict()
+            if any("总股本" in str(key) for key in row):
+                self._record_source("chip", "wencai")
+                return result
+
+        fallback = self._eastmoney_share_structure_frame()
+        if not fallback.df.empty:
+            self._record_source(
+                "chip", getattr(fallback, "source", "eastmoney") or "eastmoney"
+            )
+            return fallback
+
+        thsdk = self._ths_wencai_frame(query, limit=5)
+        if not thsdk.df.empty:
+            self._record_source("chip", "thsdk")
+            return thsdk
+        return _empty(
+            "; ".join(
+                item
+                for item in (
+                    getattr(result, "error", ""),
+                    getattr(fallback, "error", ""),
+                    getattr(thsdk, "error", ""),
+                )
+                if item
+            )
+            or "问财、腾讯行情、东方财富 F10 与 thsdk 均未返回股本结构"
+        )
+
+    def _unlock_frame(self, query: str) -> SimpleNamespace:
+        result = self._query(query, "hithink-finance-query", limit=5)
+        if not result.df.empty:
+            self._record_source("chip", "wencai")
+            return result
+        thsdk = self._ths_wencai_frame(query, limit=5)
+        if not thsdk.df.empty:
+            self._record_source("chip", "thsdk")
+            return thsdk
+        fallback = self._eastmoney_unlock_frame()
+        if not fallback.df.empty:
+            self._record_source("chip", "eastmoney")
+            return fallback
+        return _empty(
+            "; ".join(
+                item
+                for item in (
+                    getattr(result, "error", ""),
+                    getattr(thsdk, "error", ""),
+                    getattr(fallback, "error", ""),
+                )
+                if item
+            )
+            or "未返回解禁信息"
+        )
+
+    def _margin_frame(self, query: str) -> SimpleNamespace:
+        result = self._query(query, "hithink-finance-query", limit=5)
+        if not result.df.empty and any(
+            "融资余额" in str(key) for key in result.df.columns
+        ):
+            self._record_source("chip", "wencai")
+            return result
+        thsdk = self._ths_wencai_frame(query, limit=5)
+        if not thsdk.df.empty:
+            self._record_source("chip", "thsdk")
+            return thsdk
+        return _empty(
+            "; ".join(
+                item
+                for item in (
+                    getattr(result, "error", ""),
+                    getattr(thsdk, "error", ""),
+                )
+                if item
+            )
+            or "问财与 thsdk 均未返回融资余额"
+        )
+
+    def _eastmoney_rd_fallback(self) -> dict[str, Any]:
+        if not self._stock_code:
+            return {}
+        prefix = _eastmoney_market_prefix(self._stock_code)
+        params = {
+            "source": "HSF10",
+            "client": "PC",
+            "reportName": "RPT_F10_BUSINESS_RDEXPENSE",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{self._stock_code}.{prefix}")',
+            "sortTypes": "-1",
+            "sortColumns": "REPORT_DATE",
+        }
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_DATACENTER_URL}?{urlencode(params)}"
+            )
+        except Exception:
+            return {}
+        rows = [
+            dict(item)
+            for item in (((payload or {}).get("result") or {}).get("data") or [])
+            if isinstance(item, dict)
+        ]
+        if not rows:
+            return {}
+        annual = sorted(
+            (row for row in rows if _text(row.get("REPORT_TYPE")) == "年报"),
+            key=lambda row: _date_key(row.get("REPORT_DATE")),
+            reverse=True,
+        )
+        others = sorted(
+            (row for row in rows if _text(row.get("REPORT_TYPE")) != "年报"),
+            key=lambda row: _date_key(row.get("REPORT_DATE")),
+            reverse=True,
+        )
+        output: dict[str, Any] = {}
+        for row in (*annual[:2], *others[:2]):
+            period = _date_key(row.get("REPORT_DATE"))
+            if not period:
+                continue
+            expense = _number(row.get("RESEARCH_EXPENSE"))
+            ratio = _number(row.get("RESEARCH_EXPENSE_RATIO"))
+            if expense is not None:
+                output[f"研发费用[{period}]"] = expense
+            if ratio is not None:
+                output[f"研发投入占营业收入的比重[{period}]"] = ratio
+        return output
+
+    def _customer_supplier_frame(
+        self, query: str, metric: str
+    ) -> SimpleNamespace:
+        result = self._query(query, "hithink-finance-query", limit=5)
+        if not result.df.empty:
+            self._record_source("barrier", "wencai")
+            return result
+        thsdk = self._ths_wencai_frame(query, limit=5)
+        if not thsdk.df.empty:
+            self._record_source("barrier", "thsdk")
+            return thsdk
+        fallback = self._eastmoney_customer_supplier_frame(metric)
+        if not fallback.df.empty:
+            self._record_source("barrier", "eastmoney")
+            return fallback
+        return _empty("问财、thsdk 与东方财富数据中心均未返回集中度")
+
+    def _eastmoney_customer_supplier_frame(
+        self, metric: str
+    ) -> SimpleNamespace:
+        if not self._stock_code:
+            return _empty("客户/供应商集中度缺少股票代码")
+        prefix = _eastmoney_market_prefix(self._stock_code)
+        metric_type = "客户" if "客户" in metric else "供应商"
+        params = {
+            "source": "HSF10",
+            "client": "PC",
+            "reportName": "RPT_F10_BUSINESS_CUSTSUPP",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{self._stock_code}.{prefix}")',
+            "sortTypes": "-1",
+            "sortColumns": "REPORT_DATE",
+        }
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_DATACENTER_URL}?{urlencode(params)}"
+            )
+        except Exception as exc:
+            return _empty(f"东方财富集中度请求失败：{exc}")
+        rows = [
+            dict(item)
+            for item in (((payload or {}).get("result") or {}).get("data") or [])
+            if isinstance(item, dict) and _text(item.get("TYPE")) == metric_type
+        ]
+        if not rows:
+            return _empty("东方财富数据中心未返回客户/供应商明细")
+        latest_period = max(_date_key(row.get("REPORT_DATE")) for row in rows)
+        latest = [
+            row
+            for row in rows
+            if _date_key(row.get("REPORT_DATE")) == latest_period
+            and (_number(row.get("RANK")) or 99) <= 5
+        ]
+        values = [
+            value
+            for value in (_number(row.get("TOI_RATIO")) for row in latest)
+            if value is not None
+        ]
+        if not values:
+            return _empty("东方财富客户/供应商集中度没有有效比例")
+        output = {
+            f"{metric}[{latest_period}]": round(sum(values), 6),
+            "数据来源": "东方财富数据中心",
+        }
+        return SimpleNamespace(df=pd.DataFrame([output]), error="")
+
     def wencai_nlp(self, query: str) -> SimpleNamespace:
         if "公司全称" in query and "主营业务" in query:
             return self._finance_frame()
@@ -1709,6 +2519,18 @@ class CloudStockAdapter:
             return self._holders_frame()
         if "前十大股东持股比例合计" in query:
             return self._concentration_frame()
+        if "总股本" in query and ("流通a股" in query or "限售a股" in query):
+            return self._share_structure_frame(query)
+        if "下次解禁" in query:
+            return self._unlock_frame(query)
+        if "融资余额" in query:
+            return self._margin_frame(query)
+        if "客户销售额合计占比" in query:
+            return self._customer_supplier_frame(query, "客户销售额合计占比(前五大)")
+        if "供应商采购金额合计占比" in query:
+            return self._customer_supplier_frame(
+                query, "供应商采购金额合计占比(前五大)"
+            )
         if "专利数量" in query:
             return self._patent_frame(query)
         if "股东户数" in query:
@@ -1782,11 +2604,29 @@ class CloudStockAdapter:
         )
 
     def _ths_big_order_flow(self, thscode: str) -> SimpleNamespace:
+        client = self._ths_connection()
+        if client is None:
+            return _empty(
+                getattr(self, "_ths_connect_error", "")
+                or "同花顺 thsdk 不可用"
+            )
         try:
-            with mq.ThsClient() as client:
-                payload = client.capital_flow(thscode, count=200)
+            payload = client.capital_flow(thscode, count=200)
         except Exception as exc:
-            return _empty(f"thsdk 大单流向查询失败：{exc}")
+            message = str(exc)
+            if "请先连接" not in message and "not connect" not in message.lower():
+                return _empty(f"thsdk 大单流向查询失败：{message}")
+            self._reset_ths_client()
+            client = self._ths_connection()
+            if client is None:
+                return _empty(
+                    getattr(self, "_ths_connect_error", "")
+                    or "thsdk 大单流向重连失败"
+                )
+            try:
+                payload = client.capital_flow(thscode, count=200)
+            except Exception as retry_exc:
+                return _empty(f"thsdk 大单流向重连后失败：{retry_exc}")
         rows = [dict(row) for row in payload.get("items") or [] if isinstance(row, dict)]
         if not rows:
             return _empty("thsdk 未返回大单成交")

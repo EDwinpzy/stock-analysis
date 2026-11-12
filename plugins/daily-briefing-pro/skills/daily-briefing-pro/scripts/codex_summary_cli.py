@@ -31,6 +31,10 @@ class ApiSummaryConfig:
     model: str
 
 
+class SummaryBatchError(RuntimeError):
+    """The model returned a structurally invalid batch, so split and retry."""
+
+
 def api_summary_config(env: Mapping[str, str] | None = None) -> ApiSummaryConfig | None:
     """Return the first configured OpenAI-compatible summary endpoint."""
 
@@ -69,6 +73,24 @@ def api_summary_config(env: Mapping[str, str] | None = None) -> ApiSummaryConfig
         model = str(values.get(model_name) or default_model).strip()
         return ApiSummaryConfig(provider, api_key, base_url, model)
     return None
+
+
+def _model_candidates(config: ApiSummaryConfig) -> list[str]:
+    """Return the primary model followed by an optional comma-separated fallback."""
+
+    fallback_names = {
+        'generic': 'DAILY_BRIEFING_AI_FALLBACK_MODEL',
+        'deepseek': 'DEEPSEEK_FALLBACK_MODEL',
+        'openai': 'OPENAI_FALLBACK_MODEL',
+    }
+    names = [config.model]
+    fallback_name = fallback_names.get(config.provider, '')
+    fallback = os.environ.get(fallback_name, '') if fallback_name else ''
+    for raw in str(fallback).split(','):
+        name = raw.strip()
+        if name and name not in names:
+            names.append(name)
+    return names
 
 
 def codex_available() -> bool:
@@ -234,43 +256,48 @@ def call_api_text(
     headers = {'Authorization': f'Bearer {config.api_key}'}
     url = f'{config.base_url}/chat/completions'
     last_error = ''
-    for attempt in range(3):
-        try:
-            from network_config import httpx_client_kwargs
+    for model in _model_candidates(config):
+        payload['model'] = model
+        for attempt in range(3):
+            try:
+                from network_config import httpx_client_kwargs
 
-            client_kwargs = httpx_client_kwargs(timeout=timeout)
-        except ImportError:
-            client_kwargs = {'timeout': timeout, 'trust_env': False}
-        try:
-            response = httpx.post(url, headers=headers, json=payload, **client_kwargs)
-        except httpx.HTTPError:
-            last_error = 'AI summary request failed'
-            if attempt < 2:
-                time.sleep(0.5 * (attempt + 1))
-                continue
-            raise RuntimeError(last_error) from None
-        if response.status_code in (401, 403):
-            raise RuntimeError(
-                f'AI summary credentials rejected (HTTP {response.status_code})'
-            ) from None
-        if response.status_code == 429 or response.status_code >= 500:
-            last_error = f'AI summary endpoint returned HTTP {response.status_code}'
-            if attempt < 2:
-                time.sleep(0.5 * (attempt + 1))
-                continue
-            raise RuntimeError(last_error) from None
-        if response.status_code != 200:
-            raise RuntimeError(
-                f'AI summary endpoint returned HTTP {response.status_code}'
-            ) from None
-        try:
-            data = response.json()
-            content = data['choices'][0]['message']['content']
-        except (KeyError, IndexError, TypeError, ValueError):
-            raise RuntimeError('AI summary returned an invalid response') from None
-        if not isinstance(content, str) or not content.strip():
-            raise RuntimeError('AI summary returned an empty response')
-        return content.strip()
+                client_kwargs = httpx_client_kwargs(timeout=timeout)
+            except ImportError:
+                client_kwargs = {'timeout': timeout, 'trust_env': False}
+            try:
+                response = httpx.post(url, headers=headers, json=payload, **client_kwargs)
+            except httpx.HTTPError:
+                last_error = 'AI summary request failed'
+                if attempt < 2:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                break
+            if response.status_code in (401, 403):
+                raise RuntimeError(
+                    f'AI summary credentials rejected (HTTP {response.status_code})'
+                ) from None
+            if response.status_code == 404:
+                last_error = 'AI summary model is unavailable (HTTP 404)'
+                break
+            if response.status_code == 429 or response.status_code >= 500:
+                last_error = f'AI summary endpoint returned HTTP {response.status_code}'
+                if attempt < 2:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                break
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f'AI summary endpoint returned HTTP {response.status_code}'
+                ) from None
+            try:
+                data = response.json()
+                content = data['choices'][0]['message']['content']
+            except (KeyError, IndexError, TypeError, ValueError):
+                raise RuntimeError('AI summary returned an invalid response') from None
+            if not isinstance(content, str) or not content.strip():
+                raise RuntimeError('AI summary returned an empty response')
+            return content.strip()
     raise RuntimeError(last_error or 'AI summary request failed')
 
 
@@ -372,19 +399,53 @@ def _summarize_batch(
         '保留驱动到影响的逻辑与评级；无法核验因果时明确资料未提供。严禁拼接摘抄和臆测。\n'
         + json.dumps(sources, ensure_ascii=False)
     )
-    answer = call_codex_json(prompt, schema)
+    try:
+        answer = call_codex_json(prompt, schema)
+    except RuntimeError as exc:
+        message = str(exc)
+        if any(
+            marker in message
+            for marker in (
+                'returned invalid JSON',
+                'returned a non-object',
+                'returned an empty response',
+            )
+        ):
+            raise SummaryBatchError(message) from exc
+        raise
     rows = answer.get('summaries')
     expected = {index for index, _, _ in batch}
     if not isinstance(rows, list) or len(rows) != len(batch):
-        raise RuntimeError('Incomplete summary batch')
+        raise SummaryBatchError('Incomplete summary batch')
     validated = {}
     for row in rows:
         index = row.get('index') if isinstance(row, dict) else None
         summary = row.get('summary') if isinstance(row, dict) else None
         if type(index) is not int or index not in expected or index in validated or not isinstance(summary, str) or not summary.strip():
-            raise RuntimeError('Invalid or duplicate summary index')
+            raise SummaryBatchError('Invalid or duplicate summary index')
         validated[index] = summary.strip()
     return validated
+
+
+def _summarize_batch_resilient(
+    batch: list[tuple[int, str, str]],
+    schema: dict,
+) -> dict[int, str]:
+    """Split a structurally invalid batch until every valid item is kept."""
+
+    try:
+        return _summarize_batch(batch, schema)
+    except SummaryBatchError as exc:
+        if len(batch) <= 1:
+            print(
+                f'  [WARN] Codex semantic summary failed ({type(exc).__name__})',
+                file=sys.stderr,
+            )
+            return {}
+        middle = len(batch) // 2
+        merged = _summarize_batch_resilient(batch[:middle], schema)
+        merged.update(_summarize_batch_resilient(batch[middle:], schema))
+        return merged
 
 
 def summarize_tasks(tasks: list[tuple[str, str]]) -> list[str]:
@@ -401,19 +462,22 @@ def summarize_tasks(tasks: list[tuple[str, str]]) -> list[str]:
             'required': ['index', 'summary'],
         }}}, 'required': ['summaries'],
     }
-    batches = [pending[start:start + 12] for start in range(0, len(pending), 12)]
+    batches = [pending[start:start + 6] for start in range(0, len(pending), 6)]
     workers = _semantic_workers()
     if workers == 1:
         completed = []
         for batch in batches:
             try:
-                completed.append((None, _summarize_batch(batch, schema)))
+                completed.append((None, _summarize_batch_resilient(batch, schema)))
             except Exception as exc:
                 completed.append((exc, {}))
     else:
         completed = []
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {executor.submit(_summarize_batch, batch, schema): batch for batch in batches}
+            futures = {
+                executor.submit(_summarize_batch_resilient, batch, schema): batch
+                for batch in batches
+            }
             for future in as_completed(futures):
                 try:
                     completed.append((None, future.result()))

@@ -78,9 +78,32 @@ PLACEHOLDER_PATTERNS = (
     r"UNSOURCED",
     r"数据获取失败",
     r"采集失败",
+    r"公开数据未覆盖",
     r"暂无",
     r"暂无数据",
 )
+
+STOCK_QUOTE_FIELDS = {
+    "price": "最新价",
+    "change_pct": "涨跌幅",
+    "change_amt": "涨跌额",
+    "volume": "成交量",
+    "amount": "成交额",
+    "market_cap": "总市值",
+    "circulating_cap": "流通市值",
+    "pe_ttm": "市盈率TTM",
+    "turnover_rate": "换手率",
+    "amplitude": "振幅",
+    "main_net_inflow": "主力净流入",
+    "main_net_pct": "主力净量",
+    "high": "最高价",
+    "low": "最低价",
+    "open_change": "开盘涨幅",
+    "prev_close": "昨收价",
+    "limit_up": "涨停价",
+    "limit_down": "跌停价",
+    "5d_change": "5日涨幅",
+}
 
 INDUSTRY_SNAPSHOT_FIELDS = (
     "涨幅",
@@ -120,7 +143,13 @@ def is_empty(value: Any) -> bool:
     if value is None:
         return True
     if isinstance(value, str):
-        return not value.strip() or value.strip() in {"暂无", "暂无数据", "-", "--"}
+        return not value.strip() or value.strip() in {
+            "暂无",
+            "暂无数据",
+            "公开数据未覆盖",
+            "-",
+            "--",
+        }
     if isinstance(value, (list, tuple, set)):
         return len(value) == 0
     if isinstance(value, dict):
@@ -295,6 +324,99 @@ def _source_fact_problems(text: str, kind: str, data: dict[str, Any]) -> list[st
     return problems
 
 
+def _stock_nested_problems(data: dict[str, Any]) -> list[str]:
+    """Reject structurally present but semantically empty stock data blocks."""
+
+    problems: list[str] = []
+    quote = data.get("quote") if isinstance(data.get("quote"), dict) else {}
+    missing_quote = [
+        label for key, label in STOCK_QUOTE_FIELDS.items() if is_empty(quote.get(key))
+    ]
+    if missing_quote:
+        problems.append("行情关键字段缺失：" + "、".join(missing_quote))
+
+    chip = (
+        data.get("chip_structure")
+        if isinstance(data.get("chip_structure"), dict)
+        else {}
+    )
+    for key, label in (
+        ("holder_count_trend", "股东户数趋势"),
+        ("share_structure", "股本结构"),
+        ("unlock_data", "解禁信息"),
+        ("concentration", "股东集中度"),
+        ("margin", "融资余额"),
+    ):
+        value = chip.get(key)
+        if is_empty(value):
+            problems.append(f"筹码子项为空：{label}")
+    holder_trend = (
+        chip.get("holder_count_trend")
+        if isinstance(chip.get("holder_count_trend"), dict)
+        else {}
+    )
+    dated_holders = [
+        key
+        for key in holder_trend
+        if re.search(r"(?:股东户数|总户数).*?\[\d{8}\]", str(key))
+    ]
+    if len(dated_holders) < 2:
+        problems.append("股东户数趋势不足两期")
+    share_structure = (
+        chip.get("share_structure")
+        if isinstance(chip.get("share_structure"), dict)
+        else {}
+    )
+    for fragment, label in (
+        ("总股本", "总股本"),
+        ("流通a股", "流通A股"),
+        ("限售a股", "限售A股"),
+    ):
+        if not any(fragment in str(key) for key in share_structure):
+            problems.append(f"股本结构缺少：{label}")
+    concentration = (
+        chip.get("concentration")
+        if isinstance(chip.get("concentration"), dict)
+        else {}
+    )
+    if is_empty(concentration.get("前十大股东持股比例合计")):
+        problems.append("股东集中度缺少前十大股东持股比例合计")
+    margin = chip.get("margin") if isinstance(chip.get("margin"), dict) else {}
+    if not any("融资余额" in str(key) for key in margin):
+        problems.append("融资余额子项缺少融资余额")
+
+    barrier = (
+        data.get("barrier_data")
+        if isinstance(data.get("barrier_data"), dict)
+        else {}
+    )
+    for key, label in (
+        ("rd_raw", "研发专利"),
+        ("customer_concentration", "客户集中度"),
+        ("supplier_concentration", "供应商集中度"),
+    ):
+        if is_empty(barrier.get(key)):
+            problems.append(f"壁垒子项为空：{label}")
+    rd = barrier.get("rd_raw") if isinstance(barrier.get("rd_raw"), dict) else {}
+    if not any(
+        "研发投入占营业收入的比重" in str(key) or "研发投入占比" in str(key)
+        for key in rd
+    ):
+        problems.append("研发专利缺少研发投入占比")
+    if not any("专利数量" in str(key) for key in rd):
+        problems.append("研发专利缺少专利数量")
+    for key, label in (
+        ("customer_concentration", "客户集中度"),
+        ("supplier_concentration", "供应商集中度"),
+    ):
+        value = barrier.get(key)
+        if isinstance(value, dict) and (
+            is_empty(value.get("value")) or is_empty(value.get("period"))
+        ):
+            problems.append(f"{label}缺少数值或报告期")
+    return problems
+
+
 def verify_report(path: Path, kind: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
     if not path.is_file():
         return {"ok": False, "error": f"报告不存在：{path}"}
@@ -398,6 +520,8 @@ def verify_data(path: Path, kind: str) -> dict[str, Any]:
             problems.append(
                 "核心标的字段缺失：" + "；".join(incomplete_stocks[:5])
             )
+    else:
+        problems.extend(_stock_nested_problems(data))
     if data.get("error"):
         problems.append("采集器报错：" + str(data["error"]))
     return {

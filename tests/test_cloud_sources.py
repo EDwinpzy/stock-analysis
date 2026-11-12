@@ -111,6 +111,15 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter.finance_error = ""
     adapter.quote_source = ""
     adapter.quote_fallback_error = ""
+    adapter.quote_fill_sources = []
+    adapter.chip_sources = []
+    adapter.barrier_sources = []
+    adapter._ths_client = None
+    adapter._ths_connect_error = "unit-test-disable-thsdk"
+    adapter._ths_connect_retry_at = float("inf")
+    adapter._last_ths_query_at = 0.0
+    adapter._f10_payload_cache = None
+    adapter._f10_payload_error = ""
     return adapter
 
 
@@ -160,6 +169,11 @@ def test_quote_maps_dated_columns_and_previous_close():
 
 def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
     monkeypatch.setattr(
+        CloudStockAdapter,
+        "_thsdk_quote_fallback",
+        lambda self, code: {},
+    )
+    monkeypatch.setattr(
         cloud_sources,
         "_eastmoney_stock_quote",
         lambda code: {
@@ -174,6 +188,17 @@ def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
             "f25": 4.53,
         },
     )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_tencent_quote_snapshot",
+        lambda codes: {
+            "600519": {
+                "name": "贵州茅台",
+                "pe": 21.46,
+                "5d_change": -2.87,
+            }
+        },
+    )
     adapter = make_adapter(
         FakeWencai(lambda skill, query, limit: payload()),
         FakeMarket(),
@@ -184,10 +209,269 @@ def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
 
     assert row["价格"] == 1410.27
     assert row["涨幅"] == 0.57
-    assert row["市盈率TTM"] == 20.51
+    assert row["市盈率TTM"] == 21.46
     assert row["总市值"] == 1762952579442.0
     assert row["名称"] == "贵州茅台"
     assert adapter.quote_source == "eastmoney"
+    assert adapter.quote_fill_sources == ["eastmoney", "tencent"]
+
+
+def test_thsdk_quote_fallback_returns_complete_vendor_fields(monkeypatch):
+    class FakeThsClient:
+        def realtime(self, codes):
+            return {
+                "data": {
+                    "USHA600519": {
+                        "name": "贵州茅台",
+                        "raw": {
+                            "价格": 1410.27,
+                            "昨收价": 1402.3,
+                            "成交量": 3237294,
+                            "总金额": 4536814500,
+                            "换手率": 0.259,
+                            "振幅": 1.6323,
+                            "市盈率TTM": 21.4574,
+                            "5日涨幅": -2.874,
+                            "总市值": 1762952600000,
+                            "流通市值": 1762952600000,
+                            "主力净流入": -29302050,
+                            "主力净量": -0.0017,
+                            "最高价": 1411,
+                            "最低价": 1388.11,
+                            "涨停价": 1542.53,
+                            "跌停价": 1262.07,
+                            "开盘涨幅": -0.5113,
+                            "名称": "贵州茅台",
+                        },
+                    }
+                }
+            }
+
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    monkeypatch.setattr(adapter, "_ths_connection", lambda: FakeThsClient())
+
+    quote = adapter._thsdk_quote_fallback("USHA600519")
+
+    assert quote["价格"] == pytest.approx(1410.27)
+    assert quote["成交量"] == pytest.approx(3237294)
+    assert quote["市盈率TTM"] == pytest.approx(21.4574)
+    assert quote["主力净流入"] == pytest.approx(-29302050)
+    assert quote["5日涨幅"] == pytest.approx(-2.874)
+    assert quote["开盘价"] == pytest.approx(
+        1402.3 * (1 - 0.5113 / 100)
+    )
+
+
+def test_holder_trend_falls_back_to_eastmoney_f10(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_eastmoney_holder_trend_frame",
+        lambda self: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(
+                [
+                    {
+                        "股东户数(报告期)[20250630]": 220658,
+                        "股东户数(报告期)[20251231]": 255892,
+                    }
+                ]
+            ),
+            error="",
+        ),
+    )
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 股东户数[20250630] 股东户数[20251231]"
+    ).df.iloc[0]
+
+    assert row["股东户数(报告期)[20251231]"] == 255892
+    assert adapter.chip_sources == ["eastmoney"]
+
+
+def test_share_structure_falls_back_to_tencent(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_eastmoney_share_structure_frame",
+        lambda self: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(
+                [
+                    {
+                        "总股本[20261112]": 1250081601,
+                        "流通a股[20261112]": 1250081601,
+                        "限售a股[20261112]": 0,
+                    }
+                ]
+            ),
+            error="",
+            source="tencent",
+        ),
+    )
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 总股本 流通a股 限售a股"
+    ).df.iloc[0]
+
+    assert row["总股本[20261112]"] == 1250081601
+    assert adapter.chip_sources == ["tencent"]
+
+
+def test_share_structure_falls_back_to_f10_ltgf_fields(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="中芯国际",
+    )
+    adapter._stock_code = "688981"
+    monkeypatch.setattr(
+        cloud_sources,
+        "_tencent_quote_snapshot",
+        lambda codes: {},
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_f10_payload",
+        lambda self: (
+            {
+                "ltgf": [
+                    {
+                        "END_DATE": "2026-09-30 00:00:00",
+                        "HOLD_NUM_COUNT": 6382467539,
+                        "LIMITED_SHARES": 547182073,
+                        "OTHER_UNLIMITED_SHARES": 1632695979,
+                    }
+                ]
+            },
+            "",
+        ),
+    )
+
+    result = adapter._eastmoney_share_structure_frame()
+
+    row = result.df.iloc[0]
+    assert row["总股本[20260930]"] == 8562345591
+    assert row["流通a股[20260930]"] == 8015163518
+    assert row["限售a股[20260930]"] == 547182073
+    assert result.source == "eastmoney"
+
+
+def test_ths_connection_retries_after_transient_failure(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+    )
+    adapter._ths_connect_error = ""
+    adapter._ths_connect_retry_at = 0.0
+    attempts = []
+
+    class FakeThsClient:
+        def __enter__(self):
+            attempts.append("enter")
+            if len(attempts) == 1:
+                raise RuntimeError("temporary failure")
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+    monkeypatch.setattr(cloud_sources.mq, "ThsClient", FakeThsClient)
+
+    assert adapter._ths_connection() is None
+    assert "temporary failure" in adapter._ths_connect_error
+    assert adapter._ths_connection() is None
+    assert len(attempts) == 1
+
+    adapter._ths_connect_retry_at = 0.0
+    assert adapter._ths_connection() is not None
+    assert len(attempts) == 2
+    assert adapter._ths_connect_error == ""
+
+
+def test_margin_and_patents_fall_back_to_thsdk(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+
+    def fake_ths(self, query, limit=20):
+        if "融资余额" in query:
+            return cloud_sources.SimpleNamespace(
+                df=cloud_sources.pd.DataFrame(
+                    [{"融资余额[20261111]": 15093509194}]
+                ),
+                error="",
+            )
+        return cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(
+                [
+                    {
+                        "专利数量[20261111]": 272,
+                        "发明专利[20261111]": 70,
+                        "研发投入占营业收入的比重[20251231]": 0.48,
+                    }
+                ]
+            ),
+            error="",
+        )
+
+    monkeypatch.setattr(CloudStockAdapter, "_ths_wencai_frame", fake_ths)
+    monkeypatch.setattr(CloudStockAdapter, "_eastmoney_rd_fallback", lambda self: {})
+
+    margin = adapter.wencai_nlp("贵州茅台 融资余额 融资余额占流通市值比")
+    patents = adapter.wencai_nlp(
+        "贵州茅台 研发费用 专利数量 发明专利数量"
+    )
+
+    assert margin.df.iloc[0]["融资余额[20261111]"] == 15093509194
+    assert patents.df.iloc[0]["专利数量合计[20261111]"] == 272
+    assert patents.df.iloc[0]["研发投入占营业收入的比重[20251231]"] == 0.48
+    assert adapter.chip_sources == ["thsdk"]
+    assert adapter.barrier_sources == ["thsdk"]
+
+
+def test_patent_query_skips_thsdk_when_wencai_is_complete(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(
+            lambda skill, query, limit: payload(
+                {
+                    "专利数量[20261111]": 272,
+                    "发明专利[20261111]": 70,
+                    "研发投入占营业收入的比重[20251231]": 0.48,
+                }
+            )
+        ),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+
+    def fail_ths(self, query, limit=20):
+        raise AssertionError("thsdk should not be called")
+
+    def fail_rd(self):
+        raise AssertionError("eastmoney R&D should not be called")
+
+    monkeypatch.setattr(CloudStockAdapter, "_ths_wencai_frame", fail_ths)
+    monkeypatch.setattr(CloudStockAdapter, "_eastmoney_rd_fallback", fail_rd)
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 研发费用 专利数量 发明专利数量"
+    ).df.iloc[0]
+
+    assert row["专利数量合计[20261111]"] == 272
+    assert adapter.barrier_sources == ["wencai"]
 
 
 def test_finance_frame_aliases_roe_products_and_basic_info():
@@ -326,6 +610,7 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
 
     adapter = make_adapter(FakeWencai(responder), FakeMarket())
     adapter._stock_code = "600519"
+    monkeypatch.setattr(cloud_sources, "_tencent_quote_snapshot", lambda codes: {})
 
     def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
         if "IndustryAnalysis" in url:
@@ -447,6 +732,72 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
     assert rows[1]["营业收入同比"] == pytest.approx(-54.551804064166)
     assert adapter.peers_source == "eastmoney"
     assert adapter.peers_error == ""
+
+
+def test_peer_query_fills_missing_valuation_from_tencent(monkeypatch):
+    adapter = make_adapter(FakeWencai(lambda skill, query, limit: payload()), FakeMarket())
+    adapter._stock_code = "600519"
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        assert "IndustryAnalysis" in url
+        return {
+            "gzbj": [
+                {
+                    "CORRE_SECURITY_CODE": "600519",
+                    "CORRE_SECURITY_NAME": "贵州茅台",
+                    "PE_TTM": 21.34,
+                    "PB_MRQ": 7.17,
+                },
+                {"CORRE_SECURITY_CODE": "000858", "CORRE_SECURITY_NAME": "五粮液"},
+            ],
+            "gsgm": [
+                {
+                    "CORRE_SECURITY_CODE": "600519",
+                    "CORRE_SECURITY_NAME": "贵州茅台",
+                    "TOTAL_CAP": 1752989429082.3,
+                    "FREECAP": 17529.89,
+                }
+            ],
+            "gsgm_zsz": [
+                {
+                    "CORRE_SECURITY_CODE": "000858",
+                    "CORRE_SECURITY_NAME": "五粮液",
+                    "TOTAL_CAP": 280989603481.95,
+                    "FREECAP": 2819.14,
+                }
+            ],
+        }
+
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_quote_snapshot",
+        lambda codes: {
+            "600519": {"f14": "贵州茅台", "f20": 1752989429082.3},
+            "000858": {"f14": "五粮液"},
+        },
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_tencent_quote_snapshot",
+        lambda codes: {
+            "600519": {"pe": 21.46, "pb": 6.5},
+            "000858": {"pe": 23.13, "pb": 2.38},
+        },
+    )
+
+    result = adapter.wencai_nlp(
+        "白酒行业，市盈率，总市值，市净率，净资产收益率ROE，"
+        "2025年营业收入，2025年销售毛利率，2025年销售净利率，股息率"
+    )
+    rows = {row["股票代码"]: row for row in result.df.to_dict("records")}
+
+    peer = rows["000858.SZ"]
+    assert peer["市盈率(pe)"] == pytest.approx(23.13)
+    assert peer["市净率(pb)"] == pytest.approx(2.38)
+    assert peer["总市值"] == pytest.approx(280989603481.95)
+    assert peer["流通市值"] == pytest.approx(281914000000.0)
+    assert "腾讯行情" in peer["数据来源"]
 
 
 def test_finance_query_falls_back_to_eastmoney_annual_reports(monkeypatch):
@@ -618,15 +969,29 @@ def test_big_order_flow_falls_back_to_thsdk(monkeypatch):
 
 
 def test_tencent_quote_snapshot_parses_valuation_fields(monkeypatch):
-    fields = [""] * 70
+    fields = [""] * 80
     fields[1] = "古井贡酒"
     fields[2] = "000596"
     fields[3] = "105.80"
+    fields[4] = "106.14"
+    fields[5] = "106.00"
+    fields[33] = "107.20"
+    fields[34] = "104.80"
+    fields[36] = "12000"
+    fields[37] = "12800"
+    fields[38] = "0.42"
+    fields[43] = "2.25"
+    fields[44] = "432.30"
+    fields[45] = "420.10"
     fields[32] = "-0.32"
     fields[39] = "30.25"
-    fields[44] = "432.30"
     fields[46] = "2.24"
+    fields[47] = "116.75"
+    fields[48] = "95.53"
     fields[62] = "-17.47"
+    fields[63] = "3.21"
+    fields[72] = "390000000"
+    fields[73] = "400000000"
     body = ('v_sz000596="' + "~".join(fields) + '";').encode("gbk")
 
     class FakeResponse:
@@ -648,6 +1013,17 @@ def test_tencent_quote_snapshot_parses_valuation_fields(monkeypatch):
     assert quotes["000596"]["pe"] == pytest.approx(30.25)
     assert quotes["000596"]["pb"] == pytest.approx(2.24)
     assert quotes["000596"]["market_cap"] == pytest.approx(432.3e8)
+    assert quotes["000596"]["circulating_cap"] == pytest.approx(420.1e8)
+    assert quotes["000596"]["volume"] == pytest.approx(1200000)
+    assert quotes["000596"]["amount"] == pytest.approx(128000000)
+    assert quotes["000596"]["turnover_rate"] == pytest.approx(0.42)
+    assert quotes["000596"]["amplitude"] == pytest.approx(2.25)
+    assert quotes["000596"]["prev_close"] == pytest.approx(106.14)
+    assert quotes["000596"]["limit_up"] == pytest.approx(116.75)
+    assert quotes["000596"]["limit_down"] == pytest.approx(95.53)
+    assert quotes["000596"]["5d_change"] == pytest.approx(3.21)
+    assert quotes["000596"]["total_shares"] == pytest.approx(400000000)
+    assert quotes["000596"]["float_shares"] == pytest.approx(390000000)
     assert quotes["000596"]["ytd_change"] == pytest.approx(-17.47)
 
 
@@ -760,6 +1136,15 @@ def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
 
     monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
     monkeypatch.setattr(cloud_sources, "_wencai_client", lambda: (FakeWencai(responder), "test"))
+    monkeypatch.setattr(
+        cloud_sources, "_eastmoney_quote_snapshot", lambda codes: {}
+    )
+    monkeypatch.setattr(
+        cloud_sources, "_eastmoney_annual_financials", lambda code, year: {}
+    )
+    monkeypatch.setattr(
+        cloud_sources, "_tencent_quote_snapshot", lambda codes: {}
+    )
 
     result = cloud_sources.collect_industry_cloud("白酒", limit=2)
 
