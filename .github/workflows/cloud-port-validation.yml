@@ -102,8 +102,9 @@ jobs:
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/stock \
             --volume "$PWD/artifacts/data:/runtime/data" \
-            --volume "$PWD/artifacts/reports/stock:/runtime/reports" \
+            --volume "$PWD/artifacts/reports:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
             --output-dir /runtime/data/stock-analysis \
@@ -116,8 +117,9 @@ jobs:
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/industry \
             --volume "$PWD/artifacts/data:/runtime/data" \
-            --volume "$PWD/artifacts/reports/industry:/runtime/reports" \
+            --volume "$PWD/artifacts/reports:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
             --output-dir /runtime/data/industry-analysis \
@@ -215,8 +217,9 @@ jobs:
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/stock \
             --volume "$PWD/artifacts-arm64/data:/runtime/data" \
-            --volume "$PWD/artifacts-arm64/reports/stock:/runtime/reports" \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py stock-report 600519 \
             --output-dir /runtime/data/stock-analysis \
@@ -229,8 +232,9 @@ jobs:
             --env IWENCAI_API_KEY \
             --env DAILY_BRIEFING_COLLECT_TIMEOUT=900 \
             --env DAILY_BRIEFING_BUILD_TIMEOUT=300 \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports/industry \
             --volume "$PWD/artifacts-arm64/data:/runtime/data" \
-            --volume "$PWD/artifacts-arm64/reports/industry:/runtime/reports" \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports" \
             "$IMAGE" \
             python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
             --output-dir /runtime/data/industry-analysis \
