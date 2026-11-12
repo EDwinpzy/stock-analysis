@@ -221,6 +221,90 @@ def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
     assert adapter.quote_fill_sources == ["eastmoney", "tencent"]
 
 
+def test_quote_falls_back_when_only_main_net_pct_is_missing(monkeypatch):
+    vendor_quote = {
+        "股票简称": "贵州茅台",
+        "最新价": 1410.27,
+        "最新涨跌幅": 0.568352,
+        "成交量[20261112]": 3237294,
+        "成交额[20261112]": 4536814517.85,
+        "总市值[20261112]": 1762952579442.3,
+        "流通市值[20261112]": 1762952600000.0,
+        "最新市盈率ttm": 21.457358,
+        "换手率[20261112]": 0.259,
+        "振幅[20261112]": 1.632318,
+        "主力资金流向": -107540200,
+        "最高价[20261112]": 1411,
+        "最低价[20261112]": 1388.11,
+        "昨收价": 1410.27,
+        "涨停价[20261112]": 1542.53,
+        "跌停价[20261112]": 1262.07,
+        "涨跌幅[20261106-20261112]": -2.873967,
+    }
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_quote_rows",
+        lambda name: (dict(vendor_quote), {}),
+    )
+    calls = []
+
+    def fallback(code):
+        calls.append(code)
+        return {"主力净量": -0.0017}
+
+    monkeypatch.setattr(adapter, "_eastmoney_quote_fallback", fallback)
+
+    row = adapter.market_data_cn("USHA600519", "汇总").df.iloc[0]
+
+    assert calls == ["USHA600519"]
+    assert row["主力净量"] == pytest.approx(-0.0017)
+
+
+def test_quote_derives_main_net_pct_from_disclosed_flow(monkeypatch):
+    vendor_quote = {
+        "股票简称": "贵州茅台",
+        "最新价": 1410.27,
+        "最新涨跌幅": 0.568352,
+        "成交量[20261112]": 3237294,
+        "成交额[20261112]": 4536814517.85,
+        "总市值[20261112]": 1762952579442.3,
+        "流通市值[20261112]": 1762952600000.0,
+        "最新市盈率ttm": 21.457358,
+        "换手率[20261112]": 0.259,
+        "振幅[20261112]": 1.632318,
+        "主力资金流向": -107540200,
+        "最高价[20261112]": 1411,
+        "最低价[20261112]": 1388.11,
+        "昨收价": 1410.27,
+        "涨停价[20261112]": 1542.53,
+        "跌停价[20261112]": 1262.07,
+        "涨跌幅[20261106-20261112]": -2.873967,
+    }
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_quote_rows",
+        lambda name: (dict(vendor_quote), {}),
+    )
+    monkeypatch.setattr(adapter, "_eastmoney_quote_fallback", lambda code: {})
+
+    row = adapter.market_data_cn("USHA600519", "汇总").df.iloc[0]
+
+    assert row["主力净量"] == pytest.approx(
+        -107540200 / 1762952600000 * 100,
+        rel=1e-5,
+    )
+
+
 def test_thsdk_quote_fallback_returns_complete_vendor_fields(monkeypatch):
     class FakeThsClient:
         def realtime(self, codes):
@@ -299,6 +383,49 @@ def test_holder_trend_falls_back_to_eastmoney_f10(monkeypatch):
 
     assert row["股东户数(报告期)[20251231]"] == 255892
     assert adapter.chip_sources == ["eastmoney"]
+
+
+def test_customer_concentration_uses_eastmoney_when_wencai_row_is_unrelated(
+    monkeypatch,
+):
+    adapter = make_adapter(
+        FakeWencai(
+            lambda skill, query, limit: payload(
+                {
+                    "股票简称": "贵州茅台",
+                    "最新价": 1410.27,
+                }
+            )
+        ),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    monkeypatch.setattr(
+        adapter,
+        "_ths_wencai_frame",
+        lambda query, limit=5: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(),
+            error="",
+        ),
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_eastmoney_customer_supplier_frame",
+        lambda metric: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(
+                [{f"{metric}[20251231]": 10.1}]
+            ),
+            error="",
+        ),
+    )
+
+    result = adapter.wencai_nlp(
+        "贵州茅台，2025年客户销售额合计占比(前五大)"
+    )
+
+    assert result.df.iloc[0]["客户销售额合计占比(前五大)[20251231]"] == 10.1
+    assert adapter.barrier_sources == ["eastmoney"]
 
 
 def test_share_structure_falls_back_to_tencent(monkeypatch):

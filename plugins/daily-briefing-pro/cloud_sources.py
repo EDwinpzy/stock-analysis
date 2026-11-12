@@ -1772,6 +1772,7 @@ class CloudStockAdapter:
             "换手率",
             "振幅",
             "主力净流入",
+            "主力净量",
             "最高价",
             "最低价",
             "昨收价",
@@ -1795,7 +1796,13 @@ class CloudStockAdapter:
         if open_price is not None and prev_close not in (None, 0):
             row["开盘涨幅"] = (open_price / prev_close - 1) * 100
         if _is_missing(row.get("主力净量")):
-            row["主力净量"] = None
+            flow = _number(row.get("主力净流入"))
+            cap = _number(row.get("流通市值")) or _number(row.get("总市值"))
+            row["主力净量"] = (
+                round(flow / cap * 100, 6)
+                if flow is not None and cap not in (None, 0)
+                else None
+            )
         if _is_missing(_number(_first(merged, "最新价"))):
             self.quote_source = self.quote_fill_sources[0]
         else:
@@ -3120,11 +3127,15 @@ class CloudStockAdapter:
         self, query: str, metric: str
     ) -> SimpleNamespace:
         result = self._query(query, "hithink-finance-query", limit=5)
-        if not result.df.empty:
+        if not result.df.empty and any(
+            metric in str(column) for column in result.df.columns
+        ):
             self._record_source("barrier", "wencai")
             return result
         thsdk = self._ths_wencai_frame(query, limit=5)
-        if not thsdk.df.empty:
+        if not thsdk.df.empty and any(
+            metric in str(column) for column in thsdk.df.columns
+        ):
             self._record_source("barrier", "thsdk")
             return thsdk
         fallback = self._eastmoney_customer_supplier_frame(metric)
