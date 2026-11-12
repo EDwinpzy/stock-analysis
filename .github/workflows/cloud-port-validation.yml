@@ -1,6 +1,9 @@
 name: Cloud port validation
 
 on:
+  push:
+    branches:
+      - codex/cloud-plugin-port
   workflow_dispatch:
 
 permissions:
