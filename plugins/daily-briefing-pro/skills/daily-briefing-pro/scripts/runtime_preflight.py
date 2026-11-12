@@ -587,7 +587,7 @@ def _check_panel(data_dir: Path, trade_date: str) -> Check:
             "sentiment_panel",
             "情绪模型历史面板",
             f"文件缺失: {path}",
-            "从本机长期数据同步 sentiment_panel_v32.csv，或让云端重新回补至少60个交易日",
+            "用 runtime_seed.py 导入已有的云端面板备份，或让云端重新回补至少60个交易日",
         )
     try:
         with path.open(encoding="utf-8-sig", newline="") as handle:
@@ -614,7 +614,7 @@ def _check_panel(data_dir: Path, trade_date: str) -> Check:
             "sentiment_panel",
             "情绪模型历史面板",
             str(exc),
-            "从本机长期数据同步 sentiment_panel_v32.csv，或让云端重新回补至少60个交易日",
+            "用 runtime_seed.py 导入已有的云端面板备份，或让云端重新回补至少60个交易日",
         )
     if rows < 60:
         return _error(
@@ -864,7 +864,7 @@ def _check_history(data_dir: Path, trade_date: str = "") -> list[Check]:
                     "rotation_history",
                     "轮动历史快照",
                     f"JSON无效: {exc}",
-                    "从本机重新同步 rotation_history.json；坏文件会被采集器当作空历史",
+                    "用 runtime_seed.py 导入有效的 rotation_history.json；坏文件会被采集器当作空历史",
                 )
             )
         else:
@@ -890,7 +890,7 @@ def _check_history(data_dir: Path, trade_date: str = "") -> list[Check]:
                 "rotation_history",
                 "轮动历史快照",
                 "缺失；首次运行的新进/跌出会标记为 baseline",
-                "从本机长期数据同步 rotation_history.json",
+                "用 runtime_seed.py 导入已有的云端 rotation_history.json 备份",
             )
         )
     node = data_dir / "node_cycle_history.json"
@@ -906,7 +906,7 @@ def _check_history(data_dir: Path, trade_date: str = "") -> list[Check]:
             checks.append(_ok("node_history", "节点票历史", f"{len(records)} 个交易日快照"))
         except ValueError as exc:
             checks.append(
-                _error("node_history", "节点票历史", f"JSON无效: {exc}", "从本机同步 node_cycle_history.json")
+                _error("node_history", "节点票历史", f"JSON无效: {exc}", "用 runtime_seed.py 导入有效的 node_cycle_history.json")
             )
     else:
         checks.append(
@@ -914,7 +914,7 @@ def _check_history(data_dir: Path, trade_date: str = "") -> list[Check]:
                 "node_history",
                 "节点票历史",
                 "缺失；依赖同花顺历史连板池回补",
-                "从本机同步 node_cycle_history.json，避免云端历史接口限流后节点跨度缩水",
+                "用 runtime_seed.py 导入已有的 node_cycle_history.json 备份，避免云端历史接口限流后节点跨度缩水",
             )
         )
     return checks

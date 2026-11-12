@@ -41,11 +41,6 @@ HISTORY_PATH = DATA_DIR / "rotation_history.json"
 ASOF_RE = re.compile(r"\bas of (\d{4}-\d{2}-\d{2})\b", re.IGNORECASE)
 
 CN = timezone(timedelta(hours=8))
-LEGACY_WINDOWS_MODEL_DIR = Path(
-    r"D:\Codex\2026-09-15\referenced-chatgpt-conversation-this-is-an\outputs\sw_rotation_model"
-)
-
-
 def model_dir_candidates(
     base_dir: Path | None = None,
     env: Mapping[str, str] | None = None,
@@ -82,8 +77,6 @@ def model_dir_candidates(
         add(root / "sw_rotation_model")
     except Exception:  # noqa: BLE001  optional bootstrap; explicit paths still work.
         pass
-    if sys.platform.startswith("win"):
-        add(LEGACY_WINDOWS_MODEL_DIR)
     return candidates
 
 

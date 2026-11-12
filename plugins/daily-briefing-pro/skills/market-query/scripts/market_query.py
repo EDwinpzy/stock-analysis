@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Portable A-share market query CLI.
 
-The desktop plugin ships a PowerShell client that depends on a local Lumi
-client.  This implementation uses the same ``thsdk`` data contract on
-Windows, Linux and macOS, and can fall back to the Fuyao REST API when the
-THS transport is unavailable or when only an API key is configured.
-
-All output is UTF-8 JSON.  The CLI never prints or writes an API key.
+Uses the ``thsdk`` service contract or the Fuyao REST API on Windows, Linux
+and macOS. It does not read a desktop client, Lumi process or local login
+state. All output is UTF-8 JSON, and the CLI never prints or writes an API key.
 """
 
 from __future__ import annotations
@@ -2613,7 +2610,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="A 股行情查询（可移植 Python 版）")
     sub = parser.add_subparsers(dest="action", required=True)
 
-    p = sub.add_parser("status", help="检查本机/云端运行条件")
+    p = sub.add_parser("status", help="检查服务端行情通道")
     p.add_argument("--probe", action="store_true", help="实际连接一次行情服务")
     add_common(p)
 

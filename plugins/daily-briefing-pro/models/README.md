@@ -14,9 +14,9 @@ models/sw_rotation_model/
 ```
 
 This directory is gitignored and is not part of the marketplace package. Place
-a refreshed or custom model here for local runs; `fetch_rotation.py` reads
-`ROTATION_MODEL_DIR` first, then this package-relative directory. On Windows it
-also recognizes the historical development path, but never scans another drive.
+a refreshed or custom model here when explicitly provisioning an environment;
+`fetch_rotation.py` reads `ROTATION_MODEL_DIR` first, then this
+package-relative directory. It does not scan arbitrary drives or desktop paths.
 
 Cloud and clean installs do not need this directory: they extract the shipped
 `skills/daily-briefing-pro/data/cloud-baseline/models/sw_rotation_model.zip`

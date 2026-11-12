@@ -19,7 +19,7 @@ metadata:
 
 把同花顺官方 A 股金融数据接成情绪温度模型 v3.2 的日频输入。原来这条链路是「开盘啦爬虫 + AkShare 东财池 + lianban.net 无头浏览器」三源拼装，本 Skill 用一套带鉴权的官方接口覆盖其中可替代的部分。
 
-模型本体在 `D:\MyProjects\股票分析`（`emotion/` 包 + `tools/run_model.py`），本 Skill 只负责产出入参，不改模型口径。
+模型本体在当前项目工作区的 `emotion/` 包与 `tools/run_model.py`；本 Skill 只负责产出入参，不改模型口径。
 
 ## 前置条件
 
@@ -40,7 +40,7 @@ python {skill_dir}/scripts/fetch_panel.py
 python {skill_dir}/scripts/fetch_panel.py --date 2026-09-14 --format csv
 
 # 直接写进面板：按日期去重后按日期重排，先加 --preview 更稳
-python {skill_dir}/scripts/fetch_panel.py --date 2026-09-14 --append "D:\MyProjects\股票分析\data\panel_history.csv" --preview
+python {skill_dir}/scripts/fetch_panel.py --date 2026-09-14 --append "{workspace}/data/panel_history.csv" --preview
 ```
 
 脚本输出的列序与 `data/panel_history.csv`、`scripts/market_temperature_v32.py` 的 `PANEL_COLUMNS` 完全一致，写盘前会校验表头，不一致就报错而不是写坏文件。
@@ -53,7 +53,7 @@ python {skill_dir}/scripts/fetch_panel.py --date 2026-09-14 --append "D:\MyProje
 | 只要连板结构，不想等 | `--lite`：约 5 秒，跳过全市场快照与逐股历史 |
 | 要封单额、涨停原因、炸板次数等池内细节 | 直接用 `hithink-finance special limit-up-pool` / `limit-break-pool` 原生命令 |
 | 要看当天炸板/涨停梯队全貌 | `hithink-finance special limit-up-ladder --format json` |
-| 要跑模型出温度 | 到 `D:\MyProjects\股票分析` 执行 `python tools/run_model.py` |
+| 要跑模型出温度 | 在当前项目工作区执行 `python tools/run_model.py` |
 | 看图 / 出报告 | 转 `stock-market-board`（行情看板）或 `stock-analysis`（个股深度） |
 
 ## 字段来源速查

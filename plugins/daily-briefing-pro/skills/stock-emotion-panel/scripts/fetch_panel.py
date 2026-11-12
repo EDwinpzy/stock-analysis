@@ -7,7 +7,7 @@ r"""同花顺官方金融数据 -> A股超短情绪温度模型 v3.2 日频面�
 用法：
   python fetch_panel.py --date 2026-09-14
   python fetch_panel.py --date 2026-09-14 --format csv
-  python fetch_panel.py --date 2026-09-14 --append D:\\MyProjects\\股票分析\\data\\panel_history.csv
+  python fetch_panel.py --date 2026-09-14 --append .\\data\\panel_history.csv
   python fetch_panel.py --date 2026-09-14 --lite      # 跳过全市场快照与逐股历史（快，缺 4 个字段）
 
 字段口径见 ../references/panel-fields.md。

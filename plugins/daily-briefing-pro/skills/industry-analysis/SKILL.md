@@ -534,13 +534,13 @@ document.querySelectorAll('.sch').forEach(function(h){
 ## 文件命名与存放
 
 - **文件名**: `{行业名称}行业深度分析.html`
-- **输出目录**: `D:\OneDrive\Codex\股票分析\Codex\reports\行业分析\`（相对于工作空间根目录）
+- **输出目录**: `$BRIEFING_OUTPUT_DIR/行业分析/`（未设置时使用运行目录下的 `reports/行业分析/`）
 - 若目录不存在，自动创建
 - **⚠️ 唯一交付文件：只交付HTML；采集JSON仅作内部门禁与追溯，禁止另存图片(.png/.jpg/.svg)、Markdown(.md)、PDF、Word等副本**
 
 ### Step 3 — 交付报告（总结+链接，缺一不可）
 
-1. 确保输出目录存在：`D:\OneDrive\Codex\股票分析\Codex\reports\行业分析\`（若不存在则创建）
+1. 确保输出目录存在：`$BRIEFING_OUTPUT_DIR/行业分析/`（若不存在则创建）
 2. 生成HTML文件写入 `reports/行业分析/` 目录
 3. **在对话中输出报告总结内容**（必须，不可跳过）
 4. **在对话中输出报告文件链接**（必须，不可跳过）

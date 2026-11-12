@@ -620,7 +620,7 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 > {一句话行情：指数方向、涨跌氛围、成交放大或缩量，如"指数走强，4500多家上涨，成交放大到2万亿"}
 > 主线：{1-3个当天最强方向，如"创新药、PCB/覆铜板、存储，硬科技IPO收紧信号带动"}
 > 博主：{淘股吧/抖音博主当天共识方向与分歧}；防：{当天最需要注意的风险}
-> **[打开简报 →](D:/MyProjects/股票分析/报告/每日简报/{YYYY-MM-DD}简报.html)**
+> **[打开简报 →]({BRIEFING_OUTPUT_DIR}/{YYYY-MM-DD}简报.html)**
 ```
 
 - 链接必须写成 Markdown 语法 + **绝对路径**（正斜杠即可），不要 `file:///` URI、不要 URL 编码
@@ -966,7 +966,7 @@ playwright install chromium
   - 页脚版本号同步 v3.22；验收：1440/390 两档横向溢出均为 0，首屏/节点票/策略卡/金句截图核对通过（`报告\_验收截图\2026-09-21\`）
 
 ### v3.21.3 (2026-09-22)
-- **交付链接改为 Markdown 绝对路径**：Codex 桌面端不渲染裸 HTML，`<a href="file:///...">` 金色按钮会原样显示成标签源码、用户点不动（用户 09-22 截图反馈）。交付规则改为输出 `[📄 打开 M 月 D 日简报](D:/MyProjects/股票分析/报告/每日简报/YYYY-MM-DD简报.html)`，不得再用 `file:///` URL 编码或内联 `<a>` 标签
+- **交付链接改为 Markdown 绝对路径**：Codex 桌面端不渲染裸 HTML，`<a href="file:///...">` 金色按钮会原样显示成标签源码、用户点不动（用户 09-22 截图反馈）。交付规则改为输出指向运行产物目录中真实 HTML 的 Markdown 绝对路径，不得再用 `file:///` URL 编码或内联 `<a>` 标签
 - **已有报告也要给链接**：非交易日、抓取窗口不合适而主动跳过、门禁失败等未生成新报告的情况下，仍必须把输出目录里最近一份报告的可点击链接发出来
 
 ### v3.21.2 (2026-09-21)
@@ -1032,7 +1032,7 @@ playwright install chromium
 ### v3.19.0 (2026-09-15)
 - **新增板块「板块轮动」**：接入用户的**行业轮动模型 v2.0.0**（`Industry Rotation Core`，横截面排序模型，默认标的池为同花顺行业指数 90 板块，主周期 T+5、取前 15），渲染在龙虎榜之后、机构研报之前的整宽版面
   - 新增 `scripts/fetch_rotation.py`：调模型的 `run.py predict --asof {date}` → 读 `outputs/all_scores_{date}.csv` 与 `predict_manifest_{date}.json` → 转成 `data/rotation_today.json`。**不改模型代码、不改模型参数、不覆盖模型产物**
-  - 模型目录按 `ROTATION_MODEL_DIR` 环境变量查找，未设置时使用内置候选路径并在 `D:\Codex\*\*\outputs\sw_rotation_model` 兜底扫描；找不到时该板块如实显示“数据获取失败”，不编造排行
+  - 模型目录按 `ROTATION_MODEL_DIR` 环境变量查找，未设置时使用插件内候选路径和随包归档；找不到时该板块如实显示“数据获取失败”，不编造排行
   - 版面内容：表头（15个板块 · T+5 · 数据日）、KPI 条（短周期共振 n/15、本期新进、本期跌出）、排行表（排名/板块/T+5分数/T+3排名/周期共振/变动）、口径说明
   - 「短周期共振」= 该板块同时进入 T+3 与 T+5 的前 K，说明短周期与主周期同向；「新进/跌出」由 `data/rotation_history.json` 的上一期快照对比得出，首次运行标注「首次」而不是编造变化
   - **口径诚实**：模型只给行业相对排序，分数不是上涨概率；T+1 换手成本过高不可用，按 T+3/T+5 周期调仓。这些都写在板块的口径行里
@@ -1083,7 +1083,7 @@ playwright install chromium
   - `templates/briefing.html` 的 Serenity 示例块同步删除
 
 ### v3.13.0 (2026-09-14)
-- **凭证移出 Skill 目录**：删除 `run_all.py`/`inline_runner.py`/`win_launcher.py` 中写死的讯飞MaaS密钥（Skill 会同步到 OneDrive，源码存密钥等于外泄），改由 `scripts/env_config.py` 读取 `~/.codex/daily-briefing.env`；系统环境变量优先，文件只作兜底
+- **凭证移出 Skill 目录**：删除旧脚本和启动器中写死的第三方密钥（源码存密钥等于外泄），改由 `scripts/env_config.py` 读取运行环境的凭证文件；系统环境变量优先，文件只作兜底
 - **所有入口统一加载凭证**：`run_all.py`、`build_briefing.py`、`fetch_douyin.py`、`fetch_serenity.py`、`analyze_douyin.py` 均显式导入 `env_config`，避免直接运行主脚本时"读不到凭证却静默降级"
 - **编译门禁收紧**（取代 v3.12 的"淘股吧和抖音至少一个有数据即可编译"）：淘股吧与抖音都必须有目标日可核验内容；淘股吧内容还必须拿到 AI 语义摘要，否则阻断编译，不输出把原始口语当结论的简报
 - **名言数据失败状态**：`pick_quote.py` 失败只显示"每日金句数据获取失败"，不再回退默认名言
@@ -1233,8 +1233,7 @@ playwright install chromium
 ### v3.4.2 (2026-07-06)
 - **新增自选股新闻后台脚本** `scripts/fetch_selfstock_news.py`：读取同花顺自选股，后台请求东方财富快讯API筛选相关新闻，纯HTTP无浏览器
 - **新增未来大事件后台脚本** `scripts/fetch_future_events.py`：后台请求东方财富财经日历API，获取未来14日重要宏观/经济事件，纯HTTP无浏览器
-- **更新HTML生成器** `scripts/generate_briefing.py`：整合自选股新闻、未来大事件等板块，输出到 `D:\OneDrive\Codex\股票分析\Codex
-eports\每日简报/每日简报_YYYY-MM-DD.html`
+- **更新HTML生成器** `scripts/generate_briefing.py`：整合自选股新闻、未来大事件等板块，输出到运行产物目录
 - **新增执行规则**：自选股新闻与未来大事件必须使用后台脚本获取，严禁打开浏览器或弹出窗口
 
 ### v3.4.1 (2026-07-06)

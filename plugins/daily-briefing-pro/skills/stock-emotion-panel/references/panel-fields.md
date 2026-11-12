@@ -2,7 +2,7 @@
 
 基准口径来自两处，二者一致：
 
-- `D:\MyProjects\股票分析\README.md` 第 2.1 节字段表
+- 当前项目 `README.md` 第 2.1 节字段表
 - `daily-briefing-pro/scripts/market_temperature_v32.py` 的实际计算
 
 ## 逐字段来源
@@ -35,7 +35,7 @@
 
 ## 2026-09-14 逐字段对账
 
-面板取自 `D:\MyProjects\股票分析\data\panel_history.csv`（该行由开盘啦口径产出），右侧为本 Skill 用同花顺官方接口重算的结果。
+面板取自当前项目 `data/panel_history.csv`（该行由开盘啦口径产出），右侧为本 Skill 用同花顺官方接口重算的结果。
 
 | 字段 | panel_history.csv | 同花顺官方源 | 结论 |
 | --- | --- | --- | --- |

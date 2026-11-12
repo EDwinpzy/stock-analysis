@@ -122,7 +122,7 @@ python {skill_dir}/../daily-briefing-pro/scripts/verify_skill_report.py 报告.h
 
 #### 输出文件
 
-- **归档**：`D:\OneDrive\Codex\股票分析\Codex\reports\个股分析\{股票名称}深度研究报告.html`
+- **归档**：`$BRIEFING_OUTPUT_DIR/个股分析/{股票名称}深度研究报告.html`
 - **链接**：复制到 `/tmp/stock-reports/{股票代码}_report.html`（无中文路径，确保file:///可点击）
 
 ---

@@ -105,7 +105,7 @@ JSON 中备查，渲染层已屏蔽，避免一个页面出现两个“温度”
 ## 板块轮动数据（rotation_today.json）
 
 来自用户的**行业轮动模型 v2.0.0**（优先读取 `ROTATION_MODEL_DIR`，其次读取插件根目录的
-`models/sw_rotation_model`；Windows 开发机才识别历史固定路径）。云端两者都没有时，
+`models/sw_rotation_model`；不再读取任何桌面固定路径）。云端两者都没有时，
 `scripts/cloud_bootstrap.py` 会把随包的 `data/cloud-baseline/models/sw_rotation_model.zip`
 解压到可写模型缓存目录，不需要人工上传模型目录。模型工作目录必须可写，因为采集会更新
 模型 `data/`，预测会写 `outputs/`：

@@ -1,7 +1,7 @@
 {
   "generatedAt": "2026-11-05T06:47:49.7670336Z",
   "source": "C:\\应用\\同花顺AI版\\同花顺远航版\\lumi\\resources\\built-in-skills\\datahub-lumi\\snapshot\\api",
-  "runtimeMatrix": "D:\\MyProjects\\同花顺AI\\artifacts\\datahub-runtime-matrix-merged.json",
+  "runtimeMatrix": "packaged-reference",
   "runtimeTestedAt": "2026-11-05T06:47:34.916188Z",
   "contractCount": 118,
   "categories": [
