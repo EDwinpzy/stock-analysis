@@ -583,6 +583,76 @@ def test_big_order_flow_falls_back_to_thsdk(monkeypatch):
     assert result.df.iloc[0]["成交方向"] == "1"
 
 
+def test_tencent_quote_snapshot_parses_valuation_fields(monkeypatch):
+    fields = [""] * 70
+    fields[1] = "古井贡酒"
+    fields[2] = "000596"
+    fields[3] = "105.80"
+    fields[32] = "-0.32"
+    fields[39] = "30.25"
+    fields[44] = "432.30"
+    fields[46] = "2.24"
+    fields[62] = "-17.47"
+    body = ('v_sz000596="' + "~".join(fields) + '";').encode("gbk")
+
+    class FakeResponse:
+        content = body
+
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr(
+        cloud_sources.requests,
+        "get",
+        lambda *args, **kwargs: FakeResponse(),
+    )
+
+    quotes = cloud_sources._tencent_quote_snapshot(["000596"])
+
+    assert quotes["000596"]["price"] == pytest.approx(105.8)
+    assert quotes["000596"]["change_pct"] == pytest.approx(-0.32)
+    assert quotes["000596"]["pe"] == pytest.approx(30.25)
+    assert quotes["000596"]["pb"] == pytest.approx(2.24)
+    assert quotes["000596"]["market_cap"] == pytest.approx(432.3e8)
+    assert quotes["000596"]["ytd_change"] == pytest.approx(-17.47)
+
+
+def test_tencent_quote_fallback_only_fills_missing_fields():
+    stocks = [
+        {
+            "ticker": "000596",
+            "price": 105.8,
+            "change_pct": None,
+            "pe": 99.0,
+            "pb": None,
+            "market_cap": None,
+            "ytd_change": None,
+            "data_sources": ["eastmoney"],
+        }
+    ]
+    quotes = {
+        "000596": {
+            "price": 100.0,
+            "change_pct": -0.32,
+            "pe": 30.25,
+            "pb": 2.24,
+            "market_cap": 432.3e8,
+            "ytd_change": -17.47,
+        }
+    }
+
+    filled = cloud_sources._apply_tencent_quote_fallback(stocks, quotes)
+
+    assert filled == ["000596"]
+    assert stocks[0]["price"] == pytest.approx(105.8)
+    assert stocks[0]["pe"] == pytest.approx(99.0)
+    assert stocks[0]["change_pct"] == pytest.approx(-0.32)
+    assert stocks[0]["pb"] == pytest.approx(2.24)
+    assert stocks[0]["market_cap_yi"] == pytest.approx(432.3)
+    assert stocks[0]["ytd_change"] == pytest.approx(-17.47)
+    assert stocks[0]["data_sources"] == ["eastmoney", "tencent"]
+
+
 def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
     market = FakeMarket()
 

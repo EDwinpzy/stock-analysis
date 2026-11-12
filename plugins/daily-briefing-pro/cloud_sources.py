@@ -54,6 +54,7 @@ EASTMONEY_INDUSTRY_URL = (
 )
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
+TENCENT_QUOTE_URL = "https://qt.gtimg.cn/q="
 EASTMONEY_QUOTE_REFERER = "https://quote.eastmoney.com/"
 EASTMONEY_SECTOR_SEARCH_URL = "https://searchapi.eastmoney.com/api/suggest/get"
 EASTMONEY_SECTOR_LIST_URL = "https://push2.eastmoney.com/api/qt/clist/get"
@@ -409,6 +410,88 @@ def _eastmoney_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]
         detail = "；".join(errors[:3])
         raise ValueError("东方财富行情未返回数据" + (f"（{detail}）" if detail else ""))
     return output
+
+
+def _tencent_quote_snapshot(codes: Iterable[str]) -> dict[str, dict[str, Any]]:
+    """Fetch quote, valuation, market cap and YTD fields from Tencent."""
+
+    unique: list[str] = []
+    for code in codes:
+        text = _text(code)[-6:]
+        if re.fullmatch(r"\d{6}", text) and text not in unique:
+            unique.append(text)
+    if not unique:
+        return {}
+    output: dict[str, dict[str, Any]] = {}
+    for start in range(0, len(unique), 50):
+        chunk = unique[start : start + 50]
+        symbols = ",".join(
+            ("sh" if code.startswith(("6", "9")) else "sz") + code
+            for code in chunk
+        )
+        response = requests.get(
+            TENCENT_QUOTE_URL + symbols,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Referer": "https://gu.qq.com/",
+            },
+            timeout=EASTMONEY_TIMEOUT,
+        )
+        response.raise_for_status()
+        text = response.content.decode("gbk", "replace")
+        for statement in text.split(";"):
+            fields = statement.split("~")
+            if len(fields) < 63:
+                continue
+            code = _text(fields[2])
+            if not re.fullmatch(r"\d{6}", code):
+                continue
+            market_cap_yi = _number(fields[44])
+            output[code] = {
+                "price": _number(fields[3]),
+                "change_pct": _number(fields[32]),
+                "pe": _number(fields[39]),
+                "pb": _number(fields[46]),
+                "market_cap": (
+                    market_cap_yi * 1e8 if market_cap_yi is not None else None
+                ),
+                "ytd_change": _number(fields[62]),
+            }
+    return output
+
+
+def _apply_tencent_quote_fallback(
+    stocks: list[dict[str, Any]],
+    quotes: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Fill only missing stock fields, preserving every existing vendor value."""
+
+    filled: list[str] = []
+    for item in stocks:
+        quote = quotes.get(_text(item.get("ticker"))) or {}
+        if not quote:
+            continue
+        used = False
+        for key in ("price", "change_pct", "pe", "pb", "ytd_change"):
+            if item.get(key) is None and quote.get(key) is not None:
+                item[key] = quote[key]
+                used = True
+        if item.get("market_cap") is None and quote.get("market_cap") is not None:
+            item["market_cap"] = quote["market_cap"]
+            used = True
+        if item.get("market_cap") is not None:
+            item["market_cap_yi"] = round(item["market_cap"] / 1e8, 2)
+        if not used:
+            continue
+        sources = list(item.get("data_sources") or [])
+        if "tencent" not in sources:
+            sources.append("tencent")
+        item["data_sources"] = sources
+        filled.append(str(item.get("ticker") or ""))
+    return filled
 
 
 def _eastmoney_annual_reports(code: str) -> dict[int, dict[str, Any]]:
@@ -2201,6 +2284,35 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
             stock["net_profit_yi"] = round(profit / 1e8, 2)
         stocks.append(stock)
 
+    missing_quote_fields = {
+        "price",
+        "change_pct",
+        "pe",
+        "pb",
+        "market_cap_yi",
+        "ytd_change",
+    }
+    tencent_codes = [
+        str(item.get("ticker") or "")
+        for item in stocks
+        if any(item.get(key) is None for key in missing_quote_fields)
+    ]
+    tencent_used_codes: list[str] = []
+    if tencent_codes:
+        try:
+            tencent_quotes = _tencent_quote_snapshot(tencent_codes)
+        except Exception as exc:
+            warnings.append(f"腾讯行情兜底失败：{exc}")
+        else:
+            tencent_used_codes = _apply_tencent_quote_fallback(
+                stocks,
+                tencent_quotes,
+            )
+            if tencent_used_codes:
+                warnings.append(
+                    "东方财富行情不完整，已使用腾讯行情补齐估值、总市值与年内涨幅"
+                )
+
     snapshot = {
         str(key): value
         for key, value in (sector_data.get("snapshot") or {}).items()
@@ -2388,6 +2500,8 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
         )
     if fallback:
         sources.append("东方财富 F10/行情：问财缺失项的年度财务、估值与行情")
+    if tencent_used_codes:
+        sources.append("腾讯行情：缺失的估值、总市值与年内涨幅")
     if thsdk_sector_used:
         labels = [
             key
