@@ -2,7 +2,7 @@
 set -eu
 
 target_date="${1:-2026-11-11}"
-expected_report_sha256="30fef1b913896dad4efb799a71d74d689139134c3dab3d407e9188bc14853869"
+expected_report_sha256="3b2d14855eb6c1c688945fcb1bab66e7d38e81b1e36909c9a34105231932014b"
 expected_broadsheet_sha256="eec2b1a899da4319c57d3969632afb1bf694b89a91920f1565dc2901aa3c5100"
 output_dir="${BRIEFING_OUTPUT_DIR:-/runtime/reports}"
 report_path="$output_dir/${target_date}简报.html"
