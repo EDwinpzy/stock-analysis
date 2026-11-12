@@ -155,6 +155,22 @@ def _first_priority(row: dict[str, Any], *needles: str) -> Any:
     return None
 
 
+def _has_stock_peer_rows(frame: Any) -> bool:
+    """Return whether a peer result contains securities instead of a board index."""
+
+    if frame is None or getattr(frame, "empty", True):
+        return False
+    for row in frame.to_dict("records"):
+        keys = {str(key) for key in row}
+        if any("指数" in key for key in keys):
+            continue
+        code = _first(row, "股票代码", "代码", "ticker", "thscode", default="")
+        name = _first(row, "股票简称", "简称", "名称", "Name", default="")
+        if re.search(r"\d{6}", str(code)) and str(name).strip():
+            return True
+    return False
+
+
 def _coalesce(*values: Any) -> Any:
     for value in values:
         if value is not None and value != "":
@@ -2360,14 +2376,18 @@ class CloudStockAdapter:
         """Use Wencai first, then disclosed Eastmoney peer data when quota is exhausted."""
 
         result = self._query(query, "hithink-industry-query", limit=50)
-        if not result.df.empty:
+        if _has_stock_peer_rows(result.df):
             self.peers_source = "wencai"
             self.peers_error = ""
             self.peers_expected_count = 0
             self.peers_scope = ""
             return result
 
-        self.peers_error = result.error or "问财未返回同业数据"
+        self.peers_error = (
+            "问财同业查询返回行业指数而非个股"
+            if not result.df.empty
+            else (result.error or "问财未返回同业数据")
+        )
         fallback = self._eastmoney_peers_frame()
         if (
             fallback.df.empty

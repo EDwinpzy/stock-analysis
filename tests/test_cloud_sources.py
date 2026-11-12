@@ -1180,6 +1180,50 @@ def test_peer_fallback_uses_fuyao_board_when_eastmoney_push2_is_down(monkeypatch
     assert all(row["所属行业"] == "白酒" for row in rows)
 
 
+def test_peer_fallback_rejects_wencai_industry_index_row(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(
+            lambda skill, query, limit: payload(
+                {
+                    "指数代码": "881273.TI",
+                    "指数简称": "白酒",
+                    "市盈率(pe,ttm)[20261112]": 22.2,
+                }
+            )
+        ),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    peers = cloud_sources.pd.DataFrame(
+        [
+            {"股票代码": "600519.SH", "股票简称": "贵州茅台"},
+            {"股票代码": "000858.SZ", "股票简称": "五粮液"},
+        ]
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_eastmoney_peers_frame",
+        lambda: cloud_sources.SimpleNamespace(
+            df=peers,
+            error="",
+            source="eastmoney",
+            expected_count=2,
+            scope="白酒",
+        ),
+    )
+
+    result = adapter._peers_frame("白酒行业，市盈率，总市值，市净率")
+
+    assert adapter.peers_source == "eastmoney"
+    assert adapter.peers_error == ""
+    assert adapter.peers_expected_count == 2
+    assert {row["股票简称"] for row in result.df.to_dict("records")} == {
+        "贵州茅台",
+        "五粮液",
+    }
+
+
 def test_annual_financials_prefers_operating_income_over_total_income(monkeypatch):
     monkeypatch.setattr(
         cloud_sources,
