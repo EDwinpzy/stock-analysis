@@ -253,3 +253,40 @@ def test_cookie_github_payload_round_trips(tmp_path):
     _write_cookies(path, "2026-11-13T05:27:54.588Z")
     encoded = cm.cookie_github_payload(path)
     assert gzip.decompress(base64.b64decode(encoded)) == path.read_bytes()
+
+
+def test_sync_github_skips_unconfigured_optional_secrets(capsys):
+    manifest = {
+        "project": {"repository": "example/repo"},
+        "items": [
+            {
+                "id": "required",
+                "label": "Required",
+                "kind": "env",
+                "env": "REQUIRED_KEY",
+                "github_secret": "REQUIRED_KEY",
+                "required": True,
+            },
+            {
+                "id": "optional",
+                "label": "Optional ASR",
+                "kind": "env",
+                "env": "OPTIONAL_API_KEY",
+                "github_secret": "OPTIONAL_API_KEY",
+                "required": False,
+            },
+        ],
+    }
+
+    result = cm.sync_github(
+        manifest,
+        {},
+        {"REQUIRED_KEY": "configured"},
+        apply=False,
+        only={"REQUIRED_KEY", "OPTIONAL_API_KEY"},
+    )
+
+    assert result == 0
+    output = capsys.readouterr().out
+    assert "REQUIRED_KEY" in output
+    assert "[SKIP] Optional ASR" in output

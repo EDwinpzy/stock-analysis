@@ -442,7 +442,7 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
             "semantic_summary",
             "AI语义总结",
             f"凭证检测失败 ({type(exc).__name__})",
-            "检查 DEEPSEEK_API_KEY / OPENAI_API_KEY，或登录 Codex CLI",
+            "检查 DAILY_BRIEFING_AI_*、DEEPSEEK_* 或 OPENAI_* API 配置",
         )
     if available:
         state, detail = _probe_ai_key(values)
@@ -465,7 +465,7 @@ def _check_semantic_summary(env: Mapping[str, str] | None = None) -> Check:
         "semantic_summary",
         "AI语义总结",
         f"不可用: {source}",
-        "在云端 secrets 配置 DEEPSEEK_API_KEY 或 OPENAI_API_KEY；不能只复制本机 Codex 登录态",
+        "在云端 secrets 配置 DAILY_BRIEFING_AI_API_KEY、DEEPSEEK_API_KEY 或 OPENAI_API_KEY",
     )
 
 

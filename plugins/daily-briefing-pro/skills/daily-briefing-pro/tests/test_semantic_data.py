@@ -284,17 +284,17 @@ class SurveySemanticTests(unittest.TestCase):
             cache = load_summary_cache(path)
             self.assertIsNotNone(get_cached_summary(cache, DATE, "survey", "淘股吧/作者0", rows[0]["input_text"]))
 
-    def test_batch_errors_keep_safe_timeout_detail_and_hide_arbitrary_messages(self):
+    def test_batch_errors_keep_safe_api_detail_and_hide_arbitrary_messages(self):
         tgb, xueqiu = survey_sources()
         with tempfile.TemporaryDirectory() as temp:
-            timed_out = survey.analyze_sentiment(
-                tgb, xueqiu, cache_path=Path(temp) / "timeout.json",
+            unavailable = survey.analyze_sentiment(
+                tgb, xueqiu, cache_path=Path(temp) / "unavailable.json",
                 available_fn=lambda: True,
                 call_json_fn=lambda *_args, **_kwargs: (_ for _ in ()).throw(
-                    RuntimeError("Codex semantic summary timed out after 53s")
+                    RuntimeError("AI summary API is not configured")
                 ),
             )
-            self.assertIn("timed out after 53s", timed_out[0]["reason"])
+            self.assertIn("AI summary API is not configured", unavailable[0]["reason"])
 
             unsafe = survey.analyze_sentiment(
                 tgb, xueqiu, cache_path=Path(temp) / "unsafe.json",

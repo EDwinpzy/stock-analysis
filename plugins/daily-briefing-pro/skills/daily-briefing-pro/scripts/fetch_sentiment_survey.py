@@ -400,10 +400,10 @@ def _safe_semantic_error(exc: Exception) -> str:
     """Keep useful fixed diagnostics while never echoing arbitrary exception text."""
     message = str(exc).strip()
     known_messages = {
-        "Codex CLI unavailable; configure an AI API key or log in to Codex",
-        "Codex summary attempted tool use; result rejected",
-        "Codex summary returned invalid JSON",
-        "Codex summary returned a non-object",
+        "AI summary API is not configured",
+        "AI summary returned invalid JSON",
+        "AI summary returned a non-object",
+        "AI summary returned an empty response",
         "批次条目数不匹配",
         "返回项格式错误",
         "返回序号缺失、越界或重复",
@@ -411,12 +411,6 @@ def _safe_semantic_error(exc: Exception) -> str:
         "返回序号不完整",
     }
     if message in known_messages:
-        return message
-    timeout_match = re.fullmatch(r"Codex semantic summary timed out after (\d+)s", message)
-    if timeout_match:
-        return message
-    exit_match = re.fullmatch(r"Codex semantic summary failed \(exit (-?\d+)\); check Codex login/model access", message)
-    if exit_match:
         return message
     return type(exc).__name__
 

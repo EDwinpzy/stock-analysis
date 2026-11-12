@@ -367,8 +367,9 @@ The Fuyao REST contract uses `600519.SH`; `thsdk` uses `USHA600519`. The CLI acc
 The installed skill documents remain in `/opt/daily-briefing-pro/skills/`.
 `briefing --scheduled` runs the complete daily pipeline in the container. The
 OpenAI-compatible Relay is used only for textual semantic summaries; it is not
-an audio transcription endpoint. Cloud mode also disables the local Codex CLI
-summary fallback. Audio must come from one of these real paths:
+an audio transcription endpoint. The local Codex CLI summary fallback has been
+removed entirely, so every environment must configure an API key. Audio must
+come from one of these real paths:
 
 - a native Douyin subtitle, when the video actually exposes one;
 - an explicitly configured OpenAI-compatible audio ASR, Groq, OpenAI, or

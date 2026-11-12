@@ -2692,7 +2692,7 @@ document.querySelectorAll('table').forEach(function(table){
         raise RuntimeError(
             "淘股吧有可核验内容但未取得 AI 语义摘要（"
             + "、".join(tgb_ai_failures)
-            + "）。请检查 Codex CLI 登录、模型访问及语义调用时限，或确认 "
+            + "）。请检查模型服务访问及语义调用时限，或确认 "
             "~/.codex/daily-briefing.env 中的 AI API Key 有效；未写出简报，避免把原始跟帖当观点交付。"
         )
 

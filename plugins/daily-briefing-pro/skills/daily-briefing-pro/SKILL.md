@@ -111,10 +111,10 @@ python {plugin_dir}/cloud_cli.py industry-report 白酒
 
 日报转录先尝试抖音原生字幕；没有原生字幕时只调用云端 ASR API，按 `DOUYIN_TRANSCRIPT_PROVIDER=auto` 依次尝试通用 ASR、Groq、OpenAI、SiliconFlow。代码、镜像和依赖中不再包含 faster-whisper、openai-whisper、torch 或本地模型权重；没有配置任何云端 ASR Key 时预检直接报错并列出缺失变量，完整简报没有跳过转录或本地兜底模式。
 
-博主调查按作者数及原文长度分批，通过有限并行调用 Codex，并逐批保存精确日期/原文哈希缓存。语义阶段有独立总时限；编排器的外层时限须覆盖平台采集与语义阶段之和。抖音的日期核验、媒体解析、下载及转录各自报告失败原因，成功转录保存按视频 ID 绑定的缓存，重跑不重复下载已经核验的同一视频。当前默认串行转录；`DOUYIN_MAX_CONCURRENT` 可显式配置最多 2 条，各设备的 PyTorch CPU 线程上限为 4。
+博主调查按作者数及原文长度分批，通过有限并行调用语义 API，并逐批保存精确日期/原文哈希缓存。语义阶段有独立总时限；编排器的外层时限须覆盖平台采集与语义阶段之和。抖音的日期核验、媒体解析、下载及转录各自报告失败原因，成功转录保存按视频 ID 绑定的缓存，重跑不重复下载已经核验的同一视频。当前默认串行转录；`DOUYIN_MAX_CONCURRENT` 可显式配置最多 2 条，云端 ASR 并发过高会触发供应商限流。
 
 
-AI 总结只使用已配置的 OpenAI-compatible API。桌面环境仍可用 `DAILY_BRIEFING_CODEX_FALLBACK=0` 关闭本机 Codex CLI 兜底；云端 `DAILY_BRIEFING_CLOUD=1` 会强制禁用本机 CLI，只允许 API。仅传入真实采集文本，拒绝工具调用结果、缺失索引或不完整批次；失败仍阻断必选语义总结，不能用截断原文替代。不得复制登录 token 或把密钥写进源码。精确日期/原文哈希缓存仍可复用。
+AI 总结只使用已配置的 OpenAI-compatible API。本机 Codex CLI 登录路径已彻底移除；云端和桌面环境在缺少 API Key 时都会明确失败，不会回退到本机程序。仅传入真实采集文本，拒绝工具调用结果、缺失索引或不完整批次；失败仍阻断必选语义总结，不能用截断原文替代。不得复制登录 token 或把密钥写进源码。精确日期/原文哈希缓存仍可复用。
 
 ## 报刊风模板（纸张质感版式）
 
@@ -870,7 +870,7 @@ playwright install chromium
 
 - 抖音转录改为纯云端 ASR：移除 faster-whisper、openai-whisper、CTranslate2、torch、`av` 依赖、模型权重和镜像预下载；无字幕视频只调用通用 OpenAI-compatible ASR、Groq、OpenAI 或 SiliconFlow。
 - 预检在没有任何云端 ASR Key 时直接报错并列出缺失变量；定时简报在启动前增加 ASR 凭证门禁，禁止标题/固定回放冒充转录。
-- 云端 `DAILY_BRIEFING_CLOUD=1` 强制禁用本机 Codex CLI 总结兜底，语义总结只走 API。
+- 语义总结彻底移除本机 Codex CLI：云端和桌面均只走 OpenAI-compatible API，无 API Key 直接失败。
 - 转录缓存身份升级：旧本地 Whisper 缓存不再复用，必须由云端 ASR 重新生成带真实 `transcript_source` 的转录。
 
 ### v3.23.19 (2026-11-12)
@@ -893,7 +893,7 @@ playwright install chromium
 ### v3.23.17 (2026-11-05)
 
 - 修复 Codex 语义总结超时后只结束启动壳、未结束子进程的问题：现在按进程树整体终止，继承的管道不会再让采集任务一直挂到外层 900 秒超时。
-- 语义总结默认推理档从 `max` 调整为 `low`，可用 `DAILY_BRIEFING_CODEX_REASONING` 显式覆盖；最小真实调用已从长时间无响应降至十余秒返回，机构研报和情绪调查批次不再挤占整次日报的时间预算。
+- 语义总结曾将默认推理档从 `max` 调整为 `low`；该本机 Codex CLI 路径已在后续版本整体移除。
 - 语义批次改为默认 4 路受控并发（`DAILY_BRIEFING_SEMANTIC_WORKERS`，范围 1–6），并让编译阶段复用采集阶段已缓存的研报逻辑，避免 299 篇研报在采集和编译各算一遍。
 - 新增进程树终止、推理档校验及命令行参数测试，确保超时失败快速收敛且不输出源代码或凭据。
 
@@ -929,7 +929,7 @@ playwright install chromium
 
 ### v3.23.10 (2026-10-14)
 
-- 语义总结支持已登录 Codex CLI（默认 gpt-6-luna/max），博主调查分批限流并保存日期/原文哈希缓存。
+- 语义总结历史版本曾支持已登录 Codex CLI；该本机方案已在后续版本移除，现仅支持 API。
 - 行业轮动更新全部 90 行业及基准，补齐指数采集、逐模块完整性检查和来源核验。
 - 抖音详情按视频 ID 解析，默认串行转录；完整批次转录仍须实际验收。
 - 报刊版保留完整板块、数据行及图标，交付前验收桌面与手机版式。

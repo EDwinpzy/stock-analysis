@@ -342,7 +342,7 @@ def required_modules_ready(results: dict, target_date: str | None = None) -> boo
     if _tgb_activity(tgb) >= 1 and not ai_configured and not cache_ready:
         failures.append(
             "淘股吧：有可核验内容但缺少AI语义总结凭证"
-            "（修复：登录 Codex CLI，或在 ~/.codex/daily-briefing.env 配置有效的 AI API Key）"
+            "（修复：在 ~/.codex/daily-briefing.env 或云端 secrets 配置有效的 AI API Key）"
         )
     if data_error_reason(douyin):
         failures.append(
@@ -352,7 +352,7 @@ def required_modules_ready(results: dict, target_date: str | None = None) -> boo
     elif _douyin_activity(douyin) < 1:
         failures.append(
             "抖音：目标日及回退工作日没有可核验视频"
-            "（修复：检查 Cookie、ffmpeg 与 Whisper 转录环境）"
+            "（修复：检查 Cookie、ffmpeg 与云端 ASR 配置）"
         )
     elif any(not v.get('transcript') or v.get('warning') for b in douyin.get('bloggers', []) for v in b.get('videos', [])):
         failures.append('抖音：目标视频转录未全部完成')

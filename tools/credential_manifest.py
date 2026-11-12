@@ -640,7 +640,13 @@ def sync_github(
         secret_name = _nonempty(item.get("github_secret"))
         if not secret_name or (only and secret_name not in only):
             continue
-        payload = build_github_payload(item, env_file, environ)
+        try:
+            payload = build_github_payload(item, env_file, environ)
+        except CredentialError as exc:
+            if item.get("required"):
+                raise
+            print(f"[SKIP] {item.get('label') or secret_name}: {exc}")
+            continue
         if payload is not None:
             updates.append((secret_name, payload))
     if not updates:
