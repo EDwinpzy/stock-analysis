@@ -10,6 +10,7 @@ security lookup, sector membership, snapshots, news and quote fallback.
 from __future__ import annotations
 
 import gzip
+import io
 import json
 import math
 import os
@@ -21,7 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterable
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -88,6 +89,9 @@ EASTMONEY_MARGIN_URL = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 EASTMONEY_STOCK_FLOW_URL = (
     "https://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get"
 )
+EASTMONEY_NOTICE_LIST_URL = "https://np-anotice-pc.eastmoney.com/api/security/ann"
+EASTMONEY_NOTICE_CONTENT_URL = "https://np-cnotice-pc.eastmoney.com/api/content/ann"
+GOOGLE_PATENTS_QUERY_URL = "https://patents.google.com/xhr/query"
 INDUSTRY_SNAPSHOT_FIELDS = (
     "涨幅",
     "5日涨幅",
@@ -365,6 +369,174 @@ def _fetch_eastmoney_json(
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
     return _parse_eastmoney_json(raw)
+
+
+def _find_annual_report(code: str) -> dict[str, Any]:
+    """Return the newest disclosed annual report for a stock."""
+
+    for page in range(1, 4):
+        params = {
+            "sr": "-1",
+            "page_size": "50",
+            "page_index": str(page),
+            "ann_type": "A",
+            "client_source": "web",
+            "stock_list": code,
+            "f_node": "0",
+            "s_node": "0",
+        }
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_NOTICE_LIST_URL}?{urlencode(params)}",
+            referer="https://data.eastmoney.com/",
+        )
+        items = ((payload or {}).get("data") or {}).get("list") or []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = _text(item.get("title"))
+            if not re.search(r"\d{4}年年度报告", title):
+                continue
+            if any(
+                word in title
+                for word in ("摘要", "英文", "半年度", "季度", "已取消")
+            ):
+                continue
+            if _text(item.get("art_code")):
+                return dict(item)
+        if len(items) < 50:
+            break
+    return {}
+
+
+def _annual_report_pdf_url(art_code: str) -> str:
+    payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_NOTICE_CONTENT_URL}?art_code={quote(art_code)}"
+        "&client_source=web&page_index=1",
+        referer="https://data.eastmoney.com/",
+    )
+    data = (payload or {}).get("data") or {}
+    for item in data.get("attach_list") or []:
+        if isinstance(item, dict) and _text(item.get("attach_url")):
+            return _text(item.get("attach_url"))
+    return ""
+
+
+def _annual_report_text(art_code: str) -> str:
+    url = _annual_report_pdf_url(art_code)
+    if not url:
+        return ""
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Referer": "https://data.eastmoney.com/",
+    }
+    response = None
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            try:
+                from curl_cffi import requests as curl_requests
+
+                response = curl_requests.get(
+                    url,
+                    impersonate="chrome",
+                    headers=headers,
+                    timeout=90,
+                )
+            except ImportError:
+                response = requests.get(url, headers=headers, timeout=90)
+            response.raise_for_status()
+            break
+        except Exception as exc:
+            last_error = exc
+            if attempt == 2:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+    if response is None:
+        raise ValueError(f"年报 PDF 下载失败：{last_error}")
+    if len(response.content) > 40 * 1024 * 1024:
+        raise ValueError("年报 PDF 超过 40MB，已跳过正文解析")
+    from pypdf import PdfReader
+
+    reader = PdfReader(io.BytesIO(response.content))
+    return "\n".join(
+        page.extract_text() or "" for page in reader.pages
+    )
+
+
+def _disclosed_ratio(
+    text: str,
+    subject_pattern: str,
+    total_pattern: str,
+) -> float | None:
+    """Extract a percentage disclosed immediately after a report phrase."""
+
+    for match in re.finditer(subject_pattern, text):
+        window = text[match.start() : match.start() + 500]
+        ratio = re.search(
+            total_pattern + r".{0,40}?([0-9]+(?:\.[0-9]+)?)\s*%",
+            window,
+            re.S,
+        )
+        if ratio:
+            return _number(ratio.group(1))
+    return None
+
+
+def _disclosed_rd_ratio(text: str) -> float | None:
+    for pattern in (
+        r"研发投入(?:总额)?占营业收入(?:的)?比例[（(]?%?[）)]?\s*[:：]?\s*"
+        r"([0-9]+(?:\.[0-9]+)?)",
+        r"研发投入(?:总额)?占营业收入(?:的)?比重[（(]?%?[）)]?\s*[:：]?\s*"
+        r"([0-9]+(?:\.[0-9]+)?)",
+    ):
+        match = re.search(pattern, text)
+        if match:
+            return _number(match.group(1))
+    return None
+
+
+def _fetch_google_patents_count(assignee: str) -> int | None:
+    """Count public patent publications for an assignee.
+
+    Google Patents is used only when the configured Wencai/THS transports do
+    not return a patent count.  It requires no local browser or account.
+    """
+
+    name = _text(assignee)
+    if not name:
+        return None
+    query = f"assignee={name}&country=CN"
+    url = f"{GOOGLE_PATENTS_QUERY_URL}?url={quote(query, safe='')}&exp="
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://patents.google.com/",
+    }
+    for attempt in range(3):
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            if response.status_code in {429, 503}:
+                time.sleep(2 * (attempt + 1))
+                continue
+            response.raise_for_status()
+            payload = response.json()
+            total = ((payload or {}).get("results") or {}).get(
+                "total_num_results"
+            )
+            value = _number(total)
+            if value is not None:
+                return int(value)
+        except Exception:
+            if attempt == 2:
+                return None
+            time.sleep(2 * (attempt + 1))
+    return None
 
 
 def _fetch_eastmoney_holder_payload(code: str) -> dict[str, Any]:
@@ -1403,6 +1575,8 @@ class CloudStockAdapter:
         self._last_ths_query_at = 0.0
         self._f10_payload_cache: dict[str, Any] | None = None
         self._f10_payload_error = ""
+        self._company_survey_cache: dict[str, Any] | None = None
+        self._annual_report_cache: dict[str, Any] | None = None
 
     def __enter__(self) -> "CloudStockAdapter":
         return self
@@ -1438,18 +1612,24 @@ class CloudStockAdapter:
         retry_at = getattr(self, "_ths_connect_retry_at", 0.0)
         if retry_at and now < retry_at:
             return None
-        client = None
-        try:
-            client = mq.ThsClient()
-            client.__enter__()
-        except Exception as exc:
-            self._ths_connect_error = f"同花顺 thsdk 连接失败：{exc}"
-            self._ths_connect_retry_at = now + 60.0
-            return None
-        self._ths_client = client
-        self._ths_connect_error = ""
-        self._ths_connect_retry_at = 0.0
-        return client
+        last_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                client = mq.ThsClient()
+                client.__enter__()
+            except Exception as exc:
+                last_error = exc
+                if attempt == 0:
+                    time.sleep(1.0)
+                    continue
+                break
+            self._ths_client = client
+            self._ths_connect_error = ""
+            self._ths_connect_retry_at = 0.0
+            return client
+        self._ths_connect_error = f"同花顺 thsdk 连接失败：{last_error}"
+        self._ths_connect_retry_at = now + 60.0
+        return None
 
     def _ths_wencai_frame(self, query: str, limit: int = 20) -> SimpleNamespace:
         client = self._ths_connection()
@@ -2886,6 +3066,75 @@ class CloudStockAdapter:
             return _empty("问财、thsdk 与东方财富 F10 均未返回股东集中度")
         return SimpleNamespace(df=pd.DataFrame([row]), error="")
 
+    def _company_survey(self) -> dict[str, Any]:
+        cached = getattr(self, "_company_survey_cache", None)
+        if cached is not None:
+            return cached
+        if not self._stock_code:
+            return {}
+        prefix = _eastmoney_market_prefix(self._stock_code)
+        try:
+            payload = _fetch_eastmoney_json(
+                f"{EASTMONEY_COMPANY_SURVEY_URL}?"
+                f"code={prefix}{self._stock_code}"
+            )
+        except Exception:
+            payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
+        self._company_survey_cache = payload
+        return payload
+
+    def _company_full_name(self) -> str:
+        payload = self._company_survey()
+        rows = payload.get("jbzl") or []
+        if isinstance(rows, dict):
+            rows = [rows]
+        for row in rows:
+            if isinstance(row, dict) and _text(row.get("ORG_NAME")):
+                return _text(row.get("ORG_NAME"))
+        return self.stock_name
+
+    def _annual_report_values(self) -> dict[str, Any]:
+        """Read disclosed customer/supplier and R&D values from the annual report."""
+
+        cached = getattr(self, "_annual_report_cache", None)
+        if cached is not None:
+            return cached
+        if not self._stock_code:
+            return {}
+        result: dict[str, Any] = {}
+        try:
+            notice = _find_annual_report(self._stock_code)
+            art_code = _text(notice.get("art_code"))
+            title = _text(notice.get("title"))
+            period_match = re.search(r"(\d{4})年年度报告", title)
+            period = (
+                f"{period_match.group(1)}1231" if period_match else ""
+            )
+            if art_code:
+                text = _annual_report_text(art_code)
+                if text:
+                    result["text_length"] = len(text)
+                    result["period"] = period
+                    result["customer"] = _disclosed_ratio(
+                        text,
+                        r"前五名(?:销售)?客户"
+                        r"(?:销售额|销售金额|合计销售金额|销售额合计)",
+                        r"占(?:年度)?销售总额(?:的)?(?:比例)?",
+                    )
+                    result["supplier"] = _disclosed_ratio(
+                        text,
+                        r"前五名(?:销售)?供应商"
+                        r"(?:采购额|采购金额|合计采购金额|采购额合计)",
+                        r"占(?:年度)?采购总额(?:的)?(?:比例)?",
+                    )
+                    result["rd_ratio"] = _disclosed_rd_ratio(text)
+        except Exception as exc:
+            result["error"] = str(exc)
+        self._annual_report_cache = result
+        return result
+
     def _patent_frame(self, query: str) -> SimpleNamespace:
         result = self._query(query, "hithink-finance-query", limit=5)
         row: dict[str, Any] = {}
@@ -2912,6 +3161,25 @@ class CloudStockAdapter:
             rd = self._eastmoney_rd_fallback()
             if rd and _fill_missing(row, rd):
                 self._record_source("barrier", "eastmoney")
+        if not (has_patents() and has_rd_ratio()):
+            report = self._annual_report_values()
+            period = _text(report.get("period")) or datetime.now(
+                CN_TZ
+            ).strftime("%Y%m%d")
+            rd_ratio = _number(report.get("rd_ratio"))
+            if rd_ratio is not None and not has_rd_ratio():
+                row[f"研发投入占营业收入的比重[{period}]"] = rd_ratio
+                self._record_source("barrier", "eastmoney_annual")
+            if not has_patents():
+                count = _fetch_google_patents_count(
+                    self._company_full_name()
+                )
+                if count is not None:
+                    row[f"专利数量合计[{period}]"] = count
+                    row["专利统计口径"] = (
+                        "Google Patents 公开专利文献（按申请人）"
+                    )
+                    self._record_source("barrier", "google_patents")
         for key, value in list(row.items()):
             text = str(key)
             if text.startswith("专利数量["):
@@ -3167,6 +3435,23 @@ class CloudStockAdapter:
         if not fallback.df.empty:
             self._record_source("barrier", "eastmoney")
             return fallback
+        report = self._annual_report_values()
+        key = "customer" if "客户" in metric else "supplier"
+        value = _number(report.get(key))
+        period = _text(report.get("period"))
+        if value is not None and period:
+            self._record_source("barrier", "eastmoney_annual")
+            return SimpleNamespace(
+                df=pd.DataFrame(
+                    [
+                        {
+                            f"{metric}[{period}]": value,
+                            "数据来源": "东方财富年报正文",
+                        }
+                    ]
+                ),
+                error="",
+            )
         return _empty("问财、thsdk 与东方财富数据中心均未返回集中度")
 
     def _eastmoney_customer_supplier_frame(

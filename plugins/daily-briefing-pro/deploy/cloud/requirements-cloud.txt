@@ -12,6 +12,7 @@ Pillow==12.2.0
 soupsieve==2.8
 thsdk==1.7.18
 zhconv==1.4.3
+pypdf==6.10.2
 pytest==8.3.4
 
 # AKShare 1.18.46 requires py-mini-racer on Linux, which has no ARM64 wheel.

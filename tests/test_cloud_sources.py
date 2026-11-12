@@ -429,6 +429,140 @@ def test_customer_concentration_uses_eastmoney_when_wencai_row_is_unrelated(
     assert adapter.barrier_sources == ["eastmoney"]
 
 
+def test_customer_supplier_falls_back_to_annual_report(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    monkeypatch.setattr(
+        adapter,
+        "_ths_wencai_frame",
+        lambda query, limit=5: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(),
+            error="",
+        ),
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_eastmoney_customer_supplier_frame",
+        lambda metric: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(),
+            error="",
+        ),
+    )
+    monkeypatch.setattr(
+        adapter,
+        "_annual_report_values",
+        lambda: {
+            "period": "20251231",
+            "customer": 10.1,
+            "supplier": 38.12,
+            "rd_ratio": 0.48,
+        },
+    )
+
+    customer = adapter.wencai_nlp(
+        "贵州茅台，2025年客户销售额合计占比(前五大)"
+    ).df.iloc[0]
+    supplier = adapter.wencai_nlp(
+        "贵州茅台，2025年供应商采购金额合计占比(前五大)"
+    ).df.iloc[0]
+
+    assert customer["客户销售额合计占比(前五大)[20251231]"] == 10.1
+    assert supplier["供应商采购金额合计占比(前五大)[20251231]"] == 38.12
+    assert adapter.barrier_sources == ["eastmoney_annual"]
+
+
+def test_disclosed_ratios_parse_annual_report_text():
+    text = (
+        "前五名客户销售额1,704,578.78万元，占年度销售总额10.10%；"
+        "前五名供应商采购额348,825.84万元，占年度采购总额38.12%；"
+        "研发投入总额占营业收入比例（%） 0.48"
+    )
+
+    assert cloud_sources._disclosed_ratio(
+        text,
+        r"前五名(?:销售)?客户"
+        r"(?:销售额|销售金额|合计销售金额|销售额合计)",
+        r"占(?:年度)?销售总额(?:的)?(?:比例)?",
+    ) == pytest.approx(10.1)
+    assert cloud_sources._disclosed_ratio(
+        text,
+        r"前五名(?:销售)?供应商"
+        r"(?:采购额|采购金额|合计采购金额|采购额合计)",
+        r"占(?:年度)?采购总额(?:的)?(?:比例)?",
+    ) == pytest.approx(38.12)
+    assert cloud_sources._disclosed_rd_ratio(text) == pytest.approx(0.48)
+
+
+def test_find_annual_report_skips_half_year_report(monkeypatch):
+    monkeypatch.setattr(
+        cloud_sources,
+        "_fetch_eastmoney_json",
+        lambda *args, **kwargs: {
+            "data": {
+                "list": [
+                    {
+                        "art_code": "HALF",
+                        "title": "贵州茅台:贵州茅台2026年半年度报告",
+                    },
+                    {
+                        "art_code": "ANNUAL",
+                        "title": "贵州茅台:贵州茅台2025年年度报告",
+                    },
+                ]
+            }
+        },
+    )
+
+    assert cloud_sources._find_annual_report("600519")["art_code"] == "ANNUAL"
+
+
+def test_patent_falls_back_to_google_patents(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_ths_wencai_frame",
+        lambda self, query, limit=5: cloud_sources.SimpleNamespace(
+            df=cloud_sources.pd.DataFrame(),
+            error="",
+        ),
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter, "_eastmoney_rd_fallback", lambda self: {}
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_annual_report_values",
+        lambda self: {"period": "20251231", "rd_ratio": 0.48},
+    )
+    monkeypatch.setattr(
+        CloudStockAdapter,
+        "_company_full_name",
+        lambda self: "贵州茅台酒股份有限公司",
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_fetch_google_patents_count",
+        lambda name: 272,
+    )
+
+    row = adapter.wencai_nlp(
+        "贵州茅台 研发费用 专利数量 发明专利数量"
+    ).df.iloc[0]
+
+    assert row["专利数量合计[20251231]"] == 272
+    assert row["研发投入占营业收入的比重[20251231]"] == 0.48
+    assert adapter.barrier_sources == ["eastmoney_annual", "google_patents"]
+
+
 def test_share_structure_falls_back_to_tencent(monkeypatch):
     adapter = make_adapter(
         FakeWencai(lambda skill, query, limit: payload()),

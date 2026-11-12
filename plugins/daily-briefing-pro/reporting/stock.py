@@ -545,6 +545,22 @@ def build_stock_report(data: dict[str, Any]) -> str:
             source_rows.append(
                 ("东方财富数据中心", "研发费用与客户/供应商集中度", "本次采集已返回")
             )
+        if "eastmoney_annual" in barrier_sources:
+            source_rows.append(
+                (
+                    "东方财富年报正文",
+                    "客户/供应商集中度与研发投入占比",
+                    "本次采集已返回",
+                )
+            )
+        if "google_patents" in barrier_sources:
+            source_rows.append(
+                (
+                    "Google Patents",
+                    "按申请人统计的公开专利文献数",
+                    "本次采集已返回",
+                )
+            )
         thsdk_uses = []
         if "thsdk" in quote_fill_sources:
             thsdk_uses.append("实时行情")
