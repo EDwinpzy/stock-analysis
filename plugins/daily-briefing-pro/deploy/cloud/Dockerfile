@@ -24,7 +24,7 @@ ENV LANG=C.UTF-8 \
     ROTATION_MODEL_DIR=/runtime/models/sw_rotation_model
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates ffmpeg fonts-noto-cjk passwd tzdata \
+    && apt-get install -y --no-install-recommends ca-certificates curl ffmpeg fonts-noto-cjk passwd tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/daily-briefing-pro

@@ -111,6 +111,7 @@ class CloudDeployContractTests(unittest.TestCase):
                 ):
                     self.assertNotIn(token, source)
         self.assertIn("ffmpeg", dockerfile)
+        self.assertIn(" curl ", dockerfile)
 
     def test_fuyao_secret_is_created_and_loaded(self):
         init_secrets = (DEPLOY_ROOT / "init-secrets.sh").read_text(encoding="utf-8")

@@ -38,6 +38,25 @@ class RotationModelPathTests(unittest.TestCase):
 
 
 class PreflightCheckTests(unittest.TestCase):
+    def test_cloud_tools_require_curl_ffmpeg_and_node(self):
+        with patch.object(
+            preflight.shutil,
+            "which",
+            side_effect=lambda name: f"/usr/bin/{name}",
+        ):
+            checks = preflight._check_tools()
+
+        self.assertEqual({check.key for check in checks}, {"curl", "ffmpeg", "node"})
+        self.assertTrue(all(check.state == "ok" for check in checks))
+
+        with patch.object(preflight.shutil, "which", return_value=None):
+            missing = preflight._check_tools()
+
+        self.assertEqual(
+            {check.key for check in missing if check.state == "error"},
+            {"curl", "ffmpeg", "node"},
+        )
+
     def test_hithink_environment_key_bypasses_local_credential_store(self):
         with patch.object(preflight.shutil, "which", return_value="hithink-finance"), \
              patch.object(preflight.subprocess, "run") as auth_status, \

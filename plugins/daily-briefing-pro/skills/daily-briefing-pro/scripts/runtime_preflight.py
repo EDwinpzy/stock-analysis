@@ -298,6 +298,7 @@ def _check_browser() -> Check:
 def _check_tools() -> list[Check]:
     checks = []
     for key, label, command, required in (
+        ("curl", "curl", "curl", True),
         ("ffmpeg", "FFmpeg", "ffmpeg", True),
         ("node", "Node.js", "node", True),
     ):

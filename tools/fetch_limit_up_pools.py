@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -40,14 +42,32 @@ for _stream in (sys.stdout, sys.stderr):
 
 def _run_cli(args: list[str]) -> dict:
     """调用 hithink-finance，返回解析后的 JSON envelope。"""
+    executable = shutil.which("hithink-finance")
+    if not executable:
+        raise RuntimeError(
+            "未找到 hithink-finance；请安装命令行工具并通过 "
+            "HITHINK_FINANCE_API_KEY 或 FUYAO_API_KEY 提供云端 API 凭证"
+        )
+    env = os.environ.copy()
+    shared_key = (
+        env.get("HITHINK_FINANCE_API_KEY")
+        or env.get("HITHINK_API_KEY")
+        or env.get("FUYAO_API_KEY")
+    )
+    if shared_key and not env.get("HITHINK_FINANCE_API_KEY"):
+        env["HITHINK_FINANCE_API_KEY"] = shared_key
     completed = subprocess.run(
-        ["cmd", "/c", "hithink-finance", *args],
+        [executable, *args],
         capture_output=True,
         check=False,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
     )
-    text = completed.stdout.decode("utf-8", errors="replace").strip()
+    text = (completed.stdout or "").strip()
     if not text:
-        stderr = completed.stderr.decode("utf-8", errors="replace")[:200]
+        stderr = (completed.stderr or "")[:200]
         raise RuntimeError(f"CLI 无输出: {' '.join(args)} stderr={stderr}")
     return json.loads(text)
 
