@@ -1004,6 +1004,8 @@ class CloudStockAdapter:
         self.peers_error = ""
         self.finance_source = ""
         self.finance_error = ""
+        self.quote_source = ""
+        self.quote_fallback_error = ""
 
     def __enter__(self) -> "CloudStockAdapter":
         return self
@@ -1089,13 +1091,72 @@ class CloudStockAdapter:
         row_two = second.df.iloc[0].to_dict() if not second.df.empty else {}
         return row_one, row_two
 
+    def _eastmoney_quote_fallback(self, thscode: str) -> dict[str, Any]:
+        """Return a real quote when the official Wencai quote query is empty."""
+
+        code = str(thscode)[-6:]
+        if not re.fullmatch(r"\d{6}", code):
+            return {}
+        quote: dict[str, Any] = {}
+        try:
+            quote = _eastmoney_stock_quote(code) or {}
+        except Exception as exc:
+            self.quote_fallback_error = f"东方财富行情兜底失败：{exc}"
+        tencent: dict[str, Any] = {}
+        if _number(quote.get("f2")) is None:
+            try:
+                tencent = _tencent_quote_snapshot([code]).get(code) or {}
+            except Exception as exc:
+                self.quote_fallback_error = f"腾讯行情兜底失败：{exc}"
+        price = _coalesce(_number(quote.get("f2")), _number(tencent.get("price")))
+        change_pct = _coalesce(
+            _number(quote.get("f3")),
+            _number(tencent.get("change_pct")),
+        )
+        prev_close = None
+        if price is not None and change_pct is not None:
+            ratio = 1 + change_pct / 100
+            if abs(ratio) > 1e-9:
+                prev_close = price / ratio
+        return {
+            "最新价": price,
+            "最新涨跌幅": change_pct,
+            "涨跌": price - prev_close
+            if price is not None and prev_close is not None
+            else None,
+            "总市值": _coalesce(
+                _number(quote.get("f20")),
+                _number(tencent.get("market_cap")),
+            ),
+            "流通市值": _number(quote.get("f21")),
+            "市盈率TTM": _coalesce(
+                _number(quote.get("f9")),
+                _number(tencent.get("pe")),
+            ),
+            "昨收价": prev_close,
+            "名称": _text(quote.get("f14")),
+        }
+
     def market_data_cn(self, thscode: str, query_key: str) -> SimpleNamespace:
         name = self._name_for(thscode)
+        self.quote_source = ""
         first, second = self._quote_rows(name)
-        if not first and not second:
-            return _empty("问财行情查询没有返回数据")
         merged = {**second, **first}
+        fallback: dict[str, Any] = {}
+        if _number(_first(merged, "最新价")) is None:
+            fallback = self._eastmoney_quote_fallback(thscode)
+            if fallback:
+                merged = {**fallback, **merged}
+                self.quote_source = "eastmoney"
+        if not merged:
+            return _empty("问财行情查询没有返回数据")
         price = _number(_first(merged, "最新价"))
+        if price is None:
+            return _empty(
+                self.quote_fallback_error or "问财与东方财富行情均没有返回数据"
+            )
+        if not self.quote_source:
+            self.quote_source = "wencai"
         prev_close = _previous_close(merged)
         open_price = _number(_first(merged, "开盘价"))
         amount = _number(_first(merged, "成交额"))

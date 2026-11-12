@@ -121,8 +121,14 @@ def is_empty(value: Any) -> bool:
         return True
     if isinstance(value, str):
         return not value.strip() or value.strip() in {"暂无", "暂无数据", "-", "--"}
-    if isinstance(value, (list, tuple, set, dict)):
+    if isinstance(value, (list, tuple, set)):
         return len(value) == 0
+    if isinstance(value, dict):
+        if not value:
+            return True
+        if set(value) == {"error"}:
+            return True
+        return False
     return False
 
 

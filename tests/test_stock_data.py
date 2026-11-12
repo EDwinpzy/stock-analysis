@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pandas as pd
 
 import fetch_stock_data
+from reporting.stock import build_stock_report
 
 
 class ResolveTHS:
@@ -149,3 +150,35 @@ def test_tick_big_orders_keep_vendor_quote_metric():
 
     assert not applied
     assert data["quote"]["main_net_inflow"] == -26068780.0
+
+
+def test_cloud_stock_report_backfills_valuation_from_matching_peer():
+    data = {
+        "stock_name": "贵州茅台",
+        "stock_code": "600519",
+        "quote": {"error": "无行情数据"},
+        "quote_source": "eastmoney",
+        "finance_raw": {
+            "股票简称": "贵州茅台",
+            "股票代码": "600519.SH",
+            "最新价": "1410.27",
+            "最新涨跌幅": "0.57",
+        },
+        "peers_raw": [
+            {
+                "股票代码": "600519.SH",
+                "股票简称": "贵州茅台",
+                "市盈率(pe)": "20.51",
+                "市净率(pb)": "6.5",
+                "总市值": "1762952579442.0",
+            }
+        ],
+        "runtime": {"source": "cloud"},
+    }
+
+    html = build_stock_report(data)
+
+    assert "PE(TTM)" in html
+    assert "20.51" in html
+    assert "17,629.53 亿" in html
+    assert "东方财富行情" in html

@@ -159,18 +159,22 @@ def build_stock_report(data: dict[str, Any]) -> str:
     change_pct = number(quote.get("change_pct")) or number(pick(finance, "最新涨跌幅"))
     market_cap = number(quote.get("market_cap"))
     pe_ttm = number(quote.get("pe_ttm"))
+    matching_peer = next(
+        (
+            item
+            for item in peers
+            if str(code) in str(pick(item, "股票代码"))
+        ),
+        None,
+    )
+    if matching_peer:
+        if pe_ttm is None:
+            pe_ttm = _peer_metric(matching_peer, "市盈率")
+        if market_cap is None:
+            market_cap = _peer_metric(matching_peer, "总市值")
     pb = number(pick(finance, "市净率"))
-    if pb is None:
-        matching_peer = next(
-            (
-                item
-                for item in peers
-                if str(code) in str(pick(item, "股票代码"))
-            ),
-            None,
-        )
-        if matching_peer:
-            pb = _peer_metric(matching_peer, "市净率")
+    if pb is None and matching_peer:
+        pb = _peer_metric(matching_peer, "市净率")
 
     peer_pes = [value for value in (_peer_metric(item, "市盈率") for item in peers) if value is not None and value > 0]
     peer_pe_median = median(peer_pes)
@@ -416,6 +420,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
         holder_source = clean(data.get("holders_source"))
         peer_source = clean(data.get("peers_source"))
         finance_source = clean(data.get("finance_source"))
+        quote_source = clean(data.get("quote_source"))
         big_orders_source = clean(data.get("big_orders_source"))
         wencai_domains = [
             "实时行情",
@@ -428,6 +433,8 @@ def build_stock_report(data: dict[str, Any]) -> str:
             "壁垒",
             "大单日汇总",
         ]
+        if quote_source == "eastmoney":
+            wencai_domains.remove("实时行情")
         if holder_source == "eastmoney":
             wencai_domains.remove("股东")
         if peer_source == "eastmoney":
@@ -445,6 +452,10 @@ def build_stock_report(data: dict[str, Any]) -> str:
                 "本次采集已返回",
             ),
         ]
+        if quote_source == "eastmoney":
+            source_rows.append(
+                ("东方财富行情", "问财缺失时的实时行情兜底", "本次采集已返回")
+            )
         if holder_source == "eastmoney":
             source_rows.append(
                 ("东方财富 F10", "前十大流通股东与机构持股比例", "本次采集已返回")

@@ -932,7 +932,12 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
             result["quote"] = {"error": "无行情数据"}
     except Exception as e:
         result["quote"] = {"error": str(e)}
-    
+
+    result["quote_source"] = getattr(ths, "quote_source", "")
+    quote_fallback_error = getattr(ths, "quote_fallback_error", "")
+    if quote_fallback_error:
+        result["quote_fallback_error"] = quote_fallback_error
+
     time.sleep(_API_DELAY)
     
     # ========== 2. 财务数据（wencai_nlp 一次查询） ==========

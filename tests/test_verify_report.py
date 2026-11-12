@@ -107,6 +107,19 @@ def test_data_gate_reports_missing_field(tmp_path):
     assert "行情" in result["missing_or_empty"]
 
 
+def test_data_gate_treats_quote_error_object_as_missing(tmp_path):
+    path = tmp_path / "stock.json"
+    path.write_text(
+        '{"quote": {"error": "无行情数据"}, "warnings": []}',
+        encoding="utf-8",
+    )
+
+    result = verify.verify_data(path, "stock")
+
+    assert result["ok"] is False
+    assert "行情" in result["missing_or_empty"]
+
+
 def test_source_fact_gate_rejects_stock_price_mismatch(tmp_path):
     path = tmp_path / "stock.html"
     path.write_text(

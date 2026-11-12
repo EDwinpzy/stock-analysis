@@ -109,6 +109,8 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter.peers_error = ""
     adapter.finance_source = ""
     adapter.finance_error = ""
+    adapter.quote_source = ""
+    adapter.quote_fallback_error = ""
     return adapter
 
 
@@ -154,6 +156,38 @@ def test_quote_maps_dated_columns_and_previous_close():
     assert row["成交量"] == 41846748
     assert row["市盈率TTM"] == 5.235313
     assert row["名称"] == "平安银行"
+
+
+def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_stock_quote",
+        lambda code: {
+            "f2": 1410.27,
+            "f3": 0.57,
+            "f9": 20.51,
+            "f12": code,
+            "f14": "贵州茅台",
+            "f20": 1762952579442.0,
+            "f21": 1762952579442.0,
+            "f23": 6.5,
+            "f25": 4.53,
+        },
+    )
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+
+    row = adapter.market_data_cn("USHA600519", "汇总").df.iloc[0]
+
+    assert row["价格"] == 1410.27
+    assert row["涨幅"] == 0.57
+    assert row["市盈率TTM"] == 20.51
+    assert row["总市值"] == 1762952579442.0
+    assert row["名称"] == "贵州茅台"
+    assert adapter.quote_source == "eastmoney"
 
 
 def test_finance_frame_aliases_roe_products_and_basic_info():
