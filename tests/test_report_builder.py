@@ -226,6 +226,19 @@ def test_cloud_stock_report_labels_eastmoney_holder_fallback():
     assert "实时行情、财务、估值、同业、股东、产品" not in report
 
 
+def test_cloud_stock_report_labels_eastmoney_peer_fallback():
+    data = stock_fixture()
+    data["runtime"] = {"source": "cloud"}
+    data["peers_source"] = "eastmoney"
+
+    report = build_stock_report(data)
+
+    assert "东方财富 F10/行情" in report
+    assert "同业估值、市值与财务指标" in report
+    assert "实时行情、财务、估值、股东、产品、筹码、壁垒与大单日汇总" in report
+    assert "实时行情、财务、估值、同业、股东、产品" not in report
+
+
 def test_cloud_industry_report_uses_structured_source_rows():
     data = industry_fixture()
     data["sources"] = [

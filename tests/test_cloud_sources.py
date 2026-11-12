@@ -98,6 +98,11 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter._cache = {}
     adapter._news_cache = None
     adapter.stock_name = name
+    adapter._stock_code = ""
+    adapter.holders_source = ""
+    adapter.holders_error = ""
+    adapter.peers_source = ""
+    adapter.peers_error = ""
     return adapter
 
 
@@ -272,6 +277,80 @@ def test_holder_query_falls_back_to_eastmoney_disclosure(monkeypatch):
     assert row["机构持股占流通股比例[20260930]"] == pytest.approx(70.87)
     assert adapter.holders_source == "eastmoney"
     assert adapter.holders_error == ""
+
+
+def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
+    def responder(skill, query, limit):
+        assert "市盈率" in query and "市净率" in query
+        return payload()
+
+    adapter = make_adapter(FakeWencai(responder), FakeMarket())
+    adapter._stock_code = "600519"
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        if "IndustryAnalysis" in url:
+            return {
+                "gzbj": [
+                    {"CORRE_SECURITY_CODE": "600519"},
+                    {"CORRE_SECURITY_CODE": "000858"},
+                    {"CORRE_SECURITY_CODE": "行业平均"},
+                ],
+                "czxbj": [
+                    {"CORRE_SECURITY_CODE": "000568"},
+                ],
+            }
+        if "ulist.np" in url:
+            return {
+                "data": {
+                    "diff": [
+                        {
+                            "f12": "000858",
+                            "f14": "五 粮 液",
+                            "f9": 21.7,
+                            "f23": 2.37,
+                            "f20": 280989603481.95,
+                            "f37": 8.09,
+                            "f49": 77.54,
+                            "f40": 40528509770.23,
+                            "f45": 9317000000.0,
+                            "f2": 72.39,
+                            "f3": -2.51,
+                        },
+                        {
+                            "f12": "600519",
+                            "f14": "贵州茅台",
+                            "f9": 21.34,
+                            "f23": 7.17,
+                            "f20": 1752989400000.0,
+                            "f37": 32.53,
+                            "f49": 91.18,
+                            "f40": 133283652508.95,
+                            "f45": 64467425981.95,
+                            "f2": 1402.3,
+                            "f3": -2.55,
+                        },
+                    ]
+                }
+            }
+        raise AssertionError(url)
+
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    result = adapter.wencai_nlp(
+        "白酒行业，市盈率，总市值，市净率，净资产收益率ROE，"
+        "2025年营业收入，2025年销售毛利率，2025年销售净利率，股息率"
+    )
+    rows = result.df.to_dict("records")
+
+    assert [row["股票代码"] for row in rows] == ["600519.SH", "000858.SZ"]
+    assert rows[0]["股票简称"] == "贵州茅台"
+    assert rows[1]["股票简称"] == "五粮液"
+    assert rows[1]["市盈率(pe)"] == pytest.approx(21.7)
+    assert rows[1]["销售净利率"] == pytest.approx(
+        9317000000.0 / 40528509770.23 * 100
+    )
+    assert adapter.peers_source == "eastmoney"
+    assert adapter.peers_error == ""
 
 
 def test_concentration_frame_aliases_top_ten_and_first_holder():
@@ -458,6 +537,115 @@ def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
     assert len(result["news"]) == 2
     assert any("扶摇 REST" in item for item in result["sources"])
     assert any("官方问财 OpenAPI" in item and "实时行情主数据" in item for item in result["sources"])
+
+
+def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
+    market = FakeMarket()
+
+    def responder(skill, query, limit):
+        if "5日涨幅" in query:
+            return payload(
+                {
+                    "涨跌幅[20261106-20261112]": 1.1,
+                    "涨跌幅[20261030-20261112]": 2.2,
+                    "涨跌幅[20261016-20261112]": 3.3,
+                    "主力净买入额[20261112]": 123456789,
+                    "量比[20261112]": 1.5,
+                }
+            )
+        if "成分股" in query:
+            raise cloud_sources.mq.QueryError(
+                "今天的次数已用完",
+                "wencai_quota_exhausted",
+            )
+        raise AssertionError(query)
+
+    def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        if "ZYZBAjaxNew" in url:
+            if "600519" in url:
+                return {
+                    "data": [
+                        {
+                            "REPORT_TYPE": "年报",
+                            "REPORT_DATE": "2025-12-31 00:00:00",
+                            "REPORT_YEAR": "2025",
+                            "TOTALOPERATEREVE": 172054171890.91,
+                            "PARENTNETPROFIT": 82320067101.68,
+                            "TOTALOPERATEREVETZ": -1.2001,
+                            "PARENTNETPROFITTZ": -4.5323,
+                            "ROEJQ": 32.53,
+                            "XSMLL": 91.1796,
+                            "XSJLL": 50.5279,
+                        }
+                    ]
+                }
+            if "000568" in url:
+                return {
+                    "data": [
+                        {
+                            "REPORT_TYPE": "年报",
+                            "REPORT_DATE": "2025-12-31 00:00:00",
+                            "REPORT_YEAR": "2025",
+                            "TOTALOPERATEREVE": 25731010647.0,
+                            "PARENTNETPROFIT": 10800000000.0,
+                            "TOTALOPERATEREVETZ": -19.6,
+                            "PARENTNETPROFITTZ": -20.1,
+                            "ROEJQ": 22.66,
+                            "XSMLL": 86.62,
+                            "XSJLL": 42.2,
+                        }
+                    ]
+                }
+        if "ulist.np" in url:
+            return {
+                "data": {
+                    "diff": [
+                        {
+                            "f12": "600519",
+                            "f2": 1402.3,
+                            "f3": -2.55,
+                            "f9": 21.0,
+                            "f20": 1760000000000,
+                            "f23": 7.2,
+                            "f25": 5.5,
+                        },
+                        {
+                            "f12": "000568",
+                            "f2": 76.99,
+                            "f3": -3.75,
+                            "f9": 15.0,
+                            "f20": 113000000000,
+                            "f23": 2.4,
+                            "f25": -30.3,
+                        },
+                    ]
+                }
+            }
+        raise AssertionError(url)
+
+    monkeypatch.setattr(cloud_sources, "_safe_market_client", lambda: (market, ""))
+    monkeypatch.setattr(
+        cloud_sources,
+        "_wencai_client",
+        lambda: (FakeWencai(responder), "test"),
+    )
+    monkeypatch.setattr(cloud_sources, "_fetch_eastmoney_json", fake_json)
+
+    result = cloud_sources.collect_industry_cloud("白酒", limit=2)
+    by_code = {item["ticker"]: item for item in result["stocks"]}
+
+    assert by_code["600519"]["revenue"] == pytest.approx(172054171890.91)
+    assert by_code["600519"]["net_profit"] == pytest.approx(82320067101.68)
+    assert by_code["600519"]["roe"] == pytest.approx(32.53)
+    assert by_code["600519"]["gross_margin"] == pytest.approx(91.1796)
+    assert by_code["600519"]["pe"] == pytest.approx(21.0)
+    assert by_code["600519"]["market_cap_yi"] == pytest.approx(17600.0)
+    assert by_code["000568"]["revenue_yoy"] == pytest.approx(-19.6)
+    assert by_code["000568"]["profit_yoy"] == pytest.approx(-20.1)
+    assert by_code["000568"]["ytd_change"] == pytest.approx(-30.3)
+    assert by_code["600519"]["industry"] == "白酒Ⅲ"
+    assert any("东方财富 F10/行情" in item for item in result["sources"])
+    assert any("问财行业财务数据不完整" in item for item in result["warnings"])
 
 
 def test_stock_adapter_fails_closed_without_wencai_key(monkeypatch):

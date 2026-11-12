@@ -2197,7 +2197,7 @@ def build_html(today: str, trade_date: str) -> str:
 
     # 组装淘股吧行
     tgb_rows = []
-    tgb_symbols_all = set()
+    tgb_symbols_all = []
     tgb_directions = []
     tgb_ai_failures = []
     tgb_no_opinion_count = 0
@@ -2291,7 +2291,9 @@ def build_html(today: str, trade_date: str) -> str:
         if used_ai:
             direction = summary_direction(summary)
             symbols = [s for s in re.findall(r'【([^】]+)】', summary) if s not in {'中性', '看多', '看空', '关注'}]
-            for s in symbols[:5]: tgb_symbols_all.add(s)
+            for s in symbols[:5]:
+                if s not in tgb_symbols_all:
+                    tgb_symbols_all.append(s)
             tgb_directions.append(direction)
         else:
             # 有可核验内容却没拿到 AI 语义摘要：不允许把原始口语当观点交付
@@ -2347,7 +2349,7 @@ def build_html(today: str, trade_date: str) -> str:
     if tgb_no_opinion_count and (tgb_bull_count or tgb_bear_count):
         tgb_consensus += f"；另有{tgb_no_opinion_count}位未表达明确观点"
     if tgb_symbols_all:
-        top_syms = list(tgb_symbols_all)[:4]
+        top_syms = tgb_symbols_all[:4]
         tgb_consensus += f"；共同关注：{'、'.join(str(s) for s in top_syms)}"
 
     total_replies = sum(b.get("replies_today", 0) for b in tgb.get("bloggers", {}).values())
@@ -2403,7 +2405,7 @@ def build_html(today: str, trade_date: str) -> str:
 
     # 组装抖音卡片
     dy_items = []
-    dy_symbols_all = set()
+    dy_symbols_all = []
     ai_result_idx = 0
     blogger_video_started = set()  # 追踪哪些博主已有视频输出
 
@@ -2505,7 +2507,9 @@ def build_html(today: str, trade_date: str) -> str:
                 direction = {'看多': '利好', '看空': '利空'}.get(summary_direction(summary), '关注')
                 symbols = [s for s in re.findall(r'【([^】]+)】', summary) if s not in {'中性', '看多', '看空', '关注'}]
 
-            for s in symbols[:4]: dy_symbols_all.add(s)
+            for s in symbols[:4]:
+                if s not in dy_symbols_all:
+                    dy_symbols_all.append(s)
             sym_tags = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in symbols[:4])
             if direction == "利好":
                 dir_tag = '<span class="bg_">利好</span>'
@@ -2519,7 +2523,7 @@ def build_html(today: str, trade_date: str) -> str:
             dy_items.append(f'<div class="dy"><span class="dyt">{dir_tag}{warn_tag}{ai_tag}</span><div><strong>{esc(title_s[:50])}</strong><p>{esc(summary[:250])} {sym_tags}</p><small class="t3">{title_note}{esc(b.get("name", ""))} · {esc(v.get("created_at", ""))} · <a href="{esc(v.get("url", ""))}" target="_blank" rel="noopener">视频原文</a></small></div></div>')
     dy_name_parts = [esc(b.get("name", "")) for b in douyin.get("bloggers", []) if b.get("name")]
     dy_name = " · ".join(dy_name_parts) if dy_name_parts else "抖音博主"
-    dy_lbox_symbols = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in list(dy_symbols_all)[:8])
+    dy_lbox_symbols = " ".join(f'<span class="tag y">{esc(s)}</span>' for s in dy_symbols_all[:8])
     dy_count = sum(len(b.get("videos", [])) for b in douyin.get("bloggers", []) if isinstance(b, dict))
     if not dy_items:
         # 没有可渲染的真视频时，只说明失败原因，不给"线索汇总"这种会被误读的占位

@@ -1555,6 +1555,8 @@ def main():
                 if getattr(ths, "is_cloud", False):
                     result["holders_source"] = getattr(ths, "holders_source", "")
                     result["holders_error"] = getattr(ths, "holders_error", "")
+                    result["peers_source"] = getattr(ths, "peers_source", "")
+                    result["peers_error"] = getattr(ths, "peers_error", "")
                 result["runtime"] = {
                     "platform": sys.platform,
                     "python": sys.version.split()[0],

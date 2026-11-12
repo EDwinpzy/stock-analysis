@@ -150,6 +150,7 @@ jobs:
             --json /runtime/visuals/industry-visual-result.json
 
       - name: Upload report evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cloud-port-evidence
