@@ -149,6 +149,23 @@ jobs:
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
 
+      - name: Replay the fixed 2026-11-11 briefing
+        run: |
+          set -euo pipefail
+          test "$(sha256sum tests/fixtures/cloud-replay-2026-11-11.tar.gz | awk '{print $1}')" = \
+            "913c784f8e4f1ecb4443cedaf69094b9885989bfd76c01196912a918cffba329"
+          mkdir -p artifacts/replay/data artifacts/replay/reports
+          tar -xzf tests/fixtures/cloud-replay-2026-11-11.tar.gz \
+            -C artifacts/replay/data --strip-components=1
+          chmod -R 777 artifacts/replay
+          docker run --rm \
+            --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports \
+            --volume "$PWD/artifacts/replay/data:/runtime/data" \
+            --volume "$PWD/artifacts/replay/reports:/runtime/reports" \
+            "$IMAGE" \
+            sh /opt/daily-briefing-pro/deploy/cloud/verify-fixed-replay.sh 2026-11-11
+
       - name: Upload report evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -266,6 +283,23 @@ jobs:
             --sections 8 --tables 14 --label industry \
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
+
+      - name: Replay the fixed 2026-11-11 briefing
+        run: |
+          set -euo pipefail
+          test "$(sha256sum tests/fixtures/cloud-replay-2026-11-11.tar.gz | awk '{print $1}')" = \
+            "913c784f8e4f1ecb4443cedaf69094b9885989bfd76c01196912a918cffba329"
+          mkdir -p artifacts-arm64/replay/data artifacts-arm64/replay/reports
+          tar -xzf tests/fixtures/cloud-replay-2026-11-11.tar.gz \
+            -C artifacts-arm64/replay/data --strip-components=1
+          chmod -R 777 artifacts-arm64/replay
+          docker run --rm \
+            --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports \
+            --volume "$PWD/artifacts-arm64/replay/data:/runtime/data" \
+            --volume "$PWD/artifacts-arm64/replay/reports:/runtime/reports" \
+            "$IMAGE" \
+            sh /opt/daily-briefing-pro/deploy/cloud/verify-fixed-replay.sh 2026-11-11
 
       - name: Upload ARM64 evidence
         if: always()
