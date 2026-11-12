@@ -200,6 +200,17 @@ def test_stock_report_does_not_emit_empty_research_table(tmp_path):
     assert "本次采集未返回可核验的机构研报样本" in html
 
 
+def test_stock_report_uses_quote_pb_when_finance_omits_pb():
+    data = stock_fixture()
+    data["quote"]["pb"] = 6.5
+    data["finance_raw"].pop("市净率")
+
+    report = build_stock_report(data)
+
+    assert "6.50" in report
+    assert "公开数据未覆盖" not in report
+
+
 def test_stock_report_accepts_alternate_company_field_names():
     data = stock_fixture()
     data["finance_raw"]["控股股东"] = "示例控股股东"

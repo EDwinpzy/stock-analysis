@@ -913,6 +913,7 @@ def fetch_all_data(ths, thscode, pure_code, stock_name):
                 "market_cap": _vendor_quote_value(q.get("总市值", "暂无")),
                 "circulating_cap": _vendor_quote_value(q.get("流通市值", "暂无")),
                 "pe_ttm": _vendor_quote_value(q.get("市盈率TTM", "暂无")),
+                "pb": _vendor_quote_value(q.get("市净率", "暂无")),
                 "turnover_rate": _vendor_quote_value(q.get("换手率", "暂无")),
                 "amplitude": _vendor_quote_value(q.get("振幅", "暂无")),
                 "main_net_inflow": _vendor_quote_value(q.get("主力净流入", "暂无")),

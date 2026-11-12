@@ -172,7 +172,7 @@ def build_stock_report(data: dict[str, Any]) -> str:
             pe_ttm = _peer_metric(matching_peer, "市盈率")
         if market_cap is None:
             market_cap = _peer_metric(matching_peer, "总市值")
-    pb = number(pick(finance, "市净率"))
+    pb = number(quote.get("pb")) or number(pick(finance, "市净率"))
     if pb is None and matching_peer:
         pb = _peer_metric(matching_peer, "市净率")
 

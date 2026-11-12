@@ -215,6 +215,7 @@ def test_quote_falls_back_to_eastmoney_when_wencai_is_empty(monkeypatch):
     assert row["价格"] == 1410.27
     assert row["涨幅"] == 0.57
     assert row["市盈率TTM"] == 21.46
+    assert row["市净率"] == 6.5
     assert row["总市值"] == 1762952579442.0
     assert row["名称"] == "贵州茅台"
     assert adapter.quote_source == "eastmoney"
