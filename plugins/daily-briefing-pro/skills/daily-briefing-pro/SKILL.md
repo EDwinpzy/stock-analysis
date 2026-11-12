@@ -34,6 +34,13 @@ metadata:
       - SILICONFLOW_API_KEY
       - GROQ_API_KEY
       - OPENAI_API_KEY
+      - STT_AI_API_KEY
+      - STT_AI_BASE_URL
+      - STT_AI_MODEL
+      - STT_AI_LANGUAGE
+      - NOTETAKERS_ASR_BASE_URL
+      - NOTETAKERS_ASR_ENGINE
+      - NOTETAKERS_ASR_LANGUAGE
       - DOUYIN_ASR_BASE_URL
       - DOUYIN_ASR_API_KEY
       - DOUYIN_ASR_MODEL
@@ -43,6 +50,8 @@ metadata:
       - DOUYIN_MAX_CONCURRENT
       - IMA_OPENAPI_CLIENTID
       - IMA_OPENAPI_APIKEY
+      - THS_SELFSTOCK_CODES
+      - THS_SELFSTOCK_JSON
       - THS_SELFSTOCK_PATH
       external_tools:
       - ffmpeg
@@ -156,9 +165,9 @@ AI 总结只使用已配置的 OpenAI-compatible API。本机 Codex CLI 登录�
 用户说“新闻筛选/抓新闻/新闻快筛”时分两组处理，并严格只收录目标日：
 
 1. 财经与科技新闻：优先财联社加红重要消息，再按政策/监管、行业重大、公司业绩、国际、资金面排序，剔除盘面噪声和无实质传闻，最多 15 条。
-2. 自选股新闻：读取同花顺本地自选股，按公告、明确利好利空、龙虎榜、普通新闻排序，每股最多 3 条，总计最多 15 条。
+2. 自选股新闻：读取云端配置的自选股代码，按公告、明确利好利空、龙虎榜、普通新闻排序，每股最多 3 条，总计最多 15 条。
 
-每条标注来源、标的代码+名称和 `🟢利好 / 🔴利空 / 🔵中性`；输出纯文本对话，不生成 HTML/文件。入口命令为 `python scripts/news_screener.py {health|tasks|stocks|summary}`，自选股主路径由 `THS_SELFSTOCK_PATH` 或同花顺默认路径提供。禁止用静态 JSON 冒充实时结果、禁止依赖不可用的通达信接口。
+每条标注来源、标的代码+名称和 `🟢利好 / 🔴利空 / 🔵中性`；输出纯文本对话，不生成 HTML/文件。入口命令为 `python scripts/news_screener.py {health|tasks|stocks|summary}`，自选股由 `THS_SELFSTOCK_CODES`、`THS_SELFSTOCK_JSON` 或显式只读 Secret 提供，不扫描本机安装目录。禁止用静态 JSON 冒充实时结果、禁止依赖不可用的通达信接口。
 
 ### 博主观点统一规范
 
@@ -797,7 +806,7 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 - **推荐配置其一**：通用 OpenAI-compatible ASR、SiliconFlow / Groq / OpenAI / STT.ai 音频 Key；完全未配置时仍可使用 STT.ai + NoteTakers 匿名额度，但稳定批量日报不建议依赖它
 - IMA API凭证（知识库搜索）
 - 淘股吧登录Cookie（`data/tgb_cookies.json`）
-- 同花顺自选股JSON（`$THS_SELFSTOCK_PATH`，仅供专项新闻筛选）
+- 自选股代码或 JSON（`THS_SELFSTOCK_CODES` / `THS_SELFSTOCK_JSON`，仅供专项新闻筛选）
 
 ---
 
@@ -836,8 +845,10 @@ export DOUYIN_MAX_CONCURRENT="1"
 export IMA_OPENAPI_CLIENTID="xxxxxxxx"
 export IMA_OPENAPI_APIKEY="xxxxxxxx"
 
-# 同花顺自选股（可选，仅供专项新闻筛选）
-export THS_SELFSTOCK_PATH="C:/应用/同花顺/mo_xxxxx/SelfStockInfo.json"
+# 自选股（可选，仅供专项新闻筛选；云端不要扫描本机安装目录）
+export THS_SELFSTOCK_CODES="600519,000001"
+# 或者：export THS_SELFSTOCK_JSON='{"stocks":[{"code":"600519","market":"17"}]}'
+# 或者：export THS_SELFSTOCK_PATH="/run/secrets/ths_selfstock.json"
 
 # 盘面补充是否启用连板网补充抓取（可选，默认 1）
 #   1 = 同花顺官方事实 + 连板网补充（新高新低/融资余额/资金流/次日观察）

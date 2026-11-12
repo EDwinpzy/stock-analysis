@@ -10,7 +10,7 @@ from runtime_paths import get_data_dir
 
 
 class PersistentDataDirectoryTests(unittest.TestCase):
-    def test_default_path_migrates_legacy_before_package_data(self):
+    def test_default_path_seeds_package_data_without_legacy_installation_scan(self):
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp) / "home"
             package = Path(temp) / "package"
@@ -28,8 +28,8 @@ class PersistentDataDirectoryTests(unittest.TestCase):
             expected = home / ".codex" / "daily-briefing-pro" / "data"
 
             self.assertEqual(result, expected)
-            self.assertEqual((expected / "nested" / "rotation_history.json").read_text(encoding="utf-8"), "legacy")
-            self.assertEqual((expected / "sentiment_history.json").read_text(encoding="utf-8"), "old")
+            self.assertEqual((expected / "nested" / "rotation_history.json").read_text(encoding="utf-8"), "package")
+            self.assertFalse((expected / "sentiment_history.json").exists())
             self.assertEqual((expected / "news_ai_summaries.json").read_text(encoding="utf-8"), "new")
             self.assertFalse((expected / "news_today.json").exists())
             self.assertFalse((expected / "tgb_cookies.json").exists())

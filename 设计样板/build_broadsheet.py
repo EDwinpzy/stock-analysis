@@ -16,7 +16,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WORKSPACE = HERE.parent
-SKILL = Path(r"C:\Users\63054\.agents\skills\daily-briefing-pro")
+SKILL = WORKSPACE / "plugins" / "daily-briefing-pro" / "skills" / "daily-briefing-pro"
 RENDERER = SKILL / "scripts" / "build_broadsheet.py"
 
 DEFAULT_SRC = WORKSPACE / "报告" / "每日简报" / "2026-09-21简报.html"

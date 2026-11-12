@@ -8,7 +8,7 @@
 
 | 层级 | 位置 | 说明 |
 | --- | --- | --- |
-| 本机 Key/URL/模型 | `~/.codex/daily-briefing.env` | `env_config.py` 会加载；已存在的进程环境变量优先 |
+| Key/URL/模型 | GitHub Actions Secrets，或运行环境的 `~/.codex/daily-briefing.env` | 云端由工作流注入；已存在的进程环境变量优先 |
 | 淘股吧 Cookie | `~/.codex/tgb_cookies.json` | JSON 数组，必须含 `tgbpwd`、`tgbuser` |
 | 抖音 Cookie | `~/.codex/daily-briefing-pro/data/douyin_cookies.json` | `sessionid` 缺失时只能按公开页运行 |
 | 雪球 Cookie | `~/.codex/daily-briefing-pro/data/xueqiu_cookies.json` | 必须含 `xq_a_token`、`xq_is_login` |
@@ -68,9 +68,15 @@ Whisper，也不会把文本 AI Relay 当作音频接口。
 `HITHINK_API_KEY`、`HITHINK_FINANCE_API_KEY` 和 `WENCAI_API_KEY` 是兼容别名，不建议同时维护多份。
 当前推荐只写 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`。
 
-清单同时收录高级/可选运行时项，包括采集、构建和预检超时，模型缓存目录，同花顺安装目录，
-Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完整列表用
+清单同时收录高级/可选运行时项，包括采集、构建和预检超时，模型缓存目录，
+自选股环境变量，Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完整列表用
 `python tools\credential_manifest.py check --all --markdown` 查看。
+
+## 云端运行边界
+
+- 行情、新闻、研究和 AI 总结只调用 API；本地 Whisper、Windows Lumi 启动器、注册表代理和本机命令入口均已移除。
+- 自选股优先用 `THS_SELFSTOCK_CODES` 或 `THS_SELFSTOCK_JSON` 注入；`THS_SELFSTOCK_PATH` 只在显式配置时读取只读 Secret，不扫描同花顺安装目录。
+- 云端 `/runtime/data`、`/runtime/reports` 只是容器临时工作盘；跨任务持久化依靠挂载卷、GitHub Actions artifact 或你自己的对象存储，不读取用户电脑。
 
 ## Cookie 的短命边界
 
@@ -99,7 +105,7 @@ Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完
 - 本地 Whisper / faster-whisper 已从代码、依赖和镜像中移除；抖音转录只调用云端音频 API。
   没有带 Key 的通道时使用 STT.ai 匿名兜底，但额度有限，不会降级到本机模型，也不会用标题冒充转录。
 - 当前 `thsdk` 是游客态；只有配置 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 才是固定账号。
-- 当前未配置 `THS_SELFSTOCK_PATH`，因此自选股/分组接口属于可选不可用状态。
+- 当前未配置自选股代码，因此自选股新闻/分组接口属于可选不可用状态；可在云端配置 `THS_SELFSTOCK_CODES`，不需要上传本机同花顺文件。
 - 自托管 Compose 的 `secrets/` 目录目前只有 `fuyao_api_key`；如果实际启用 Compose，需要按
   `deploy/cloud/README.md` 补齐，不要误以为 GitHub Actions 已通过就代表 Compose 也已配置。
 - GitHub 侧工作流引用的 Secret 名称齐全，但 GitHub 无法回读 Secret 值；远端值是否落后于本机，仍需在替换后

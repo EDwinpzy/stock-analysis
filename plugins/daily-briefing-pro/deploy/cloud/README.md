@@ -270,7 +270,7 @@ does not silently substitute a local-only feature with a different metric.
 | Capital flow | `capital-flow` | `thsdk` only | Fuyao marks the flow endpoint `client-only` |
 | Ranking | `sort` | `thsdk` block members plus realtime; Fuyao market/index fallback | Common market scopes and `.TI` sectors have a direct REST path; other numeric block IDs use `thsdk` |
 | First-push subscription | `subscribe` | One-shot realtime/candle snapshot; `thsdk` for trend/tick | It returns the equivalent first snapshot and does not keep a persistent stream |
-| Watchlist/groups | `watchlist`, `sectors` | `THS_SELFSTOCK_PATH` or `/run/secrets/ths_selfstock.json` | No login-state import; a missing file is reported instead of invented |
+| Watchlist/groups | `watchlist`, `sectors` | `THS_SELFSTOCK_CODES`, `THS_SELFSTOCK_JSON`, or an explicit read-only Secret | No host installation scan; missing configuration is reported instead of invented |
 | Read-only calls | `call` | Allowlisted portable tools | `wencai_query` uses `IWENCAI_API_KEY` for all 21 skills; without it only the `hithink-market-query` skill can fall back to `thsdk` |
 | Data/report parity | `parity` | Local and cloud JSON/HTML inputs | Ignores collection timestamps and runtime paths, not business values |
 
@@ -287,10 +287,13 @@ performs the requested realtime, candle, trend or tick fetch, returns the first
 equivalent snapshot, and exits. This matches the desktop operation's
 "first event then unsubscribe" lifecycle without claiming a persistent stream.
 
-For watchlist parity, mount a genuine Tonghuashun self-stock export at
-`secrets/ths_selfstock.json`. The portable reader supports the old list format
-and both remote-client pipe formats. If the file is absent, `watchlist` returns
-an explicit `unavailable` result with zero securities.
+For watchlist parity, prefer `THS_SELFSTOCK_CODES` in the environment, or set
+`THS_SELFSTOCK_JSON` to a JSON array/object. A genuine exported self-stock file
+may still be mounted at `secrets/ths_selfstock.json` and pointed to explicitly
+with `THS_SELFSTOCK_PATH`. The reader supports the old list format and both
+remote-client pipe formats. It never scans a Windows installation directory;
+if nothing is configured, `watchlist` returns an explicit `unavailable` result
+with zero securities.
 
 ## Timeouts and process cleanup
 

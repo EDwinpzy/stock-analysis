@@ -10,9 +10,11 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from runtime_paths import get_data_dir
 
 DATA_ROOT = get_data_dir(Path(BASE))
-COOKIE_FILE = os.environ.get("TGB_COOKIE_PATH", str(DATA_ROOT / "tgb_cookies.json"))
-if not os.path.exists(COOKIE_FILE):
-    COOKIE_FILE = os.path.expanduser("~/.codex/tgb_cookies.json")
+COOKIE_FILE = str(
+    Path(os.environ.get("TGB_COOKIE_PATH", "")).expanduser()
+    if os.environ.get("TGB_COOKIE_PATH", "").strip()
+    else DATA_ROOT / "tgb_cookies.json"
+)
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE

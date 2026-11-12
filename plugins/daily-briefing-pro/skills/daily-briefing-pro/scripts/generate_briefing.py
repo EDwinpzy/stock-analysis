@@ -14,13 +14,7 @@ from urllib.parse import quote
 
 SCRIPT_DIR = Path(__file__).parent
 BASE_DIR = SCRIPT_DIR.parent
-# 输出到当前工作区的 reports/每日简报
-# 如果从 skill 目录内部运行，自动定位到用户工作空间
-_cwd = Path(os.getcwd())
-if ".agents" in _cwd.parts and "skills" in _cwd.parts:
-    WORKSPACE_ROOT = Path.cwd()
-else:
-    WORKSPACE_ROOT = _cwd
+# 输出到当前工作区的 reports/每日简报。
 OUTPUT_DIR = Path.cwd() / "reports" / "每日简报"
 
 

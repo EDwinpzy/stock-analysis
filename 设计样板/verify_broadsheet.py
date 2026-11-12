@@ -11,7 +11,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WORKSPACE = HERE.parent
-SKILL = Path(r"C:\Users\63054\.agents\skills\daily-briefing-pro")
+SKILL = WORKSPACE / "plugins" / "daily-briefing-pro" / "skills" / "daily-briefing-pro"
 CHECKER = SKILL / "scripts" / "verify_broadsheet.py"
 
 DEFAULT_OUT = HERE / "报刊风样板-v2.html"

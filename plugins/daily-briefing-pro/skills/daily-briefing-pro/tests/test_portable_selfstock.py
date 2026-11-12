@@ -38,31 +38,45 @@ class PortableSelfstockTests(unittest.TestCase):
         self.assertEqual(stocks["source_file"], str(path))
         self.assertEqual(stocks["source_format"], "old_json")
 
-    def test_ths_home_environment_is_a_portable_discovery_root(self):
-        with tempfile.TemporaryDirectory() as temp:
-            with patch.dict(os.environ, {"THS_HOME": temp}):
-                roots = parse_selfstock._find_ths_base_dirs()
+    def test_selfstock_codes_environment_avoids_local_file_discovery(self):
+        with patch.dict(
+            os.environ,
+            {"THS_SELFSTOCK_CODES": "600519, 000001；300750.SZ"},
+            clear=True,
+        ):
+            source = parse_selfstock.get_selfstock_source_info()
+            stocks = parse_selfstock.parse_selfstock()
 
-        self.assertIn(temp, roots)
+        self.assertTrue(source["found"])
+        self.assertEqual(source["format"], "env_codes")
+        self.assertEqual(source["count"], 3)
+        self.assertEqual(
+            [stock["full_code"] for stock in stocks],
+            ["600519.SH", "000001.SZ", "300750.SZ"],
+        )
+
+    def test_selfstock_json_environment_supports_structured_codes(self):
+        payload = json.dumps(
+            {"stocks": [{"code": "600519", "market": "17"}, {"code": "000001", "market": "33"}]}
+        )
+        with patch.dict(os.environ, {"THS_SELFSTOCK_JSON": payload}, clear=True):
+            source = parse_selfstock.get_selfstock_source_info()
+            stocks = parse_selfstock.parse_selfstock()
+
+        self.assertEqual(source["format"], "env_json")
+        self.assertEqual(source["count"], 2)
+        self.assertEqual([stock["code"] for stock in stocks], ["600519", "000001"])
 
     def test_stockblock_accepts_explicit_path_and_selfstock_json_parent(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             stockblock = root / "stockblock.ini"
             stockblock.write_text("[BLOCK_STOCK_CONTEXT]\n1=17:600519\n", encoding="utf-8")
-            selfstock = root / "SelfStockInfo.json"
-            selfstock.write_text("[]", encoding="utf-8")
-
             with patch.dict(os.environ, {"THS_STOCKBLOCK_PATH": str(stockblock)}):
                 self.assertEqual(parse_stockblock.default_stockblock_file(), str(stockblock))
 
-            with patch.dict(
-                os.environ,
-                {"THS_SELFSTOCK_PATH": str(selfstock)},
-                clear=False,
-            ):
-                os.environ.pop("THS_STOCKBLOCK_PATH", None)
-                self.assertEqual(parse_stockblock.default_stockblock_file(), str(stockblock))
+            with patch.dict(os.environ, {}, clear=True):
+                self.assertEqual(parse_stockblock.default_stockblock_file(), "")
 
 
 if __name__ == "__main__":

@@ -723,6 +723,40 @@ def test_watchlist_reads_ths_selfstock_cache(tmp_path):
     ]
 
 
+def test_watchlist_reads_cloud_environment_codes(monkeypatch):
+    monkeypatch.setenv("THS_SELFSTOCK_CODES", "600519, 000001.SZ；300750")
+    monkeypatch.delenv("THS_SELFSTOCK_PATH", raising=False)
+    monkeypatch.delenv("THS_SELFSTOCK_JSON", raising=False)
+
+    result = mq.watchlist_payload()
+
+    assert result["count"] == 3
+    assert result["source"] == "env:THS_SELFSTOCK_CODES"
+    assert [item["security"] for item in result["securities"]] == [
+        "USHA600519",
+        "USZA000001",
+        "USZA300750",
+    ]
+
+
+def test_watchlist_reads_cloud_environment_json_object(monkeypatch):
+    monkeypatch.delenv("THS_SELFSTOCK_CODES", raising=False)
+    monkeypatch.delenv("THS_SELFSTOCK_PATH", raising=False)
+    monkeypatch.setenv(
+        "THS_SELFSTOCK_JSON",
+        '{"stocks":[{"code":"600519","market":"17"},{"code":"000001","market":"33"}]}',
+    )
+
+    result = mq.watchlist_payload()
+
+    assert result["count"] == 2
+    assert result["source"] == "env:THS_SELFSTOCK_JSON"
+    assert [item["security"] for item in result["securities"]] == [
+        "USHA600519",
+        "USZA000001",
+    ]
+
+
 def test_sectors_lists_default_watchlist_group(tmp_path):
     path = tmp_path / "SelfStockInfo.json"
     path.write_text(

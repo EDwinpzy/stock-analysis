@@ -15,6 +15,7 @@ import io
 import json
 import math
 import os
+import re
 import secrets
 import shutil
 import sys
@@ -526,40 +527,69 @@ def selfstock_path(explicit: str = "") -> Path | None:
         candidates.append(Path(explicit).expanduser())
     if os.getenv("THS_SELFSTOCK_PATH"):
         candidates.append(Path(os.environ["THS_SELFSTOCK_PATH"]).expanduser())
-    candidates.extend(
-        [
-            Path("/run/secrets/ths_selfstock.json"),
-            Path.home() / ".codex" / "daily-briefing-pro" / "data" / "ths_selfstock.json",
-        ]
-    )
+    candidates.append(Path("/run/secrets/ths_selfstock.json"))
     for path in candidates:
         if path.is_file():
             return path
     return None
 
 
+def selfstock_env_payload() -> tuple[Any, str] | None:
+    codes = os.getenv("THS_SELFSTOCK_CODES", "").strip()
+    if codes:
+        rows = [
+            {"C": code}
+            for code in re.split(r"[,;，；\s]+", codes)
+            if code.strip()
+        ]
+        return rows, "env:THS_SELFSTOCK_CODES"
+    raw = os.getenv("THS_SELFSTOCK_JSON", "").strip()
+    if raw:
+        try:
+            return json.loads(raw), "env:THS_SELFSTOCK_JSON"
+        except ValueError as exc:
+            raise QueryError(
+                f"THS_SELFSTOCK_JSON 不是合法 JSON：{redact(exc)}",
+                "invalid_selfstock",
+            ) from exc
+    return None
+
+
 def _selfstock_items(data: Any) -> list[dict[str, str]]:
     if isinstance(data, list):
         rows = data
-    else:
+    elif isinstance(data, dict):
         container = data.get("Data") if isinstance(data.get("Data"), dict) else data.get("data", data)
-        if not isinstance(container, dict):
+        if isinstance(container, list):
+            rows = container
+        elif isinstance(container, dict):
+            for key in ("stocks", "codes", "securities", "items"):
+                candidate = container.get(key)
+                if isinstance(candidate, list):
+                    rows = candidate
+                    break
+            else:
+                count = int(container.get("Count") or container.get("num") or 0)
+                raw = container.get("Selfstock") or container.get("selfstock") or ""
+                if not raw or count <= 0:
+                    return []
+                parts = [part for part in str(raw).split("|") if part]
+                codes = parts[:count]
+                markets = [part.lstrip(",") for part in parts[count : count * 2]]
+                rows = [
+                    {"C": code, "M": markets[index] if index < len(markets) else ""}
+                    for index, code in enumerate(codes)
+                ]
+        else:
             return []
-        count = int(container.get("Count") or container.get("num") or 0)
-        raw = container.get("Selfstock") or container.get("selfstock") or ""
-        if not raw or count <= 0:
-            return []
-        parts = [part for part in str(raw).split("|") if part]
-        codes = parts[:count]
-        markets = [part.lstrip(",") for part in parts[count : count * 2]]
-        rows = [
-            {"C": code, "M": markets[index] if index < len(markets) else ""}
-            for index, code in enumerate(codes)
-        ]
+    else:
+        return []
 
     market_map = {"17": "SH", "33": "SZ", "48": "BJ", "20": "BJ"}
     items: list[dict[str, str]] = []
     for row in rows:
+        if isinstance(row, str):
+            row = {"C": row}
         if not isinstance(row, dict):
             continue
         code = str(row.get("C") or row.get("code") or "").strip()
@@ -585,25 +615,30 @@ def _selfstock_items(data: Any) -> list[dict[str, str]]:
 
 
 def watchlist_payload(explicit_path: str = "") -> dict[str, Any]:
-    path = selfstock_path(explicit_path)
-    if path is None:
-        return {
-            "sectorId": "-1",
-            "name": "自选股",
-            "source": "unavailable",
-            "count": 0,
-            "securities": [],
-            "note": "未找到 THS_SELFSTOCK_PATH 或 /run/secrets/ths_selfstock.json",
-        }
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise QueryError(f"读取自选股文件失败：{redact(exc)}", "invalid_selfstock") from exc
+    environment = selfstock_env_payload()
+    if environment is not None:
+        data, source = environment
+    else:
+        path = selfstock_path(explicit_path)
+        if path is None:
+            return {
+                "sectorId": "-1",
+                "name": "自选股",
+                "source": "unavailable",
+                "count": 0,
+                "securities": [],
+                "note": "未配置 THS_SELFSTOCK_CODES/THS_SELFSTOCK_JSON，也没有可读的只读 Secret",
+            }
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise QueryError(f"读取自选股文件失败：{redact(exc)}", "invalid_selfstock") from exc
+        source = str(path)
     items = _selfstock_items(data)
     return {
         "sectorId": "-1",
         "name": "自选股",
-        "source": str(path),
+        "source": source,
         "count": len(items),
         "securities": items,
     }

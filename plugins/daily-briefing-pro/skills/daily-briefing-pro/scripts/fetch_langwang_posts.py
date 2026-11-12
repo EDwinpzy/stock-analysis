@@ -3,8 +3,16 @@
 用法: python fetch_langwang_posts.py [--out data/langwang_posts.json]
 """
 import json, os, re, sys, urllib.request, urllib.parse, ssl, time
+from pathlib import Path
 
-COOKIE_FILE = os.path.expanduser("~/.codex/tgb_cookies.json")
+from runtime_paths import get_data_dir
+
+DATA_ROOT = get_data_dir(Path(__file__).resolve().parents[1])
+COOKIE_FILE = str(
+    Path(os.environ.get("TGB_COOKIE_PATH", "")).expanduser()
+    if os.environ.get("TGB_COOKIE_PATH", "").strip()
+    else DATA_ROOT / "tgb_cookies.json"
+)
 BASE = "https://www.tgb.cn/user/blog/moreTopic"
 UID = "2747572"
 

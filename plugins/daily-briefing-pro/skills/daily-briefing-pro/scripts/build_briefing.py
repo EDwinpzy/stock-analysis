@@ -43,11 +43,7 @@ DATA_DIR = get_data_dir(BASE_DIR)
 
 # 输出目录：优先使用环境变量 BRIEFING_OUTPUT_DIR（run_all 会按调用方目录注入），
 # 否则落到当前工作目录下的 报告/每日简报，保证"从哪里调用就写到哪里"。
-_cwd = Path(os.getcwd())
-if ".agents" in _cwd.parts and "skills" in _cwd.parts:
-    WORKSPACE_ROOT = Path.cwd()
-else:
-    WORKSPACE_ROOT = _cwd
+WORKSPACE_ROOT = Path.cwd()
 OUTPUT_DIR = Path(os.environ.get("BRIEFING_OUTPUT_DIR") or (WORKSPACE_ROOT / "报告" / "每日简报"))
 
 # AI 凭证被服务端拒绝（401/403）后置位，避免对每个博主/视频重复空重试

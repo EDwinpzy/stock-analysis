@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-"""
-解析同花顺（含远航版）自选股文件
-支持三种格式：
-  1. 旧版同花顺：SelfStockInfo.json (数组格式)
-  2. 新版远航版：bin/users/*/SelfStockCache.json (管道分隔格式)
-  3. 新版远航版：transaction/xiadan-plus/selfstock_*.json (管道分隔格式)
+"""解析自选股配置，不扫描本机同花顺安装目录。
 
-搜索优先级（自动发现）：
-  1. THS_SELFSTOCK_PATH 环境变量（精确路径或目录）
-  2. 远航版 bin/users/*/SelfStockCache.json
-  3. 远航版 transaction/xiadan-plus/selfstock_*.json
-  4. 旧版同花顺 mo_*/SelfStockInfo.json
+配置优先级：
+  1. ``THS_SELFSTOCK_CODES``：逗号、分号或空白分隔的代码列表
+  2. ``THS_SELFSTOCK_JSON``：代码数组，或含 ``stocks``/``codes`` 的对象
+  3. ``THS_SELFSTOCK_PATH``：显式指定的只读 JSON 文件
+
+文件格式兼容旧版 ``SelfStockInfo.json`` 以及远航版导出的管道分隔格式。
+云端应通过环境变量或只读 Secret 提供数据，禁止依赖用户电脑上的安装目录。
 """
 import json
 import os
+import re
 import sys
-import glob as glob_mod
 
 
 # 市场代码映射 (M字段→交易所前缀)
@@ -27,78 +24,115 @@ MARKET_MAP = {
 }
 
 
-# ── 文件发现 ────────────────────────────────────────────
+# ── 配置源发现 ──────────────────────────────────────────
 
-def _find_ths_base_dirs():
-    """查找同花顺安装根目录"""
-    candidates = []
-    for name in ("THS_HOME", "THS_INSTALL_DIR", "THS_ROOT"):
-        value = os.environ.get(name, "").strip()
-        if value and os.path.isdir(value):
-            candidates.append(value)
-    if os.name == "nt":
-        for base in [r"C:\应用\同花顺远航版", r"C:\应用\同花顺"]:
-            if os.path.isdir(base):
-                candidates.append(base)
-    return list(dict.fromkeys(candidates))
+_EXCHANGE_BY_MARKET = {"17": "SH", "33": "SZ", "48": "BJ", "20": "BJ"}
+_MARKET_BY_EXCHANGE = {"SH": "17", "SZ": "33", "BJ": "20"}
+
+
+def _stock_from_code(value, market=""):
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    code, _, suffix = raw.partition(".")
+    code = code.strip()
+    suffix = suffix.strip().upper()
+    exchange = suffix if suffix in _MARKET_BY_EXCHANGE else ""
+    if not exchange and market:
+        exchange = _EXCHANGE_BY_MARKET.get(str(market), str(market))
+    if not exchange and re.fullmatch(r"\d{6}", code):
+        if code[0] in "69":
+            exchange = "SH"
+        elif code[0] in "03":
+            exchange = "SZ"
+        elif code[0] in "48":
+            exchange = "BJ"
+    if exchange not in _MARKET_BY_EXCHANGE:
+        exchange = "UNKNOWN"
+    return {
+        "code": code,
+        "market": str(market) or _MARKET_BY_EXCHANGE.get(exchange, ""),
+        "prefix": exchange,
+        "full_code": f"{code}.{exchange}" if exchange in _MARKET_BY_EXCHANGE else code,
+        "price": "",
+        "add_date": "",
+    }
+
+
+def _dedupe_stocks(stocks):
+    unique = {}
+    for stock in stocks:
+        if stock and stock.get("code"):
+            unique.setdefault(stock["code"], stock)
+    return list(unique.values())
+
+
+def _parse_codes(value):
+    return _dedupe_stocks(
+        _stock_from_code(code)
+        for code in re.split(r"[,;，；\s]+", str(value or ""))
+        if code.strip()
+    )
+
+
+def _parse_env_json(value):
+    payload = json.loads(value)
+    if isinstance(payload, dict):
+        payload = payload.get("stocks") or payload.get("codes") or payload.get("data") or []
+    if not isinstance(payload, list):
+        raise ValueError("THS_SELFSTOCK_JSON 必须是数组，或包含 stocks/codes 数组的对象")
+    stocks = []
+    for row in payload:
+        if isinstance(row, dict):
+            stocks.append(
+                _stock_from_code(
+                    row.get("code") or row.get("C") or "",
+                    row.get("market") or row.get("M") or "",
+                )
+            )
+        else:
+            stocks.append(_stock_from_code(row))
+    return _dedupe_stocks(stocks)
+
+
+def _env_selfstock():
+    codes = os.environ.get("THS_SELFSTOCK_CODES", "").strip()
+    if codes:
+        return _parse_codes(codes), "env_codes"
+    payload = os.environ.get("THS_SELFSTOCK_JSON", "").strip()
+    if payload:
+        return _parse_env_json(payload), "env_json"
+    return None, ""
 
 
 def discover_selfstock_file():
     """
-    自动发现自选股文件，返回 (filepath, format_type)
+    返回显式配置的自选股文件，不递归扫描系统目录。
+
+    Returns:
+        (filepath, format_type)
     format_type: 'cache_json' | 'xiadan_json' | 'old_json' | None
     """
-    # 1. 环境变量优先
-    env_path = os.environ.get("THS_SELFSTOCK_PATH", "")
+    env_path = os.environ.get("THS_SELFSTOCK_PATH", "").strip()
     if env_path:
-        if os.path.isfile(env_path):
-            # 根据文件名判断格式
-            fname = os.path.basename(env_path)
+        expanded = os.path.expanduser(env_path)
+        if os.path.isfile(expanded):
+            fname = os.path.basename(expanded)
             if "SelfStockCache" in fname:
-                return env_path, "cache_json"
-            elif "selfstock_" in fname.lower():
-                return env_path, "xiadan_json"
-            elif "SelfStockInfo" in fname:
-                return env_path, "old_json"
-            else:
-                return env_path, "cache_json"  # 猜
-        elif os.path.isdir(env_path):
-            # 目录：尝试在下面找
+                return expanded, "cache_json"
+            if "selfstock_" in fname.lower():
+                return expanded, "xiadan_json"
+            if "SelfStockInfo" in fname:
+                return expanded, "old_json"
+            return expanded, "cache_json"
+        if os.path.isdir(expanded):
             for fmt, pattern in [
                 ("cache_json", "SelfStockCache.json"),
                 ("old_json", "SelfStockInfo.json"),
             ]:
-                p = os.path.join(env_path, pattern)
-                if os.path.isfile(p):
-                    return p, fmt
-
-    # 2. 远航版 bin/users/*/SelfStockCache.json（优先：有 Count 字段，最新）
-    for base in _find_ths_base_dirs():
-        pattern = os.path.join(base, "bin", "users", "*", "SelfStockCache.json")
-        files = sorted(glob_mod.glob(pattern), key=os.path.getmtime, reverse=True)
-        if files:
-            return files[0], "cache_json"
-
-    # 3. 远航版 transaction/xiadan-plus/selfstock_*.json
-    for base in _find_ths_base_dirs():
-        pattern = os.path.join(base, "transaction", "xiadan-plus", "selfstock_*.json")
-        files = sorted(glob_mod.glob(pattern), key=os.path.getmtime, reverse=True)
-        if files:
-            return files[0], "xiadan_json"
-
-    # 4. 旧版同花顺 mo_*/SelfStockInfo.json
-    for base in _find_ths_base_dirs():
-        pattern = os.path.join(base, "mo_*", "SelfStockInfo.json")
-        files = sorted(glob_mod.glob(pattern), key=os.path.getmtime, reverse=True)
-        if files:
-            return files[0], "old_json"
-
-    # 5. 远航版 transaction/mo_*/SelfStockInfo.json
-    for base in _find_ths_base_dirs():
-        pattern = os.path.join(base, "transaction", "mo_*", "SelfStockInfo.json")
-        files = sorted(glob_mod.glob(pattern), key=os.path.getmtime, reverse=True)
-        if files:
-            return files[0], "old_json"
+                candidate = os.path.join(expanded, pattern)
+                if os.path.isfile(candidate):
+                    return candidate, fmt
 
     return None, None
 
@@ -221,18 +255,21 @@ def parse_selfstock(filepath=None, fmt=None):
     解析自选股文件，返回股票列表
 
     Args:
-        filepath: 自选股文件路径，为 None 时自动发现
+        filepath: 自选股文件路径；为 None 时读取显式环境变量配置
         fmt: 格式提示，'cache_json' | 'xiadan_json' | 'old_json'，为 None 时自动检测
 
     Returns:
         List[Dict]: 股票列表，每个元素包含 code, market, prefix, full_code, price, add_date
     """
     if filepath is None:
+        env_stocks, _ = _env_selfstock()
+        if env_stocks is not None:
+            return env_stocks
         filepath, fmt = discover_selfstock_file()
         if filepath is None:
             raise FileNotFoundError(
-                "未找到自选股文件。请设置 THS_SELFSTOCK_PATH 环境变量，"
-                "或设置 THS_HOME/THS_INSTALL_DIR/THS_ROOT 指向同花顺安装目录。"
+                "未配置自选股。请设置 THS_SELFSTOCK_CODES、THS_SELFSTOCK_JSON，"
+                "或用 THS_SELFSTOCK_PATH 指向只读 JSON。"
             )
 
     if not os.path.exists(filepath):
@@ -298,9 +335,21 @@ def _read_sync_time(filepath):
 def get_selfstock_source_info(filepath=None, fmt=None):
     """返回自选股来源信息（文件路径、格式、股票数量、同步时间）"""
     if filepath is None:
+        env_stocks, env_format = _env_selfstock()
+        if env_stocks is not None:
+            return {
+                "found": True,
+                "filepath": "",
+                "format": env_format,
+                "count": len(env_stocks),
+                "sync_time": "",
+            }
         filepath, fmt = discover_selfstock_file()
     if filepath is None:
-        return {"found": False, "error": "未找到自选股文件"}
+        return {
+            "found": False,
+            "error": "未配置 THS_SELFSTOCK_CODES、THS_SELFSTOCK_JSON 或 THS_SELFSTOCK_PATH",
+        }
     stocks = parse_selfstock(filepath, fmt)
     sync_time = _read_sync_time(filepath)
     return {
@@ -320,7 +369,7 @@ if __name__ == "__main__":
         if not info["found"]:
             print(json.dumps({
                 "error": info.get("error", "未找到自选股文件"),
-                "hint": "请设置 THS_SELFSTOCK_PATH 环境变量",
+                "hint": "请设置 THS_SELFSTOCK_CODES 或 THS_SELFSTOCK_JSON；云端不要扫描本机安装目录",
             }, ensure_ascii=False, indent=2))
             sys.exit(1)
 

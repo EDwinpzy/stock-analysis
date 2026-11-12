@@ -8,17 +8,11 @@ import os
 import re
 import sys
 
-DEFAULT_WINDOWS_THS_DIR = r"C:\应用\同花顺\mo_4aknfs5zs"
-
-
 def default_stockblock_file():
-    configured = (
-        os.environ.get("THS_STOCKBLOCK_PATH")
-        or os.environ.get("THS_SELFSTOCK_PATH")
-        or (DEFAULT_WINDOWS_THS_DIR if os.name == "nt" else "")
-    )
+    configured = os.environ.get("THS_STOCKBLOCK_PATH", "").strip()
     if not configured:
         return ""
+    configured = os.path.expanduser(configured)
     if os.path.isfile(configured) and not configured.lower().endswith(".json"):
         return configured
     if configured.lower().endswith(".json"):
@@ -33,7 +27,7 @@ def parse_stockblock(filepath=None):
         filepath = default_stockblock_file()
 
     if not filepath or not os.path.exists(filepath):
-        detail = filepath or "未配置 THS_STOCKBLOCK_PATH 或 THS_SELFSTOCK_PATH"
+        detail = filepath or "未配置 THS_STOCKBLOCK_PATH"
         print(json.dumps({"error": f"文件不存在: {detail}"}, ensure_ascii=False))
         sys.exit(1)
 

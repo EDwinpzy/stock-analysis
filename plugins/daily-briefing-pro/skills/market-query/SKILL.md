@@ -85,8 +85,8 @@ Key 冒充。所有命令加 `--include-meta` 可查看实际来源和尝试链�
 - 扶摇公开 API 的逐笔资金流端点标记为 `client-only`；`capital-flow --mode cloud`
   应明确报错，不能拿其他指标冒充大单数据。
 - `subscribe` 是收到首帧后退订的一次性快照，不是长连接推送。
-- 个人自选股和分组从 `THS_SELFSTOCK_PATH`（云端为 `/run/secrets/ths_selfstock.json`）
-  读取；未提供时返回 `unavailable`，不伪造空分组。
+- 个人自选股和分组从 `THS_SELFSTOCK_CODES`、`THS_SELFSTOCK_JSON`，或显式配置的
+  只读 Secret 读取；不扫描本机同花顺目录，未提供时返回 `unavailable`，不伪造空分组。
 
 完整云接口目录以 `references/cloud-apis.md` 和 `references/cloud-apis.csv` 为准。
 共 120 个 GET 端点，其中 11 个标记为 `client-only`，外部 API Key 可能没有权限。
@@ -125,7 +125,7 @@ Key 冒充。所有命令加 `--include-meta` 可查看实际来源和尝试链�
 | 盘前 `sort --mode cloud` 返回 `total=0` | 快照尚无涨跌值；保留 `missing_count` 与取数时间 |
 | 盘前实时/分时出现 `2147483648` | 供应商空值哨兵；应输出 `null` |
 | `status --probe` 失败 | 两条真实通道都未返回证券；检查网络、`thsdk` 账号或扶摇 Key |
-| `watchlist` 返回空 | 设置 `THS_SELFSTOCK_PATH` 或挂载容器 Secret |
+| `watchlist` 返回空 | 设置 `THS_SELFSTOCK_CODES` / `THS_SELFSTOCK_JSON`，或显式挂载只读 Secret |
 | `capital-flow --mode cloud` 失败 | 公开云接口没有该能力；改用 `ths` 或报告缺口 |
 
 完整接口契约：

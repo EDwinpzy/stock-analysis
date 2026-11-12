@@ -145,7 +145,7 @@ def main():
             "news": [],
             "status": "empty",
             "source": "东方财富个股新闻API (AkShare)",
-            "note": "未找到自选股，请检查 THS_SELFSTOCK_PATH 环境变量或 SelfStockInfo.json"
+            "note": "未配置自选股，请设置 THS_SELFSTOCK_CODES 或 THS_SELFSTOCK_JSON"
         }, ensure_ascii=False, indent=2))
         return
 

@@ -2,7 +2,7 @@
   "interface": {
     "displayName": "A股行情",
     "shortDescription": "A股简报、行情查询、个股与行业分析",
-    "longDescription": "覆盖A股每日简报、情绪温度面板、个股深度分析、行业产业链分析、K线行情看板，以及同花顺 DataHub/DataAccessor 本地行情、自选股与自选分组，并支持自动回退到扶摇公网 API。数据须注明来源；获取失败或缺失时如实说明，不编造内容。",
+    "longDescription": "覆盖A股每日简报、情绪温度面板、个股深度分析、行业产业链分析、K线行情看板，以及扶摇 REST、问财 OpenAPI、东方财富/腾讯等云端行情、自选股与自选分组。不读取桌面客户端，不依赖用户电脑。数据须注明来源；获取失败或缺失时如实说明，不编造内容。",
     "developerName": "EDwin",
     "category": "Productivity",
     "capabilities": [
@@ -14,7 +14,7 @@
   },
   "name": "daily-briefing-pro",
   "version": "3.23.19",
-  "description": "提供A股每日简报、情绪面板、个股与行业研究、K线行情看板，以及本地同花顺客户端与扶摇云API双通道行情查询。",
+  "description": "提供A股每日简报、情绪面板、个股与行业研究、K线行情看板，以及扶摇/问财/东方财富等云端 API 行情与自选股查询。",
   "author": {
     "name": "EDwin"
   },
