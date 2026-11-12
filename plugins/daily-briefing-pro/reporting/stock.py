@@ -413,14 +413,23 @@ def build_stock_report(data: dict[str, Any]) -> str:
 
     runtime = data.get("runtime") if isinstance(data.get("runtime"), dict) else {}
     if str(runtime.get("source") or "") == "cloud":
+        holder_source = clean(data.get("holders_source"))
+        if holder_source == "eastmoney":
+            wencai_scope = "实时行情、财务、估值、同业、产品、筹码、壁垒与大单日汇总"
+        else:
+            wencai_scope = "实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总"
         source_rows = (
             ("扶摇 REST", "证券检索、新闻与公告", "本次采集已返回"),
             (
                 "官方问财 OpenAPI",
-                "实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总",
+                wencai_scope,
                 "本次采集已返回",
             ),
         )
+        if holder_source == "eastmoney":
+            source_rows += (
+                ("东方财富 F10", "前十大流通股东与机构持股比例", "本次采集已返回"),
+            )
     else:
         source_rows = (
             ("同花顺 thsdk", "行情、财务、股东、资金、公告", "本次采集已返回"),

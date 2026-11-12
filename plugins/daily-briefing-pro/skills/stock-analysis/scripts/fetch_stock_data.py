@@ -1552,6 +1552,9 @@ def main():
                 }
             else:
                 result = fetch_all_data(ths, thscode, pure_code, stock_name)
+                if getattr(ths, "is_cloud", False):
+                    result["holders_source"] = getattr(ths, "holders_source", "")
+                    result["holders_error"] = getattr(ths, "holders_error", "")
                 result["runtime"] = {
                     "platform": sys.platform,
                     "python": sys.version.split()[0],

@@ -224,6 +224,56 @@ def test_holder_query_routes_to_ranked_top_ten_names():
     assert row["机构持股占流通股比例[20260930]"] == 70.03
 
 
+def test_holder_query_falls_back_to_eastmoney_disclosure(monkeypatch):
+    def responder(skill, query, limit):
+        assert "前十大流通股东名称" in query
+        return payload()
+
+    adapter = make_adapter(FakeWencai(responder), FakeMarket())
+    adapter._stock_code = "600519"
+
+    monkeypatch.setattr(
+        cloud_sources,
+        "_fetch_eastmoney_holder_payload",
+        lambda code: {
+            "sdltgd": [
+                {
+                    "HOLDER_RANK": index,
+                    "HOLDER_NAME": f"股东{index}",
+                    "END_DATE": "2026-09-30 00:00:00",
+                }
+                for index in range(10, 0, -1)
+            ],
+            "jgcc": [
+                {
+                    "REPORT_DATE": "2026-09-30 00:00:00",
+                    "ORG_TYPE": "00",
+                    "TOTAL_SHARES_RATIO": 70.87,
+                }
+            ],
+            "gdrs": [
+                {
+                    "END_DATE": "2026-09-30 00:00:00",
+                    "HOLDER_TOTAL_NUM": 278364,
+                    "TOTAL_NUM_RATIO": -6.09,
+                }
+            ],
+        },
+    )
+
+    result = adapter.wencai_nlp(
+        "贵州茅台，十大流通股东，北向资金持股比例，股东户数变化，机构持股比例"
+    )
+    row = result.df.iloc[0]
+
+    assert row["前十大流通股东名称"] == "||".join(
+        f"股东{index}" for index in range(1, 11)
+    )
+    assert row["机构持股占流通股比例[20260930]"] == pytest.approx(70.87)
+    assert adapter.holders_source == "eastmoney"
+    assert adapter.holders_error == ""
+
+
 def test_concentration_frame_aliases_top_ten_and_first_holder():
     def responder(skill, query, limit):
         assert "前十大股东持股比例合计" in query

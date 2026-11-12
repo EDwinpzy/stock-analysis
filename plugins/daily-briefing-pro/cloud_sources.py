@@ -9,11 +9,14 @@ security lookup, sector membership, snapshots, news and quote fallback.
 
 from __future__ import annotations
 
+import gzip
+import json
 import math
 import os
 import re
 import sys
 import time
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -34,6 +37,11 @@ import market_query as mq  # noqa: E402
 CN_TZ = ZoneInfo("Asia/Shanghai")
 WENCAI_TIMEOUT = int(os.getenv("DAILY_BRIEFING_WENCAI_TIMEOUT", "25"))
 QUERY_DELAY = float(os.getenv("DAILY_BRIEFING_WENCAI_DELAY", "0.35"))
+EASTMONEY_TIMEOUT = int(os.getenv("DAILY_BRIEFING_EASTMONEY_TIMEOUT", "15"))
+EASTMONEY_HOLDER_URL = (
+    "https://emweb.securities.eastmoney.com/PC_HSF10/"
+    "ShareholderResearch/PageAjax"
+)
 CloudSourceError = mq.QueryError
 
 
@@ -139,6 +147,54 @@ def _annual_years() -> list[int]:
     return [current - 3, current - 2, current - 1]
 
 
+def _eastmoney_market_prefix(code: str) -> str:
+    text = str(code or "").strip()
+    if not re.fullmatch(r"\d{6}", text):
+        raise ValueError(f"无效的六位股票代码：{code!r}")
+    if text.startswith(("4", "8", "920")):
+        return "BJ"
+    if text.startswith(("5", "6", "9")):
+        return "SH"
+    return "SZ"
+
+
+def _date_key(value: Any) -> str:
+    text = _text(value)
+    match = re.search(r"(\d{4})-?(\d{2})-?(\d{2})", text)
+    return "".join(match.groups()) if match else ""
+
+
+def _fetch_eastmoney_holder_payload(code: str) -> dict[str, Any]:
+    """Fetch the public F10 shareholder disclosure page.
+
+    The page is used only when the official Wencai query returns no holder
+    records.  It is a disclosed-data fallback, not a reconstructed estimate.
+    """
+
+    prefix = _eastmoney_market_prefix(code)
+    url = f"{EASTMONEY_HOLDER_URL}?code={prefix}{code}"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Referer": "https://emweb.securities.eastmoney.com/",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "identity",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=EASTMONEY_TIMEOUT) as response:
+        raw = response.read()
+    if raw[:2] == b"\x1f\x8b":
+        raw = gzip.decompress(raw)
+    payload = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(payload, dict):
+        raise ValueError("东方财富 F10 返回结构无效")
+    return payload
+
+
 def _previous_close(row: dict[str, Any]) -> float | None:
     """Return the prior close when the vendor exposes dated close columns.
 
@@ -194,6 +250,9 @@ class CloudStockAdapter:
         self._cache: dict[tuple[str, str, int], dict[str, Any]] = {}
         self._news_cache: list[dict[str, Any]] | None = None
         self.stock_name = ""
+        self._stock_code = ""
+        self.holders_source = ""
+        self.holders_error = ""
 
     def __enter__(self) -> "CloudStockAdapter":
         return self
@@ -219,6 +278,8 @@ class CloudStockAdapter:
 
     def _name_for(self, thscode: str) -> str:
         code = str(thscode)[-6:]
+        if re.fullmatch(r"\d{6}", code):
+            self._stock_code = code
         name = self._names.get(code)
         if name:
             return name
@@ -393,22 +454,146 @@ class CloudStockAdapter:
             "股东户数 陆股通持股占流通a股比"
         )
         result = self._query(query, "hithink-finance-query", limit=10)
-        if result.df.empty:
-            return result
-        rows = [row.to_dict() for _, row in result.df.iterrows()]
-        rows.sort(key=lambda row: _number(row.get("排名")) or 10**9)
-        names: list[str] = []
-        for row in rows:
-            name = _text(row.get("名称"))
+        if not result.df.empty:
+            rows = [row.to_dict() for _, row in result.df.iterrows()]
+            rows.sort(key=lambda row: _number(row.get("排名")) or 10**9)
+            names: list[str] = []
+            for row in rows:
+                name = _text(row.get("名称"))
+                if name and name not in names:
+                    names.append(name)
+            merged = dict(rows[0])
+            if not names:
+                existing = _text(merged.get("前十大流通股东名称"))
+                if existing:
+                    names = [
+                        item.strip()
+                        for item in re.split(r"[|,，;；]", existing)
+                        if item.strip()
+                    ]
+            if names:
+                merged["前十大流通股东名称"] = "||".join(names)
+                self.holders_source = "wencai"
+                self.holders_error = ""
+                return SimpleNamespace(df=pd.DataFrame([merged]), error="")
+
+        self.holders_error = result.error or "问财未返回前十大流通股东名录"
+        fallback = self._eastmoney_holders_frame()
+        if not fallback.df.empty:
+            self.holders_source = "eastmoney"
+            self.holders_error = ""
+            return fallback
+        self.holders_source = ""
+        self.holders_error = "; ".join(
+            item for item in (self.holders_error, fallback.error) if item
+        )
+        return _empty(self.holders_error)
+
+    def _eastmoney_holders_frame(self) -> SimpleNamespace:
+        if not self._stock_code:
+            return _empty("东方财富股东兜底缺少股票代码")
+        try:
+            payload = _fetch_eastmoney_holder_payload(self._stock_code)
+        except Exception as exc:
+            return _empty(f"东方财富股东兜底请求失败：{exc}")
+
+        free_holders = [
+            dict(item)
+            for item in payload.get("sdltgd") or []
+            if isinstance(item, dict)
+        ]
+        if not free_holders:
+            return _empty("东方财富未返回前十大流通股东")
+        free_holders.sort(
+            key=lambda item: _number(item.get("HOLDER_RANK")) or 10**9
+        )
+        names = []
+        for item in free_holders:
+            name = _text(item.get("HOLDER_NAME"))
             if name and name not in names:
                 names.append(name)
-        merged = dict(rows[0])
         if not names:
-            existing = _text(merged.get("前十大流通股东名称"))
-            if existing:
-                names = [item.strip() for item in re.split(r"[|,，;；]", existing) if item.strip()]
-        merged["前十大流通股东名称"] = "||".join(names)
-        return SimpleNamespace(df=pd.DataFrame([merged]), error="" if names else "empty")
+            return _empty("东方财富前十大流通股东名称为空")
+
+        holder_date = _date_key(free_holders[0].get("END_DATE"))
+
+        institutions = [
+            dict(item)
+            for item in payload.get("jgcc") or []
+            if isinstance(item, dict)
+        ]
+        institution_ratio = None
+        institution_date = ""
+        if institutions:
+            institution_date = max(
+                (_date_key(item.get("REPORT_DATE")) for item in institutions),
+                default="",
+            )
+            latest = [
+                item
+                for item in institutions
+                if not institution_date
+                or _date_key(item.get("REPORT_DATE")) == institution_date
+            ]
+            total_rows = [
+                item for item in latest if _text(item.get("ORG_TYPE")) == "00"
+            ]
+            ratio_rows = total_rows or latest
+            institution_ratio = max(
+                (
+                    value
+                    for value in (
+                        _number(item.get("TOTAL_SHARES_RATIO"))
+                        for item in ratio_rows
+                    )
+                    if value is not None
+                ),
+                default=None,
+            )
+        if institution_ratio is None:
+            return _empty("东方财富未返回机构持股占流通股比例")
+
+        holder_counts = [
+            dict(item)
+            for item in payload.get("gdrs") or []
+            if isinstance(item, dict)
+        ]
+        holder_count_row: dict[str, Any] = {}
+        holder_count_date = ""
+        if holder_counts:
+            holder_count_date = max(
+                (_date_key(item.get("END_DATE")) for item in holder_counts),
+                default="",
+            )
+            holder_count_row = next(
+                (
+                    item
+                    for item in holder_counts
+                    if not holder_count_date
+                    or _date_key(item.get("END_DATE")) == holder_count_date
+                ),
+                {},
+            )
+
+        row: dict[str, Any] = {
+            "前十大流通股东名称": "||".join(names[:10]),
+            f"机构持股占流通股比例[{institution_date or holder_date}]": institution_ratio,
+            "股票代码": self._stock_code,
+            "股票简称": self.stock_name,
+            "股东数据来源": "东方财富F10",
+        }
+        holder_total = _number(holder_count_row.get("HOLDER_TOTAL_NUM"))
+        holder_change = _number(holder_count_row.get("TOTAL_NUM_RATIO"))
+        if holder_total is not None:
+            row[f"总户数[{holder_count_date}]"] = holder_total
+        if holder_change is not None:
+            row[f"总户数较上期增长率[{holder_count_date}]"] = holder_change
+        return SimpleNamespace(
+            df=pd.DataFrame([row]),
+            error="",
+            source="eastmoney",
+            period=holder_date,
+        )
 
     def _concentration_frame(self) -> SimpleNamespace:
         query = (
