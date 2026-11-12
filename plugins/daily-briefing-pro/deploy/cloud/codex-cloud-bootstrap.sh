@@ -87,10 +87,6 @@ git -C "$REPO_ROOT" show \
 
 python3 -m venv "$VENV"
 "$VENV/bin/python" -m pip install --upgrade pip setuptools wheel
-"$VENV/bin/python" -m pip install \
-  --index-url https://download.pytorch.org/whl/cpu \
-  --extra-index-url https://pypi.org/simple \
-  "torch==2.7.0+cpu"
 "$VENV/bin/python" -m pip install -r "$BASE/requirements-cloud.txt"
 case "$(uname -m)" in
   aarch64|arm64)
@@ -147,8 +143,16 @@ fi
 export XDG_CACHE_HOME="$BASE/cache"
 export DOUYIN_WHISPER_MODEL="small"
 "$VENV/bin/python" - <<'PY'
-import whisper
-whisper.load_model("small")
+import os
+
+from faster_whisper import WhisperModel
+
+WhisperModel(
+    "small",
+    device="cpu",
+    compute_type="int8",
+    download_root=os.path.join(os.environ["XDG_CACHE_HOME"], "faster-whisper"),
+)
 PY
 
 rm -rf "$BASE/cache/pip"

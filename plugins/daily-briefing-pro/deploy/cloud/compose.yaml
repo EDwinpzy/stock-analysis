@@ -35,6 +35,9 @@ services:
       DOUYIN_ASR_BASE_URL: ${DOUYIN_ASR_BASE_URL:-}
       DOUYIN_ASR_MODEL: ${DOUYIN_ASR_MODEL:-}
       DOUYIN_MAX_CONCURRENT: "1"
+      DOUYIN_LOCAL_ASR_ENGINE: faster-whisper
+      DOUYIN_FASTER_WHISPER_COMPUTE_TYPE: int8
+      DOUYIN_WHISPER_THREADS: "2"
       DOUYIN_WHISPER_MODEL: small
       TGB_COOKIE_PATH: /run/secrets/tgb_cookies.json
       DOUYIN_COOKIE_PATH: /run/secrets/douyin_cookies.json

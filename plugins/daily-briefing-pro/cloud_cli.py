@@ -48,6 +48,9 @@ INDUSTRY = SKILLS / "industry-analysis" / "scripts" / "fetch_industry_data.py"
 BRIEFING = SKILLS / "daily-briefing-pro" / "scripts" / "run_all.py"
 VERIFY = SKILLS / "daily-briefing-pro" / "scripts" / "verify_skill_report.py"
 PARITY = SKILLS / "daily-briefing-pro" / "scripts" / "compare_cloud_parity.py"
+BUSINESS_PARITY = (
+    SKILLS / "daily-briefing-pro" / "scripts" / "compare_business_parity.py"
+)
 REPORT_BUILDER = PLUGIN_ROOT / "report_builder.py"
 
 API_KEY_ENVS = ("FUYAO_API_KEY", "HITHINK_API_KEY", "HITHINK_FINANCE_API_KEY")
@@ -302,6 +305,10 @@ def doctor(probe: bool = False, dry_run: bool = False) -> int:
         "briefing_runner": {"path": str(BRIEFING), "exists": BRIEFING.is_file()},
         "verifier": {"path": str(VERIFY), "exists": VERIFY.is_file()},
         "parity_verifier": {"path": str(PARITY), "exists": PARITY.is_file()},
+        "business_parity_verifier": {
+            "path": str(BUSINESS_PARITY),
+            "exists": BUSINESS_PARITY.is_file(),
+        },
         "report_builder": {"path": str(REPORT_BUILDER), "exists": REPORT_BUILDER.is_file()},
         "hithink_cli": {"path": shutil.which("hithink-finance") or ""},
         "adobe_note": "Node/Chromium/FFmpeg are only required by the full briefing pipeline.",
@@ -420,6 +427,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--html-local", default="")
     p.add_argument("--html-cloud", default="")
     p.add_argument("--ignore-path", action="append", default=[])
+    p.add_argument("--type", choices=("stock", "industry"))
+    p.add_argument("--business-only", action="store_true")
 
     raw_args = list(sys.argv[1:] if argv is None else argv)
     passthrough: list[str] | None = None
@@ -507,6 +516,26 @@ def main(argv: list[str] | None = None) -> int:
         return run_command(command, args.dry_run)
 
     if args.command == "parity":
+        if args.business_only:
+            if not args.type:
+                print(
+                    json.dumps(
+                        {"ok": False, "error": "--business-only 需要 --type"},
+                        ensure_ascii=False,
+                    )
+                )
+                return 2
+            command = [
+                sys.executable,
+                str(BUSINESS_PARITY),
+                "--type",
+                args.type,
+                "--local",
+                args.data_local,
+                "--cloud",
+                args.data_cloud,
+            ]
+            return run_command(command, args.dry_run)
         command = [
             sys.executable,
             str(PARITY),

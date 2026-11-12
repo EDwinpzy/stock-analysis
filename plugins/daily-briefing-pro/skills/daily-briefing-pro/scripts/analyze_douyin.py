@@ -7,19 +7,21 @@
 1. 解析分享链接 → 获取无水印视频地址、标题、作者、封面
 2. 下载视频 (MP4)
 3. 提取音频 (MP3)
-4. 语音转文字 (多API自动切换，无API Key时自动降级到本地Whisper)
+4. 语音转文字 (原生字幕优先；多API自动切换，无API Key时降级到本地faster-whisper/Whisper)
 
 用法:
     python analyze_douyin.py <抖音分享链接> [--provider auto|local|groq|openai|siliconflow|cloud] [--api-key KEY] [--keep-files] [--output-dir DIR] [--json]
 
 说明:
-    --provider auto（默认）会优先使用显式配置的通用 OpenAI-compatible ASR，
-    然后按 Groq → OpenAI → SiliconFlow → 容器内置 Whisper 顺序尝试。
+    --provider auto（默认）会优先使用抖音原生字幕；没有字幕时优先使用显式配置的
+    通用 OpenAI-compatible ASR，然后按 Groq → OpenAI → SiliconFlow →
+    容器内置 faster-whisper（兼容旧 Whisper）顺序尝试。
     通用 ASR 必须同时配置 DOUYIN_ASR_BASE_URL、DOUYIN_ASR_API_KEY、
     DOUYIN_ASR_MODEL；文本 Relay 不能当作音频接口使用。
 """
 
 import asyncio
+import importlib.util
 import json
 import os
 import re
@@ -86,7 +88,7 @@ MOBILE_HEADERS = {
 DESKTOP_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 # 多种语音转文字 API 配置
-# 优先级: Groq(免费快) > OpenAI(需key) > 本地Whisper(需安装)
+# auto 优先级：通用 ASR > Groq > OpenAI > SiliconFlow > 本地 faster-whisper
 
 TRANSCRIPT_PROVIDERS = {
     'groq': {
@@ -115,9 +117,9 @@ TRANSCRIPT_PROVIDERS = {
     },
     'local': {
         'api_base': None,
-        'model': 'base',
+        'model': 'small',
         'env_key': None,
-        'description': '本地Whisper (需pip install openai-whisper)'
+        'description': '本地 faster-whisper（兼容旧 openai-whisper）'
     }
 }
 
@@ -141,6 +143,8 @@ class ImgInfo:
 class VideoInfo:
     video_url: str
     video_urls: List[str] = field(default_factory=list)
+    subtitle_urls: List[str] = field(default_factory=list)
+    subtitle_text: str = ""
     cover_url: str = ""
     title: str = ""
     music_url: str = ""
@@ -220,6 +224,127 @@ def _all_urls(value) -> list[str]:
             seen.add(cleaned)
             result.append(cleaned)
     return result
+
+
+def _subtitle_urls_from_item(data: dict) -> list[str]:
+    """Extract caption/subtitle URLs without treating the post caption as text."""
+    if not isinstance(data, dict):
+        return []
+
+    containers = []
+    for key in ("caption_infos", "subtitle_infos", "caption_info", "subtitle_info"):
+        containers.append(data.get(key))
+    video = data.get("video") if isinstance(data.get("video"), dict) else {}
+    for key in ("cla_info", "caption_infos", "subtitle_infos"):
+        containers.append(video.get(key))
+    for container in list(containers):
+        if isinstance(container, dict):
+            for key in ("caption_infos", "subtitle_infos", "caption_info", "subtitle_info"):
+                containers.append(container.get(key))
+
+    found: list[str] = []
+
+    def collect(value) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                lowered = str(key).lower()
+                if lowered in {
+                    "url", "url_list", "urls", "web_url", "subtitle_url", "caption_url",
+                }:
+                    found.extend(_all_urls(child))
+                elif lowered in {
+                    "caption_infos", "subtitle_infos", "caption_info", "subtitle_info",
+                    "cla_info",
+                }:
+                    collect(child)
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                collect(child)
+
+    for container in containers:
+        collect(container)
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for url in found:
+        cleaned = unescape(str(url or "")).strip()
+        if not cleaned or not cleaned.lower().startswith(("http://", "https://")):
+            continue
+        if cleaned in seen:
+            continue
+        seen.add(cleaned)
+        result.append(cleaned)
+    return result[:6]
+
+
+def _subtitle_text_from_payload(payload: str) -> str:
+    """Convert VTT/SRT/JSON subtitle payloads into readable transcript text."""
+    text = str(payload or "").lstrip("\ufeff").strip()
+    if not text:
+        return ""
+
+    if text.startswith(("{", "[")):
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            data = None
+        if data is not None:
+            parts: list[str] = []
+
+            def walk(value) -> None:
+                if isinstance(value, dict):
+                    for key in ("text", "content", "transcript", "body", "utterances", "sentences"):
+                        child = value.get(key)
+                        if isinstance(child, str) and child.strip():
+                            parts.append(child.strip())
+                        elif isinstance(child, (dict, list)):
+                            walk(child)
+                elif isinstance(value, list):
+                    for child in value:
+                        walk(child)
+
+            walk(data)
+            joined = " ".join(dict.fromkeys(part for part in parts if part))
+            if joined:
+                return re.sub(r"\s+", " ", joined).strip()
+
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("WEBVTT", "NOTE ")):
+            continue
+        if line == "NOTE" or "-->" in line or re.fullmatch(r"\d+", line):
+            continue
+        line = re.sub(r"<[^>]+>", "", line)
+        line = unescape(line).strip()
+        if line:
+            lines.append(line)
+    return re.sub(r"\s+", " ", " ".join(lines)).strip()
+
+
+async def fetch_douyin_subtitle(urls: Sequence[str]) -> tuple[str, str]:
+    """Return (transcript, source_url) from the first usable subtitle URL."""
+    if not urls:
+        return "", ""
+    import httpx
+
+    headers = {
+        **MOBILE_HEADERS,
+        "Referer": "https://www.douyin.com/",
+    }
+    async with httpx.AsyncClient(
+        **httpx_client_kwargs(follow_redirects=True, timeout=20.0)
+    ) as client:
+        for url in urls:
+            try:
+                response = await client.get(str(url), headers=headers)
+                response.raise_for_status()
+                parsed = _subtitle_text_from_payload(response.text)
+                if len(parsed) >= 8:
+                    return parsed, str(url)
+            except Exception:
+                continue
+    return "", ""
 
 
 def _video_media_urls(video: dict) -> list[str]:
@@ -357,6 +482,7 @@ def _video_info_from_item(
     return VideoInfo(
         video_url=video_url,
         video_urls=video_urls,
+        subtitle_urls=_subtitle_urls_from_item(data),
         cover_url=cover_url,
         title=title,
         images=images,
@@ -780,34 +906,120 @@ def extract_text_from_audio_cloud(
             return text
 
 
-def extract_text_from_audio_local(audio_path: Path, model_size: str | None = None) -> str:
-    """使用本地 Whisper 模型转录 (免费，但需要下载模型)。
+def _faster_whisper_cache_root() -> Path:
+    configured = os.environ.get("DOUYIN_FASTER_WHISPER_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser()
+    cache_home = os.environ.get("XDG_CACHE_HOME", "").strip()
+    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
+    return base / "faster-whisper"
 
-    默认 base 对财经口播的中文识别错误率偏高（专有名词、数字经常听错），
-    因此默认改用 small，并允许用 DOUYIN_WHISPER_MODEL 覆盖（base/small/medium/large）。
-    """
-    model_size = model_size or os.environ.get('DOUYIN_WHISPER_MODEL', 'small')
+
+def _local_cpu_threads() -> int:
+    try:
+        threads = int(os.environ.get("DOUYIN_WHISPER_THREADS", "4"))
+    except ValueError:
+        threads = 4
+    return max(1, min(4, threads, os.cpu_count() or 4))
+
+
+def extract_text_from_audio_faster_whisper(
+    audio_path: Path,
+    model_size: str | None = None,
+) -> str:
+    """Transcribe with CTranslate2 Whisper, avoiding torch and GPU needs."""
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError as exc:
+        raise ImportError(
+            "请先安装 faster-whisper: pip install faster-whisper"
+        ) from exc
+
+    model_size = (
+        model_size
+        or os.environ.get("DOUYIN_FASTER_WHISPER_MODEL")
+        or os.environ.get("DOUYIN_WHISPER_MODEL")
+        or "small"
+    )
+    compute_type = os.environ.get("DOUYIN_FASTER_WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
+    cache_root = _faster_whisper_cache_root()
+    cache_root.mkdir(parents=True, exist_ok=True)
+    model = WhisperModel(
+        model_size,
+        device="cpu",
+        compute_type=compute_type,
+        download_root=str(cache_root),
+        cpu_threads=_local_cpu_threads(),
+        num_workers=1,
+    )
+    segments, _info = model.transcribe(
+        str(audio_path),
+        language="zh",
+        beam_size=5,
+        vad_filter=True,
+        condition_on_previous_text=False,
+    )
+    text = " ".join(
+        str(getattr(segment, "text", "") or "").strip()
+        for segment in segments
+        if str(getattr(segment, "text", "") or "").strip()
+    )
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def extract_text_from_audio_local(audio_path: Path, model_size: str | None = None) -> str:
+    """Use faster-whisper when available, with openai-whisper as compatibility fallback."""
+    engine = os.environ.get("DOUYIN_LOCAL_ASR_ENGINE", "auto").strip().lower() or "auto"
+    if engine in {"auto", "faster", "faster-whisper"}:
+        if importlib.util.find_spec("faster_whisper") is not None:
+            return extract_text_from_audio_faster_whisper(audio_path, model_size=model_size)
+        if engine in {"faster", "faster-whisper"}:
+            raise ImportError(
+                "DOUYIN_LOCAL_ASR_ENGINE=faster-whisper，但未安装 faster-whisper"
+            )
+    if engine not in {"auto", "whisper", "openai-whisper"}:
+        raise ValueError(
+            "DOUYIN_LOCAL_ASR_ENGINE 只能是 auto、faster-whisper 或 whisper"
+        )
+
+    model_size = model_size or os.environ.get("DOUYIN_WHISPER_MODEL", "small")
     try:
         import whisper
         import torch
-        # Bound CPU preprocessing/decoding threads on both CPU and CUDA runs.
-        # Parallel analyzer processes otherwise each inherit PyTorch's large
-        # machine-wide default and compete with the Whisper GPU workload.
-        try:
-            threads = int(os.environ.get('DOUYIN_WHISPER_THREADS', '4'))
-        except ValueError:
-            threads = 4
-        thread_limit = max(1, min(4, threads, os.cpu_count() or 4))
-        torch.set_num_threads(thread_limit)
-        model = whisper.load_model(model_size)
-        # 财经口播里中英混说常见，显式指定语言可减少自动检测带来的漂移。
-        result = model.transcribe(str(audio_path), language='zh')
-        return result['text']
-    except ImportError:
-        raise ImportError("请先安装 openai-whisper: pip install openai-whisper")
+    except ImportError as exc:
+        raise ImportError(
+            "本地 ASR 不可用：请安装 faster-whisper，或安装 openai-whisper 与 CPU torch"
+        ) from exc
+
+    # Bound CPU preprocessing/decoding threads on both CPU and CUDA runs.
+    # Parallel analyzer processes otherwise each inherit PyTorch's large
+    # machine-wide default and compete with the Whisper GPU workload.
+    torch.set_num_threads(_local_cpu_threads())
+    model = whisper.load_model(model_size)
+    # 财经口播里中英混说常见，显式指定语言可减少自动检测带来的漂移。
+    result = model.transcribe(str(audio_path), language="zh")
+    return result["text"]
 
 
-def extract_text_from_audio(audio_path: Path, provider: str = 'auto', api_key: str = None) -> str:
+def _local_asr_source() -> str:
+    engine = os.environ.get("DOUYIN_LOCAL_ASR_ENGINE", "auto").strip().lower()
+    if engine in {"whisper", "openai-whisper"}:
+        return "whisper"
+    if engine in {"faster", "faster-whisper"}:
+        return "faster-whisper"
+    return (
+        "faster-whisper"
+        if importlib.util.find_spec("faster_whisper") is not None
+        else "whisper"
+    )
+
+
+def extract_text_from_audio(
+    audio_path: Path,
+    provider: str = 'auto',
+    api_key: str = None,
+    return_source: bool = False,
+) -> str | tuple[str, str]:
     """
     多API语音转文字，自动选择可用服务
     
@@ -836,29 +1048,35 @@ def extract_text_from_audio(audio_path: Path, provider: str = 'auto', api_key: s
         try:
             if prov == 'cloud':
                 print(f"  [转录] 使用 OpenAI Compatible 云端 ASR...", file=sys.stderr)
-                return extract_text_from_audio_cloud(audio_path, api_key=api_key or '')
+                text = extract_text_from_audio_cloud(audio_path, api_key=api_key or '')
+                return (text, "cloud-asr") if return_source else text
 
             elif prov == 'groq':
                 key = api_key or os.environ.get('GROQ_API_KEY', '')
                 if key:
                     print(f"  [转录] 使用 Groq Whisper...", file=sys.stderr)
-                    return extract_text_from_audio_groq(audio_path, key)
+                    text = extract_text_from_audio_groq(audio_path, key)
+                    return (text, "groq-whisper") if return_source else text
                     
             elif prov == 'openai':
                 key = api_key or os.environ.get('OPENAI_API_KEY', '')
                 if key:
                     print(f"  [转录] 使用 OpenAI Whisper...", file=sys.stderr)
-                    return extract_text_from_audio_openai(audio_path, key)
+                    text = extract_text_from_audio_openai(audio_path, key)
+                    return (text, "openai-whisper") if return_source else text
                     
             elif prov == 'siliconflow':
                 key = api_key or os.environ.get('SILICONFLOW_API_KEY', '')
                 if key:
                     print(f"  [转录] 使用 SiliconFlow SenseVoice...", file=sys.stderr)
-                    return extract_text_from_audio_siliconflow(audio_path, key)
+                    text = extract_text_from_audio_siliconflow(audio_path, key)
+                    return (text, "siliconflow-sensevoice") if return_source else text
                     
             elif prov == 'local':
                 print(f"  [转录] 使用本地 Whisper...", file=sys.stderr)
-                return extract_text_from_audio_local(audio_path)
+                text = extract_text_from_audio_local(audio_path)
+                source = _local_asr_source()
+                return (text, source) if return_source else text
                 
         except Exception as e:
             errors.append(f"{prov}: {str(e)[:50]}")
@@ -874,6 +1092,7 @@ def format_video_info_dict(video_info: VideoInfo) -> dict:
         "title": video_info.title,
         "video_url": video_info.video_url,
         "video_urls": video_info.video_urls,
+        "subtitle_urls": video_info.subtitle_urls,
         "cover_url": video_info.cover_url,
         "music_url": video_info.music_url,
         "author": {
@@ -895,6 +1114,8 @@ async def analyze_douyin_video(
     keep_files: bool = False,
     output_dir: Optional[str] = None,
     known_media_urls: Optional[Sequence[str]] = None,
+    known_subtitle_urls: Optional[Sequence[str]] = None,
+    known_subtitle_text: str = "",
     known_title: str = "",
     known_author_name: str = "",
 ) -> dict:
@@ -929,6 +1150,12 @@ async def analyze_douyin_video(
         video_info = VideoInfo(
             video_url=known_media_urls[0],
             video_urls=known_media_urls,
+            subtitle_urls=list(dict.fromkeys(
+                str(item or "").strip()
+                for item in (known_subtitle_urls or [])
+                if str(item or "").strip().lower().startswith(("http://", "https://"))
+            )),
+            subtitle_text=str(known_subtitle_text or "").strip(),
             title=known_title or f"douyin_{_extract_video_id(share_url) or 'video'}",
             author=VideoAuthor(name=known_author_name),
         )
@@ -952,6 +1179,23 @@ async def analyze_douyin_video(
     if not video_info.video_url:
         result["status"] = "no_video"
         result["note"] = "该链接为图片合集，没有可下载的视频"
+        return result
+
+    # Douyin increasingly marks videos with native captions.  Prefer the
+    # platform subtitle over ASR: it is deterministic, faster, and avoids both
+    # the text-only relay limitation and CPU-heavy audio decoding.
+    subtitle_text = str(video_info.subtitle_text or "").strip()
+    subtitle_source = "provided"
+    if not subtitle_text and video_info.subtitle_urls:
+        print("[1.5/4] 检测到抖音原生字幕，优先读取...", file=sys.stderr)
+        subtitle_text, subtitle_url = await fetch_douyin_subtitle(video_info.subtitle_urls)
+        subtitle_source = subtitle_url
+    if subtitle_text:
+        result["transcript"] = subtitle_text
+        result["transcript_source"] = "douyin_subtitle"
+        result["metadata"]["subtitle_source"] = subtitle_source
+        result["status"] = "success"
+        print(f"  → 使用原生字幕 ({len(subtitle_text)} 字符)", file=sys.stderr)
         return result
 
     # Step 2: 下载视频
@@ -995,8 +1239,21 @@ async def analyze_douyin_video(
     # Step 4: 语音转文字 (多API自动切换)
     print(f"[4/4] 正在进行语音转文字...", file=sys.stderr)
     try:
-        transcript = extract_text_from_audio(audio_path, provider=provider, api_key=api_key)
+        transcribed = extract_text_from_audio(
+            audio_path,
+            provider=provider,
+            api_key=api_key,
+            return_source=True,
+        )
+        if isinstance(transcribed, tuple):
+            transcript, transcript_source = transcribed
+        else:
+            # Keep custom analyzers/tests that still return a plain string
+            # compatible; the built-in implementations return source metadata.
+            transcript, transcript_source = str(transcribed), ""
         result["transcript"] = transcript
+        if transcript_source:
+            result["transcript_source"] = transcript_source
         print(f"  → 完成 ({len(transcript)} 字符)", file=sys.stderr)
     except Exception as e:
         result["status"] = "partial"
@@ -1039,6 +1296,13 @@ async def main():
         default=[],
         help="主页列表已取得的媒体 CDN 地址（可重复）",
     )
+    parser.add_argument(
+        "--subtitle-url",
+        action="append",
+        default=[],
+        help="主页列表已取得的抖音字幕地址（可重复）",
+    )
+    parser.add_argument("--subtitle-text", default="", help="已取得的抖音字幕文本")
     parser.add_argument("--title", default="", help="主页列表中的视频标题")
     parser.add_argument("--author-name", default="", help="主页列表中的作者名")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出结果")
@@ -1052,6 +1316,8 @@ async def main():
         keep_files=args.keep_files,
         output_dir=args.output_dir or None,
         known_media_urls=args.media_url,
+        known_subtitle_urls=args.subtitle_url,
+        known_subtitle_text=args.subtitle_text,
         known_title=args.title,
         known_author_name=args.author_name,
     )

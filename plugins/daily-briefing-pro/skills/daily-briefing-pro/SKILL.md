@@ -29,12 +29,18 @@ metadata:
       - httpx
       - requests
       - akshare
+      - faster-whisper
       - openai-whisper
       - beautifulsoup4
       env_vars:
       - SILICONFLOW_API_KEY
       - GROQ_API_KEY
       - OPENAI_API_KEY
+      - DOUYIN_ASR_BASE_URL
+      - DOUYIN_ASR_API_KEY
+      - DOUYIN_ASR_MODEL
+      - DOUYIN_TRANSCRIPT_PROVIDER
+      - DOUYIN_LOCAL_ASR_ENGINE
       - DEEPSEEK_API_KEY
       - DOUYIN_BLOGGERS_EXTRA
       - DOUYIN_MAX_CONCURRENT
@@ -106,7 +112,7 @@ python {plugin_dir}/cloud_cli.py industry-report 白酒
 
 安装插件后，在本 Skill 目录执行 `python scripts/run_all.py --scheduled`。源码项目另提供 `tools/run_daily_briefing.py` 启动器，从任意工作目录调用项目源码并固定 UTF-8 编码与项目报告目录；此项目启动器不属于插件安装包。恢复指定日期已采集数据时使用 `--date YYYY-MM-DD --resume`，日期和逐模块完整性校验仍执行，不能把其他日期的数据当成本日结果。
 
-日报转录默认通过 `DOUYIN_TRANSCRIPT_PROVIDER=local` 指定本机 Whisper；保留显式选择云端服务的能力，完整简报没有跳过转录模式。
+日报转录先尝试抖音原生字幕；没有原生字幕时按 `DOUYIN_TRANSCRIPT_PROVIDER` 选择通道。桌面默认 `local`，云端 Compose 默认 `auto`；本地引擎优先 `faster-whisper`，兼容旧 `openai-whisper`。保留显式选择云端服务的能力，完整简报没有跳过转录模式。
 
 博主调查按作者数及原文长度分批，通过有限并行调用 Codex，并逐批保存精确日期/原文哈希缓存。语义阶段有独立总时限；编排器的外层时限须覆盖平台采集与语义阶段之和。抖音的日期核验、媒体解析、下载及转录各自报告失败原因，成功转录保存按视频 ID 绑定的缓存，重跑不重复下载已经核验的同一视频。当前默认串行转录；`DOUYIN_MAX_CONCURRENT` 可显式配置最多 2 条，各设备的 PyTorch CPU 线程上限为 4。
 
@@ -169,7 +175,7 @@ AI 总结先使用已配置的 API。没有独立 API Key 时，允许 `scripts/
 
 核验细节（2026-09 起抖音改版后的实测口径）：移动端列表接口已不再返回 `create_time`，且移动端 UA 的详情页会被静默拦空（HTTP 200 但 DOM 为空），因此**详情页时间核验必须用桌面 UA 渲染**（每次约 6 秒，失败重试 1 次），只在桌面端取不到时才回退移动端。主页列表是新→旧排列，核验到早于目标窗口的条目即可停止，不必整页逐条渲染。桌面端 `/aweme/v1/web/aweme/post/` 常返回数天前的旧缓存，不能作为发布时间依据。
 
-默认串行转录，可显式配置最多 2 条（`DOUYIN_MAX_CONCURRENT` 可调，本地 Whisper 并发过高会把单条推到超时），`auto` 服务优先级为 Groq、OpenAI、SiliconFlow、本地 Whisper；无 API Key 仍必须尝试本地 Whisper。本地 Whisper 默认 `small` 模型并固定 `language=zh`（`DOUYIN_WHISPER_MODEL` 可改为 base/medium/large，`base` 对财经口播的专有名词与数字错误率明显偏高）；失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
+默认串行转录，可显式配置最多 2 条（`DOUYIN_MAX_CONCURRENT` 可调，本地 Whisper 并发过高会把单条推到超时），`auto` 依次尝试显式配置的通用 OpenAI-compatible ASR、Groq、OpenAI、SiliconFlow，最后回退到本地 `faster-whisper`（旧 `openai-whisper` 兼容）；无 API Key 仍必须尝试本地 ASR。本地 ASR 默认 `small` 模型并固定 `language=zh`（`DOUYIN_WHISPER_MODEL` 可改为 base/medium/large，`base` 对财经口播的专有名词与数字错误率明显偏高）；`DOUYIN_TRANSCRIPT_PROVIDER=cloud` 必须同时配置 `DOUYIN_ASR_BASE_URL`、`DOUYIN_ASR_API_KEY`、`DOUYIN_ASR_MODEL`，文本 Relay 不能作为音频接口。失败条目在 main() 里串行重试一次。视频下载或转录失败时可跳过该条并记录原因；成功转录但未配置 AI 时，HTML 只展示明确标注的转录摘录，不把它写成 AI 观点。
 
 当天未更新时的回退规则：按**自然日**回退到最近一个确有视频的发布日，最多 `DOUYIN_MAX_STALE_DAYS`（默认 7）天；不做工作日跳过，因为短视频博主周末照常更新。回退时必须在 `note` 与板块 meta 里写明实际数据日期，且不得用旧视频冒充当日内容；超过窗口仍无视频则如实标注账号最近发布时间。禁止保存视频/音频/Markdown/HTML 等专项产物。表格列为 `标题 | 核心观点 | 标的 | 方向`，最后给出核心主线；无法获取时间时不得凭猜测纳入当日结果。观点提炼提示词按语音转写场景编写：在内部纠正同音错字，只输出判断+逻辑+【标的】，禁止输出纠错清单或补充转录里没有的个股。
 
@@ -260,7 +266,7 @@ AI 总结先使用已配置的 API。没有独立 API Key 时，允许 `scripts/
 
 8. **未来大事件：后台HTTP，禁止打开浏览器** — 该板块必须使用专用的后台Python脚本（`fetch_future_events.py`）通过urllib/httpx直接请求API获取数据。**严禁**使用Playwright、`mcp__plugin_playwright`、手动打开浏览器或任何会弹出窗口的方式获取。脚本运行时无可见界面，纯后台执行。自选股新闻抓取器仅供专项筛选使用，不属于完整简报流程。
 
-9. **抖音转录不强制依赖API Key，且必须防遗漏兜底** — `analyze_douyin.py` 默认 `--provider auto`，未配置 SiliconFlow/Groq/OpenAI API Key 时**自动降级到本地Whisper**（`openai-whisper`）。禁止因缺少 `SILICONFLOW_API_KEY` 就跳过抖音板块，必须尝试本地转录。若单条视频转录仍失败，`fetch_douyin.py` 必须**使用视频标题+话题标签兜底**并写入 warning；成功转录但无 AI 时，必须保留真实 transcript 并在 HTML 以“转录摘录（未使用AI）”标注。
+9. **抖音转录不强制依赖API Key，且必须防遗漏兜底** — `analyze_douyin.py` 默认 `--provider auto`，优先使用抖音原生字幕；未配置 SiliconFlow/Groq/OpenAI/通用 ASR Key 时**自动降级到本地 `faster-whisper`，旧 `openai-whisper` 兼容**。禁止因缺少 `SILICONFLOW_API_KEY` 就跳过抖音板块，必须尝试本地转录。若单条视频转录仍失败，`fetch_douyin.py` 必须**使用视频标题+话题标签兜底**并写入 warning；成功转录但无 AI 时，必须保留真实 transcript 并在 HTML 以“转录摘录（未使用AI）”标注。缓存命中必须保留原始 `transcript_source` 并标记 `transcript_cache_hit`，不能用固定回放冒充新转录。
 
 10. **机构研报必须含看多/看空逻辑** — 机构研报板块的核心价值不在于"谁看多谁看空"，而在于**为什么看多、为什么看空**。每条研报观点必须包含：
    - **标的/板块**（必须标注具体股票代码或板块名称）
@@ -512,11 +518,11 @@ hithink-finance capabilities --format json          # 查看当前命令契约
 ### Step 0 — 环境初始化
 
 ```bash
-# 检查本地Whisper是否可用（抖音转录兜底方案）
-python -c "import whisper; print('LOCAL_WHISPER_OK')" 2>/dev/null || echo "NEED_INSTALL_WHISPER"
+# 检查本地 Whisper 是否可用（优先 faster-whisper，兼容旧 openai-whisper）
+python -c "import faster_whisper; print('FASTER_WHISPER_OK')" 2>/dev/null || python -c "import whisper; print('OPENAI_WHISPER_OK')" 2>/dev/null || echo "NEED_INSTALL_WHISPER"
 ```
 
-> 本地Whisper未安装时，可用 `pip install openai-whisper` 安装。安装后首次使用会自动下载模型（约140MB）。
+> 云端推荐 `pip install faster-whisper`（CPU `int8`）；本地兼容路径也可安装 `openai-whisper`。安装后首次使用会自动下载模型，容器镜像在构建时预下载 `small` 权重。
 
 ### Step 1 — 一体化执行（run_all.py）
 
@@ -784,14 +790,14 @@ python scripts/run_all.py [--date YYYY-MM-DD]
 - Python ≥ 3.12
 - Playwright (`pip install playwright && playwright install chromium`)
 - httpx, requests, akshare
-- OpenAI 兼容 API 凭证（博主观点AI总结提炼，**必配**）：写入 `~/.codex/daily-briefing.env` 或设为环境变量，例如 `DEEPSEEK_API_KEY` + `DEEPSEEK_BASE_URL` + `DEEPSEEK_MODEL`
+- OpenAI 兼容文本 API 凭证（博主观点 AI 总结提炼，**必配**）：写入 `~/.codex/daily-briefing.env` 或设为环境变量，例如 `DEEPSEEK_API_KEY` + `DEEPSEEK_BASE_URL` + `DEEPSEEK_MODEL`；该接口只做文本，不能用于音频
 
 ### 可选
 - ffmpeg（抖音音频提取，如未安装则analyze_douyin.py会失败）
 - node.js（研报客搜索）
 - `hithink-finance` CLI（同花顺官方数据，龙虎榜与盘面补充的主源）：`npm install -g @hithink-tech/hithink-finance-cli` 后执行 `hithink-finance auth login`；未安装或未登录时自动降级（龙虎榜回退 AkShare，盘面补充只剩连板网）
 - `scripts/yanbao/` 三源研报专项模式所需的 Node.js 运行时
-- SiliconFlow / Groq / OpenAI API Key（抖音转录加速，未配置时自动使用本地Whisper）
+- 通用 OpenAI-compatible ASR、SiliconFlow / Groq / OpenAI 音频 Key（抖音转录加速），或本地 `faster-whisper` / `openai-whisper`
 - IMA API凭证（知识库搜索）
 - 淘股吧登录Cookie（`data/tgb_cookies.json`）
 - 同花顺自选股JSON（`$THS_SELFSTOCK_PATH`，仅供专项新闻筛选）
@@ -810,7 +816,11 @@ export DEEPSEEK_API_KEY="sk-xxxxxxxx"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com/v1"
 export DEEPSEEK_MODEL="deepseek-chat"
 
-# 抖音转录（可选，未配置时自动使用本地Whisper）
+# 抖音转录（可选；原生字幕优先，未配置 API 时使用本地 faster-whisper）
+# 通用 ASR 三项必须同时配置，文本 Relay 地址不能填这里
+export DOUYIN_ASR_BASE_URL=""
+export DOUYIN_ASR_API_KEY=""
+export DOUYIN_ASR_MODEL=""
 export SILICONFLOW_API_KEY="sk-xxxxxxxx"
 export GROQ_API_KEY="gsk_xxxxxxxx"
 export OPENAI_API_KEY="sk-xxxxxxxx"
@@ -818,8 +828,10 @@ export OPENAI_API_KEY="sk-xxxxxxxx"
 # 追加抖音博主（可选，格式 name|url,name|url）
 export DOUYIN_BLOGGERS_EXTRA=""
 
-# 抖音并发转录数（可选，默认 3，本地 Whisper 吃资源建议不超过 5）
-export DOUYIN_MAX_CONCURRENT="3"
+# 本地 ASR 引擎（可选：auto / faster-whisper / whisper）
+export DOUYIN_LOCAL_ASR_ENGINE="faster-whisper"
+# 抖音并发转录数（可选，默认 1-2，本地 Whisper 吃资源建议不超过 2）
+export DOUYIN_MAX_CONCURRENT="1"
 
 # IMA知识库（可选）
 export IMA_OPENAPI_CLIENTID="xxxxxxxx"
@@ -1284,7 +1296,7 @@ eports\每日简报/每日简报_YYYY-MM-DD.html`
 | **编造新闻/观点** | 懒于获取真实数据 | 如实标注"数据获取失败"或使用最近可用数据 |
 | **机构研报只有结论没有逻辑** | 只写了"XX看多YY" | 必须写出逻辑链：驱动因素→传导路径→受益标的，如"存储涨价：三星提价+美光扩产→NAND供给偏紧→利好存储模组厂" |
 | **淘股吧4位博主全部0条** | Cookie过期或脚本故障 | 检查 `~/.codex/tgb_cookies.json` 是否过期；用urllib直接测试moreReplyMod页面是否返回登录页；**必须报错修复后重试，禁止填"今日无动态"** |
-| **抖音板块跳过或填"处理超时"** | ffmpeg缺失/Whisper未安装/网络问题 | 检查ffmpeg是否可用、openai-whisper是否安装；延长超时到5分钟；**必须报错修复后重试，禁止跳过** |
+| **抖音板块跳过或填"处理超时"** | ffmpeg缺失/ASR未安装/网络问题 | 检查ffmpeg、原生字幕、faster-whisper（或openai-whisper）和音频 API 配置；延长超时到5分钟；**必须报错修复后重试，禁止跳过** |
 | **先输出简报再补数据** | 没等Group B完成就编译 | 必须等淘股吧和抖音都成功获取后，再统一编译输出；获取失败则报错停止，不输出简报 |
 | **链接不可点击** | 用了裸 HTML `<a>` 标签，或把链接写进 ``` 代码块 | 用 `[📄 打开 M 月 D 日简报](D:/.../YYYY-MM-DD简报.html)` 的 Markdown 绝对路径链接，放在代码块外；Codex 桌面端不渲染 HTML |
 

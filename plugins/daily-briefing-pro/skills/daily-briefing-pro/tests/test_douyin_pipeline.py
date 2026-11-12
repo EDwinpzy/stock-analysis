@@ -115,6 +115,7 @@ class DouyinSubprocessTests(unittest.TestCase):
                 "https://v1.example/video.mp4",
                 "https://v2.example/video.mp4",
             ],
+            "subtitle_urls": ["https://cdn.example/subtitle.vtt"],
         }
         with patch.object(fetch_douyin.subprocess, "run", return_value=completed) as run:
             fetch_douyin.transcribe_video(video)
@@ -126,6 +127,37 @@ class DouyinSubprocessTests(unittest.TestCase):
             video["media_urls"],
         )
         self.assertIn("--title", command)
+        subtitle_offsets = [
+            index for index, value in enumerate(command) if value == "--subtitle-url"
+        ]
+        self.assertEqual(
+            [command[index + 1] for index in subtitle_offsets],
+            video["subtitle_urls"],
+        )
+
+    def test_extracted_video_keeps_transcript_source(self):
+        with patch.object(
+            fetch_douyin,
+            "get_video_transcript_with_fallback",
+            return_value={
+                "transcript": "真实语音内容",
+                "transcript_source": "faster-whisper",
+            },
+        ), patch.object(
+            fetch_douyin,
+            "summarize_with_deepseek",
+            return_value="摘要",
+        ):
+            result = fetch_douyin.extract_video_info(
+                {
+                    "url": "https://www.douyin.com/video/123456789012",
+                    "title": "财经视频",
+                    "create_time": 1790006400,
+                }
+            )
+
+        self.assertEqual(result["transcript"], "真实语音内容")
+        self.assertEqual(result["transcript_source"], "faster-whisper")
 
 
 class DouyinConcurrencyTests(unittest.TestCase):
@@ -219,6 +251,105 @@ class WhisperThreadTests(unittest.TestCase):
 
         self.assertEqual(result, "测试转录")
         self.assertEqual(thread_calls, [min(4, os.cpu_count() or 4)])
+
+
+class FasterWhisperTests(unittest.TestCase):
+    def test_faster_whisper_is_preferred_and_segments_are_joined(self):
+        captured = {}
+
+        class FakeSegment:
+            def __init__(self, text):
+                self.text = text
+
+        class FakeModel:
+            def __init__(self, *args, **kwargs):
+                captured["init"] = (args, kwargs)
+
+            def transcribe(self, path, **kwargs):
+                captured["transcribe"] = (path, kwargs)
+                return iter([FakeSegment(" 第一段 "), FakeSegment("第二段")]), {}
+
+        fake_module = types.SimpleNamespace(WhisperModel=FakeModel)
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "sample.mp3"
+            audio.write_bytes(b"audio")
+            with patch.dict(
+                sys.modules,
+                {"faster_whisper": fake_module},
+            ), patch.object(
+                analyze_douyin.importlib.util,
+                "find_spec",
+                return_value=object(),
+            ), patch.dict(
+                os.environ,
+                {
+                    "DOUYIN_FASTER_WHISPER_ROOT": temp,
+                    "DOUYIN_WHISPER_MODEL": "small",
+                },
+                clear=True,
+            ):
+                text = analyze_douyin.extract_text_from_audio_local(audio)
+
+        self.assertEqual(text, "第一段 第二段")
+        self.assertEqual(captured["init"][0], ("small",))
+        self.assertEqual(captured["init"][1]["device"], "cpu")
+        self.assertEqual(captured["init"][1]["compute_type"], "int8")
+        self.assertTrue(captured["transcribe"][1]["vad_filter"])
+
+    def test_auto_records_faster_whisper_as_transcript_source(self):
+        with patch.dict(
+            os.environ,
+            {"DOUYIN_LOCAL_ASR_ENGINE": "faster-whisper"},
+            clear=True,
+        ), patch.object(
+            analyze_douyin,
+            "extract_text_from_audio_local",
+            return_value="转录文本",
+        ):
+            text, source = analyze_douyin.extract_text_from_audio(
+                Path("unused.mp3"),
+                provider="auto",
+                return_source=True,
+            )
+
+        self.assertEqual(text, "转录文本")
+        self.assertEqual(source, "faster-whisper")
+
+
+class DouyinSubtitleTests(unittest.TestCase):
+    def test_vtt_payload_is_normalized_to_transcript(self):
+        payload = "\ufeffWEBVTT\n\n00:00:01.000 --> 00:00:03.000\n存储<00:00:01.500>涨价\n\n00:00:03.000 --> 00:00:05.000\n关注<font>供需</font>\n"
+
+        text = analyze_douyin._subtitle_text_from_payload(payload)
+
+        self.assertEqual(text, "存储涨价 关注供需")
+
+    def test_json_subtitle_payload_uses_text_fields_without_timestamps(self):
+        payload = json.dumps(
+            {"body": [{"from": 0, "to": 1, "content": "第一句"}, {"content": "第二句"}]},
+            ensure_ascii=False,
+        )
+
+        self.assertEqual(
+            analyze_douyin._subtitle_text_from_payload(payload),
+            "第一句 第二句",
+        )
+
+    def test_known_subtitle_skips_video_download(self):
+        with patch.object(
+            analyze_douyin,
+            "download_video",
+            side_effect=AssertionError("native subtitle must bypass media download"),
+        ):
+            result = asyncio.run(analyze_douyin.analyze_douyin_video(
+                "https://www.douyin.com/video/123456789012",
+                known_media_urls=["https://cdn.example/video.mp4"],
+                known_subtitle_text="抖音原生字幕内容足够长，可以直接使用。",
+            ))
+
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["transcript_source"], "douyin_subtitle")
+        self.assertEqual(result["transcript"], "抖音原生字幕内容足够长，可以直接使用。")
 
 
 class DouyinOutputStatusTests(unittest.TestCase):

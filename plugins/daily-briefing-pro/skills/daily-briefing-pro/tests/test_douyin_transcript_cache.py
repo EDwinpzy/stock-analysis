@@ -23,10 +23,27 @@ class TranscriptCacheTests(unittest.TestCase):
 
     def test_completed_video_survives_parent_retry_without_media_paths(self):
         fetch.save_video_transcript(self.video, {'transcript': '真实转录文本', 'video_path': '/temporary/private.mp4'})
-        self.assertEqual(fetch.load_video_transcript(self.video)['transcript'], '真实转录文本')
+        loaded = fetch.load_video_transcript(self.video)
+        self.assertEqual(loaded['transcript'], '真实转录文本')
+        self.assertEqual(loaded['transcript_source'], 'verified_video_cache')
+        self.assertTrue(loaded['transcript_cache_hit'])
         self.assertNotIn('private.mp4', next(Path(self.temp.name).glob('*.json')).read_text(encoding='utf-8'))
         with patch.object(fetch, 'transcribe_video', side_effect=AssertionError('should reuse valid cache')):
-            self.assertEqual(fetch.get_video_transcript_with_fallback(self.video)['transcript'], '真实转录文本')
+            fallback = fetch.get_video_transcript_with_fallback(self.video)
+            self.assertEqual(fallback['transcript'], '真实转录文本')
+            self.assertTrue(fallback['transcript_cache_hit'])
+
+    def test_cache_keeps_the_real_transcript_producer(self):
+        fetch.save_video_transcript(
+            self.video,
+            {'transcript': '真实转录文本', 'transcript_source': 'faster-whisper'},
+        )
+
+        loaded = fetch.load_video_transcript(self.video)
+
+        self.assertEqual(loaded['transcript_source'], 'faster-whisper')
+        self.assertEqual(loaded['original_transcript_source'], 'faster-whisper')
+        self.assertTrue(loaded['transcript_cache_hit'])
 
     def test_daily_collector_defaults_to_local_even_with_cloud_keys(self):
         with patch.dict(fetch.os.environ, {'GROQ_API_KEY': 'unused-test-key'}, clear=True), \

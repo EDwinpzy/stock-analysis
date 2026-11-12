@@ -129,6 +129,8 @@ INDUSTRY_STOCK_FIELDS = {
     "profit_yoy": "净利同比",
     "ytd_change": "年内涨幅",
     "industry": "所属行业",
+    "dividend_yield": "股息率",
+    "main_business": "主营业务",
 }
 
 
@@ -321,6 +323,36 @@ def _source_fact_problems(text: str, kind: str, data: dict[str, Any]) -> list[st
             )
         if "公开数据未覆盖" in text:
             problems.append("行业报告仍含“公开数据未覆盖”字段")
+        missing_business = []
+        missing_dividend = []
+        for item in stocks:
+            business_tokens = [
+                _name_key(token)
+                for token in re.split(r"\|\||、|；|;|/", str(item.get("main_business") or ""))
+                if len(_name_key(token)) >= 2
+            ]
+            if business_tokens and not any(
+                token in normalized_text for token in business_tokens
+            ):
+                missing_business.append(
+                    str(item.get("name") or item.get("ticker") or "未命名标的")
+                )
+            dividend = _number(item.get("dividend_yield"))
+            if dividend is not None and not any(
+                variant in text
+                for variant in (f"{dividend:,.2f}%", f"{dividend:.2f}%")
+            ):
+                missing_dividend.append(
+                    str(item.get("name") or item.get("ticker") or "未命名标的")
+                )
+        if missing_business:
+            problems.append(
+                "报告缺少采集主营产品：" + "、".join(missing_business[:5])
+            )
+        if missing_dividend:
+            problems.append(
+                "报告缺少采集股息率：" + "、".join(missing_dividend[:5])
+            )
     return problems
 
 
@@ -334,6 +366,33 @@ def _stock_nested_problems(data: dict[str, Any]) -> list[str]:
     ]
     if missing_quote:
         problems.append("行情关键字段缺失：" + "、".join(missing_quote))
+
+    peers = [item for item in (data.get("peers_raw") or []) if isinstance(item, dict)]
+    expected_peers = _number(data.get("peers_expected_count")) or 0
+    if expected_peers and len(peers) < expected_peers:
+        problems.append(
+            f"同业数量不足：{len(peers)} < {int(expected_peers)}"
+        )
+    if str(data.get("peers_scope") or "") == "eastmoney_f10_sample":
+        problems.append("同业数据退化为东方财富 F10 样本，未覆盖完整行业板块")
+    if peers and expected_peers:
+        peer_keys = set().union(*(set(item) for item in peers))
+        required_peer_labels = (
+            "股票代码",
+            "股票简称",
+            "市盈率(pe)",
+            "市净率(pb)",
+            "总市值",
+            "净资产收益率",
+            "营业收入",
+        )
+        missing_peer_labels = [
+            label for label in required_peer_labels if label not in peer_keys
+        ]
+        if missing_peer_labels:
+            problems.append(
+                "同业表字段缺失：" + "、".join(missing_peer_labels)
+            )
 
     chip = (
         data.get("chip_structure")

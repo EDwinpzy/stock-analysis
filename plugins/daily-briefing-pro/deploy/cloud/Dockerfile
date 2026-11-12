@@ -30,12 +30,7 @@ RUN apt-get update \
 WORKDIR /opt/daily-briefing-pro
 COPY deploy/cloud/requirements-cloud.txt /tmp/requirements-cloud.txt
 
-# CPU-only Torch keeps the Whisper fallback usable without a CUDA host.
-RUN python -m pip install --no-cache-dir \
-        --index-url https://download.pytorch.org/whl/cpu \
-        --extra-index-url https://pypi.org/simple \
-        "torch==2.7.0+cpu" \
-    && python -m pip install --no-cache-dir -r /tmp/requirements-cloud.txt \
+RUN python -m pip install --no-cache-dir -r /tmp/requirements-cloud.txt \
     && if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
         python -m pip install --no-cache-dir --no-deps "akracer==0.0.14"; \
     elif [ "$(dpkg --print-architecture)" = "amd64" ]; then \
@@ -60,11 +55,12 @@ RUN mkdir -p /opt/playwright-browsers \
     && cp -a /runtime/home/.cache/ms-playwright/. /opt/playwright-browsers/ \
     && chmod -R a+rX /opt/playwright-browsers
 
-# Bake the small Whisper checkpoint into the image. The runtime home is a
-# named volume, so the entrypoint copies this cache into it on first start.
-RUN mkdir -p /opt/whisper-cache \
-    && XDG_CACHE_HOME=/opt/whisper-cache python -c "import whisper; whisper.load_model('small')" \
-    && chmod -R a+rX /opt/whisper-cache
+# Bake the faster-whisper model into the image. The runtime home is a named
+# volume, so the entrypoint copies this cache into it on first start. CTranslate2
+# int8 is materially cheaper than CPU torch for the 1.5 CPU / 2GB Compose limit.
+RUN mkdir -p /opt/faster-whisper-cache \
+    && python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/faster-whisper-cache', cpu_threads=4, num_workers=1)" \
+    && chmod -R a+rX /opt/faster-whisper-cache
 
 COPY . /opt/daily-briefing-pro/
 

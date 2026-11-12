@@ -15,6 +15,7 @@ from .common import (
     median,
     number,
     section,
+    split_products,
     table,
     tone,
 )
@@ -79,6 +80,7 @@ def _metrics(stock: dict[str, Any]) -> dict[str, Any]:
         "ytd": ytd,
         "industry": str(clean(stock.get("industry")) or "行业未返回"),
         "main_business": str(clean(stock.get("main_business")) or ""),
+        "dividend_yield": number(stock.get("dividend_yield")),
     }
 
 
@@ -211,8 +213,22 @@ def build_industry_report(data: dict[str, Any]) -> str:
     ]
 
     detail_rows = [
-        (item["name"], item["ticker"], fnum(item["price"]), fpct(item["change_pct"]), fnum(item["pe"]), fnum(item["pb"]), fyi((item["market_cap"] or 0) * 1e8), fpct(item["revenue_yoy"]), fpct(item["profit_yoy"]), fpct(item["roe"], signed=False), fpct(item["gross_margin"], signed=False))
-        for item in ranked[:10]
+        (
+            item["name"],
+            item["ticker"],
+            fnum(item["price"]),
+            fpct(item["change_pct"]),
+            fnum(item["pe"]),
+            fnum(item["pb"]),
+            fyi((item["market_cap"] or 0) * 1e8),
+            fpct(item["revenue_yoy"]),
+            fpct(item["profit_yoy"]),
+            fpct(item["roe"], signed=False),
+            fpct(item["gross_margin"], signed=False),
+            fpct(item["dividend_yield"], signed=False),
+            "、".join(split_products(item["main_business"])) or "公开数据未覆盖",
+        )
+        for item in ranked
     ]
     core_cards = "".join(
         '<div class="sc"><div class="sch">'
@@ -226,6 +242,8 @@ def build_industry_report(data: dict[str, Any]) -> str:
                 ("净利同比", fpct(item["profit_yoy"]), "最新年度", tone(item["profit_yoy"])),
                 ("ROE", fpct(item["roe"], signed=False), "盈利质量", ""),
                 ("毛利率", fpct(item["gross_margin"], signed=False), "产品结构", ""),
+                ("股息率", fpct(item["dividend_yield"], signed=False), "近12个月现金分红", ""),
+                ("主营业务", "、".join(split_products(item["main_business"])) or "公开数据未覆盖", "公开披露口径", ""),
                 ("年内涨幅", fpct(item["ytd"]), "区间行情", tone(item["ytd"])),
                 ("量化排序", f"{_quality(item):.2f}", "收入/利润/ROE/估值综合", ""),
             )
@@ -362,7 +380,7 @@ def build_industry_report(data: dict[str, Any]) -> str:
             "03",
             "核心标的",
             core_cards
-            + table(("标的", "代码", "价格", "涨跌", "PE", "PB", "总市值", "营收同比", "净利同比", "ROE", "毛利率"), detail_rows),
+            + table(("标的", "代码", "价格", "涨跌", "PE", "PB", "总市值", "营收同比", "净利同比", "ROE", "毛利率", "股息率", "主营业务"), detail_rows),
             "量化排序",
         ),
         section(
@@ -375,9 +393,9 @@ def build_industry_report(data: dict[str, Any]) -> str:
         section(
             "05",
             "同行指标",
-            table(("标的", "代码", "营收(亿)", "净利(亿)", "毛利率", "ROE", "营收同比", "净利同比", "PE", "PB", "市值(亿)"), [
-                (item["name"], item["ticker"], fnum(item["revenue"]), fnum(item["profit"]), fpct(item["gross_margin"], signed=False), fpct(item["roe"], signed=False), fpct(item["revenue_yoy"]), fpct(item["profit_yoy"]), fnum(item["pe"]), fnum(item["pb"]), fnum(item["market_cap"]))
-                for item in stocks[:10]
+            table(("标的", "代码", "营收(亿)", "净利(亿)", "毛利率", "ROE", "营收同比", "净利同比", "PE", "PB", "市值(亿)", "股息率"), [
+                (item["name"], item["ticker"], fnum(item["revenue"]), fnum(item["profit"]), fpct(item["gross_margin"], signed=False), fpct(item["roe"], signed=False), fpct(item["revenue_yoy"]), fpct(item["profit_yoy"]), fnum(item["pe"]), fnum(item["pb"]), fnum(item["market_cap"]), fpct(item["dividend_yield"], signed=False))
+                for item in stocks
             ])
             + table(
                 ("板块指标", "数值"),

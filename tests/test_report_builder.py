@@ -141,6 +141,8 @@ def industry_fixture() -> dict:
                 "profit_yoy": 11.2,
                 "ytd_change": 5.5,
                 "industry": "食品饮料-白酒",
+                "dividend_yield": 2.5,
+                "main_business": "茅台酒",
             }
         ],
         "sector_snapshot": {
@@ -381,6 +383,8 @@ def test_generated_industry_report_passes_source_fact_gate(tmp_path):
     assert "风险观察" in html
     assert "<th>观察方式</th>" in html
     assert 'data-label="观察方式"' in html
+    assert "2.50%" in html
+    assert "茅台酒" in html
 
 
 def test_report_builder_cli_writes_verified_stock_report(tmp_path, capsys):

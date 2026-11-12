@@ -224,6 +224,41 @@ def parse_video_item(item: dict) -> dict | None:
             value = value.replace('playwm', 'play')
             if value not in media_urls:
                 media_urls.append(value)
+
+    subtitle_urls = []
+    subtitle_containers = []
+    for key in ("caption_infos", "subtitle_infos", "caption_info", "subtitle_info"):
+        subtitle_containers.append(item.get(key))
+    for key in ("cla_info", "caption_infos", "subtitle_infos"):
+        subtitle_containers.append(video.get(key))
+    for container in list(subtitle_containers):
+        if isinstance(container, dict):
+            for key in ("caption_infos", "subtitle_infos", "caption_info", "subtitle_info"):
+                subtitle_containers.append(container.get(key))
+
+    def collect_subtitles(value):
+        if isinstance(value, dict):
+            for child_key, child in value.items():
+                lowered = str(child_key).lower()
+                if lowered in {
+                    "url", "url_list", "urls", "web_url", "subtitle_url", "caption_url",
+                }:
+                    values = child if isinstance(child, (list, tuple)) else [child]
+                    for candidate in values:
+                        if isinstance(candidate, str) and candidate.lower().startswith(("http://", "https://")):
+                            if candidate not in subtitle_urls:
+                                subtitle_urls.append(candidate)
+                elif lowered in {
+                    "caption_infos", "subtitle_infos", "caption_info", "subtitle_info",
+                    "cla_info",
+                }:
+                    collect_subtitles(child)
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                collect_subtitles(child)
+
+    for container in subtitle_containers:
+        collect_subtitles(container)
     return {
         'aweme_id': vid,
         'title': item.get('desc', '').strip() or f"视频 {vid}",
@@ -234,6 +269,7 @@ def parse_video_item(item: dict) -> dict | None:
         # Keep the signed CDN alternatives from the homepage response. Detail
         # pages can be temporarily unavailable while these URLs are still valid.
         'media_urls': media_urls,
+        'subtitle_urls': subtitle_urls[:6],
     }
 
 
@@ -496,11 +532,17 @@ def transcribe_video(video: str | dict, provider: str = "local") -> dict:
                 for value in (video.get("media_urls") or [])
                 if str(value).strip().lower().startswith(("http://", "https://"))
             ]
+            subtitle_urls = [
+                str(value).strip()
+                for value in (video.get("subtitle_urls") or [])
+                if str(value).strip().lower().startswith(("http://", "https://"))
+            ]
             title = str(video.get("title") or "").strip()
             author_name = str(video.get("author_name") or "").strip()
         else:
             video_url = str(video or "").strip()
             media_urls = []
+            subtitle_urls = []
             title = ""
             author_name = ""
         child_env = {
@@ -519,6 +561,8 @@ def transcribe_video(video: str | dict, provider: str = "local") -> dict:
             ]
             for media_url in dict.fromkeys(media_urls[:6]):
                 command.extend(["--media-url", media_url])
+            for subtitle_url in dict.fromkeys(subtitle_urls[:6]):
+                command.extend(["--subtitle-url", subtitle_url])
             if title:
                 command.extend(["--title", title])
             if author_name:
@@ -621,7 +665,17 @@ def load_video_transcript(video: dict) -> dict | None:
         data = payload.get('data') or {}
         if not isinstance(data, dict) or not str(data.get('transcript') or '').strip() or data.get('warning') or data.get('error'):
             return None
-        return {**data, 'transcript_source': 'verified_video_cache'}
+        original_source = str(data.get('transcript_source') or '').strip()
+        # Keep the real producer (native subtitle, faster-whisper, etc.) intact
+        # for auditing.  Only legacy cache entries without provenance use the
+        # generic cache label.
+        source = original_source or 'verified_video_cache'
+        return {
+            **data,
+            'transcript_source': source,
+            'transcript_cache_hit': True,
+            'original_transcript_source': source,
+        }
     except (OSError, ValueError, AttributeError):
         return None
 
@@ -632,7 +686,7 @@ def save_video_transcript(video: dict, data: dict) -> None:
         return
     TRANSCRIPT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     # Never persist media paths (temporary files), cookies, or analyzer logs.
-    payload = {'identity': identity, 'data': {key: data[key] for key in ('transcript', '_resolved_title') if key in data},
+    payload = {'identity': identity, 'data': {key: data[key] for key in ('transcript', '_resolved_title', 'transcript_source') if key in data},
                'verified_at': datetime.now(timezone(timedelta(hours=8))).isoformat()}
     fd, name = tempfile.mkstemp(prefix='transcript-', suffix='.tmp', dir=TRANSCRIPT_CACHE_DIR)
     path = Path(name)
@@ -673,6 +727,9 @@ def extract_video_info(video: dict) -> dict:
         "title": display_title,
         "url": video['url'],
         "transcript": transcript,
+        "transcript_source": data.get("transcript_source", ""),
+        "transcript_cache_hit": bool(data.get("transcript_cache_hit")),
+        "original_transcript_source": data.get("original_transcript_source", ""),
         "fallback_text": fallback_text,
         "summary": summary,
         "symbols": symbols,

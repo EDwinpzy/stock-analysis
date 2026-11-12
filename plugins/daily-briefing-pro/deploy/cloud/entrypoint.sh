@@ -32,11 +32,11 @@ if [ -z "${HITHINK_FINANCE_API_KEY:-}" ]; then
     fi
 fi
 
-# The image carries the small Whisper checkpoint; the named home volume does
-# not. Copy it once so local transcription works before any download.
-if [ -d /opt/whisper-cache/whisper ] && [ ! -e /runtime/home/.cache/whisper ]; then
+# The image carries the faster-whisper CTranslate2 model; the named home
+# volume does not. Copy it once so the first video does not need a download.
+if [ -d /opt/faster-whisper-cache ] && [ ! -e /runtime/home/.cache/faster-whisper ]; then
     mkdir -p /runtime/home/.cache
-    cp -a /opt/whisper-cache/whisper /runtime/home/.cache/whisper
+    cp -a /opt/faster-whisper-cache /runtime/home/.cache/faster-whisper
 fi
 
 model_template=/opt/daily-briefing-pro/models/sw_rotation_model

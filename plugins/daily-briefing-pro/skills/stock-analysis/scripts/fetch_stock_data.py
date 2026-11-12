@@ -1588,6 +1588,10 @@ def main():
                     result["holders_error"] = getattr(ths, "holders_error", "")
                     result["peers_source"] = getattr(ths, "peers_source", "")
                     result["peers_error"] = getattr(ths, "peers_error", "")
+                    result["peers_expected_count"] = int(
+                        getattr(ths, "peers_expected_count", 0) or 0
+                    )
+                    result["peers_scope"] = getattr(ths, "peers_scope", "")
                     result["quote_fill_sources"] = list(
                         getattr(ths, "quote_fill_sources", []) or []
                     )

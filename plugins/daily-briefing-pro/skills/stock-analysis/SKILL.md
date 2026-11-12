@@ -43,7 +43,7 @@ python {skill_dir}/scripts/fetch_stock_data.py {股票名称或代码} \
 
 脚本输出JSON文件路径到stdout最后一行。读取JSON获取全部数据（行情/财务/同业/股东/大单/新闻/产品/筹码/博主/壁垒/研报）。
 
-`cloud_cli.py stock-report` / `stock` 会强制使用 `--source cloud`：证券检索、新闻和公告来自**同花顺扶摇 REST**；实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总来自**官方问财 OpenAPI**。第一次云端运行可加 `--preflight` 检查证券解析和两个数据通道；必须注入 `FUYAO_API_KEY` 与 `IWENCAI_API_KEY`（也接受兼容的 `HITHINK_FINANCE_API_KEY` / `WENCAI_API_KEY`），缺少任一凭据即失败，绝不回退到游客账号或伪造数据。输出目录必须可写，不要写安装包目录。
+`cloud_cli.py stock-report` / `stock` 会强制使用 `--source cloud`：证券检索、新闻和公告来自**同花顺扶摇 REST**；实时行情、财务、估值、同业、股东、产品、筹码、壁垒与大单日汇总优先来自**官方问财 OpenAPI**。第一次云端运行可加 `--preflight` 检查证券解析和数据通道；`FUYAO_API_KEY`（也接受兼容的 `HITHINK_FINANCE_API_KEY`）必需，`IWENCAI_API_KEY` 可选；问财缺失或额度耗尽时由东方财富、腾讯和同花顺补数，并在 JSON/报告标明降级来源，绝不回退到游客账号或伪造数据。输出目录必须可写，不要写安装包目录。
 
 本地兼容路径保留 `--source ths`（`thsdk`），仅用于有固定 `THS_USERNAME`、`THS_PASSWORD`、`THS_MAC` 的本机环境；它不属于云端交付链路。云端大单数据只有官方问财返回的**当日买入/卖出汇总**，报告会标记为“大单日汇总（非逐笔）”，不会冒充逐笔成交。
 

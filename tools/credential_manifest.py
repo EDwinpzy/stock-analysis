@@ -388,8 +388,12 @@ def apply_github_state(
     if not secret:
         return
     if secret not in github_names:
-        result["state"] = "fail"
-        result["detail"] = f"{result['detail']}；GitHub Secret {secret} 缺失"
+        required = bool(result.get("required"))
+        result["state"] = "fail" if required else (
+            "warn" if result.get("state") == "ok" else "optional"
+        )
+        suffix = "缺失" if required else "缺失（可选）"
+        result["detail"] = f"{result['detail']}；GitHub Secret {secret} {suffix}"
         return
     result["detail"] = f"{result['detail']}；GitHub Secret 已存在"
 

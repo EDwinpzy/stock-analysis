@@ -60,6 +60,10 @@ EASTMONEY_BUSINESS_ANALYSIS_URL = (
     "https://emweb.securities.eastmoney.com/PC_HSF10/"
     "BusinessAnalysis/PageAjax"
 )
+EASTMONEY_BONUS_URL = (
+    "https://emweb.securities.eastmoney.com/PC_HSF10/"
+    "BonusFinancing/PageAjax"
+)
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
 EASTMONEY_STOCK_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 TENCENT_QUOTE_URL = "https://qt.gtimg.cn/q="
@@ -581,6 +585,21 @@ def _apply_tencent_quote_fallback(
     return filled
 
 
+def _fill_missing_dividend_yields(stocks: list[dict[str, Any]]) -> None:
+    """Recalculate dividend yields after a quote fallback supplies the price."""
+
+    for stock in stocks:
+        if stock.get("dividend_yield") is not None:
+            continue
+        price = _number(stock.get("price"))
+        if price is None:
+            continue
+        stock["dividend_yield"] = _eastmoney_dividend_yield(
+            str(stock.get("ticker") or ""),
+            price,
+        )
+
+
 def _eastmoney_annual_reports(code: str) -> dict[int, dict[str, Any]]:
     """Return disclosed annual reports keyed by report year."""
 
@@ -614,7 +633,267 @@ def _eastmoney_annual_financials(code: str, target_year: int) -> dict[str, Any]:
     eligible = [year for year in annual if year <= target_year]
     selected_year = max(eligible or annual)
     selected = annual[selected_year]
+    try:
+        income = _eastmoney_income_reports(code).get(selected_year) or {}
+    except Exception:
+        income = {}
+    if income:
+        selected = {**selected}
+        # Eastmoney's ZYZBAjaxNew field TOTALOPERATEREVE is total operating
+        # revenue (营业总收入), while the local/Wencai report uses operating
+        # revenue (营业收入). Prefer the income statement field so the same
+        # label carries the same accounting definition on both sides.
+        if income.get("OPERATE_INCOME") is not None:
+            selected["TOTALOPERATEREVE"] = income["OPERATE_INCOME"]
+        if income.get("OPERATE_INCOME_YOY") is not None:
+            selected["TOTALOPERATEREVETZ"] = income["OPERATE_INCOME_YOY"]
+        if income.get("PARENT_NETPROFIT") is not None:
+            selected["PARENTNETPROFIT"] = income["PARENT_NETPROFIT"]
+        if income.get("PARENT_NETPROFIT_YOY") is not None:
+            selected["PARENTNETPROFITTZ"] = income["PARENT_NETPROFIT_YOY"]
+        selected["_INCOME_STATEMENT"] = income
     return {**selected, "_SELECTED_REPORT_YEAR": selected_year}
+
+
+def _eastmoney_income_reports(code: str) -> dict[int, dict[str, Any]]:
+    """Return annual income statement rows keyed by report year."""
+
+    prefix = _eastmoney_market_prefix(code)
+    params = {
+        "source": "HSF10",
+        "client": "PC",
+        "reportName": "RPT_F10_FINANCE_GINCOME",
+        "columns": "ALL",
+        "filter": f'(SECUCODE="{code}.{prefix}")(REPORT_TYPE="年报")',
+        "pageNumber": 1,
+        "pageSize": 12,
+        "sortColumns": "REPORT_DATE",
+        "sortTypes": "-1",
+    }
+    payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_DATACENTER_URL}?{urlencode(params)}"
+    )
+    rows = [
+        dict(item)
+        for item in (((payload or {}).get("result") or {}).get("data") or [])
+        if isinstance(item, dict)
+    ]
+    annual: dict[int, dict[str, Any]] = {}
+    for item in rows:
+        date = _text(item.get("REPORT_DATE"))
+        report_year = date[:4]
+        if report_year.isdigit() and date.startswith(report_year + "-12-31"):
+            annual[int(report_year)] = item
+    return annual
+
+
+def _eastmoney_main_business(code: str) -> dict[str, str]:
+    """Return disclosed product names for one security from the F10 page."""
+
+    if not code:
+        return {}
+    prefix = _eastmoney_market_prefix(code)
+    try:
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_BUSINESS_ANALYSIS_URL}?code={prefix}{code}"
+        )
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    rows = [
+        dict(item)
+        for item in payload.get("zygcfx") or []
+        if isinstance(item, dict) and _text(item.get("ITEM_NAME"))
+    ]
+    if rows:
+        latest = max(
+            (_date_key(item.get("REPORT_DATE")) for item in rows),
+            default="",
+        )
+        if latest:
+            rows = [
+                item
+                for item in rows
+                if _date_key(item.get("REPORT_DATE")) == latest
+            ]
+        products = [item for item in rows if _text(item.get("MAINOP_TYPE")) == "2"]
+        if not products:
+            products = rows
+        products.sort(
+            key=lambda item: _number(item.get("MBI_RATIO")) or -1,
+            reverse=True,
+        )
+        names: list[str] = []
+        for item in products:
+            name = _text(item.get("ITEM_NAME"))
+            if name and name not in names:
+                names.append(name)
+        if names:
+            return {
+                "main_business": "||".join(names[:20]),
+                "period": latest,
+            }
+    scope_rows = payload.get("zyfw") or []
+    if isinstance(scope_rows, dict):
+        scope_rows = [scope_rows]
+    scope = next(
+        (
+            _text(item.get("BUSINESS_SCOPE"))
+            for item in scope_rows
+            if isinstance(item, dict) and _text(item.get("BUSINESS_SCOPE"))
+        ),
+        "",
+    )
+    if scope:
+        return {"main_business": scope[:600], "period": "经营范围"}
+    return {}
+
+
+def _eastmoney_dividend_yield(code: str, price: float | None) -> float | None:
+    """Compute a trailing-12-month cash dividend yield from F10 disclosures."""
+
+    if not code or price is None or price <= 0:
+        return None
+    prefix = _eastmoney_market_prefix(code)
+    try:
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_BONUS_URL}?code={prefix}{code}"
+        )
+    except Exception:
+        return None
+    rows = payload.get("fhyx") if isinstance(payload, dict) else None
+    if not isinstance(rows, list):
+        return None
+    cutoff = datetime.now(CN_TZ) - timedelta(days=370)
+    total_per_share = 0.0
+    found = False
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        if "实施方案" not in _text(item.get("ASSIGN_PROGRESS")):
+            continue
+        date_text = _text(item.get("EX_DIVIDEND_DATE")) or _text(
+            item.get("NOTICE_DATE")
+        )
+        try:
+            event_date = datetime.strptime(date_text[:10], "%Y-%m-%d").replace(
+                tzinfo=CN_TZ
+            )
+        except ValueError:
+            continue
+        if event_date < cutoff:
+            continue
+        match = re.search(
+            r"10\s*派\s*([0-9]+(?:\.[0-9]+)?)\s*元",
+            _text(item.get("IMPL_PLAN_PROFILE")),
+        )
+        if not match:
+            continue
+        total_per_share += float(match.group(1)) / 10.0
+        found = True
+    if not found:
+        return 0.0
+    return round(total_per_share / price * 100.0, 4)
+
+
+_EASTMONEY_INDUSTRY_BOARD_CACHE: dict[str, str] | None = None
+
+
+def _eastmoney_industry_boards() -> dict[str, str]:
+    """Return the Eastmoney industry-board code map keyed by display name."""
+
+    global _EASTMONEY_INDUSTRY_BOARD_CACHE
+    if _EASTMONEY_INDUSTRY_BOARD_CACHE is not None:
+        return _EASTMONEY_INDUSTRY_BOARD_CACHE
+    boards: dict[str, str] = {}
+    page = 1
+    while page <= 8:
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_SECTOR_LIST_URL}?pn={page}&pz=100&po=1&np=1"
+            "&fltt=2&invt=2&fid=f3&fs=m:90+t:2&fields=f12,f14"
+        )
+        data = (payload or {}).get("data") or {}
+        rows = [item for item in data.get("diff") or [] if isinstance(item, dict)]
+        if not rows:
+            break
+        for item in rows:
+            code = _text(item.get("f12"))
+            name = _normalize_name(item.get("f14"))
+            if code and name:
+                boards.setdefault(name, code)
+        total = int(_number(data.get("total")) or 0)
+        if total and page * 100 >= total:
+            break
+        if len(rows) < 100:
+            break
+        page += 1
+    _EASTMONEY_INDUSTRY_BOARD_CACHE = boards
+    return boards
+
+
+def _eastmoney_industry_name(code: str) -> str:
+    """Return the Eastmoney industry label for one security."""
+
+    if not code:
+        return ""
+    payload = _fetch_eastmoney_json(
+        f"{EASTMONEY_QUOTE_URL}?fltt=2&invt=2&fields=f12,f14,f100"
+        f"&secids={_eastmoney_secid(code)}",
+        referer=EASTMONEY_QUOTE_REFERER,
+    )
+    rows = ((payload or {}).get("data") or {}).get("diff") or []
+    for item in rows:
+        if isinstance(item, dict) and _text(item.get("f12"))[-6:] == code[-6:]:
+            return _normalize_name(item.get("f100"))
+    return ""
+
+
+def _eastmoney_industry_members(industry_name: str) -> list[dict[str, Any]]:
+    """Return all A-share members of one Eastmoney industry board."""
+
+    normalized = _normalize_name(industry_name)
+    if not normalized:
+        return []
+    board = _eastmoney_industry_boards().get(normalized)
+    if not board:
+        return []
+    fields = (
+        "f2,f3,f9,f12,f14,f20,f21,f23,f25,"
+        "f37,f40,f41,f45,f46,f49,f100"
+    )
+    members: list[dict[str, Any]] = []
+    page = 1
+    while page <= 5:
+        payload = _fetch_eastmoney_json(
+            f"{EASTMONEY_SECTOR_LIST_URL}?pn={page}&pz=100&po=1&np=1"
+            f"&fltt=2&invt=2&fid=f20&fs=b:{board}&fields={fields}",
+            referer=EASTMONEY_QUOTE_REFERER,
+        )
+        data = (payload or {}).get("data") or {}
+        rows = [item for item in data.get("diff") or [] if isinstance(item, dict)]
+        if not rows:
+            break
+        for item in rows:
+            code = _text(item.get("f12"))
+            if not re.fullmatch(r"(?:60|68|00|30)\d{4}", code):
+                continue
+            row_industry = _normalize_name(item.get("f100"))
+            if row_industry and row_industry != normalized:
+                continue
+            members.append(item)
+        total = int(_number(data.get("total")) or 0)
+        if total and page * 100 >= total:
+            break
+        if len(rows) < 100:
+            break
+        page += 1
+    unique: dict[str, dict[str, Any]] = {}
+    for item in members:
+        code = _text(item.get("f12"))
+        if code and code not in unique:
+            unique[code] = item
+    return list(unique.values())
 
 
 def _eastmoney_sector_board(keyword: str) -> dict[str, str]:
@@ -1091,6 +1370,8 @@ class CloudStockAdapter:
         self.holders_error = ""
         self.peers_source = ""
         self.peers_error = ""
+        self.peers_expected_count = 0
+        self.peers_scope = ""
         self.finance_source = ""
         self.finance_error = ""
         self.quote_source = ""
@@ -1700,6 +1981,10 @@ class CloudStockAdapter:
         except Exception as exc:
             self.finance_error = f"东方财富年度财务兜底请求失败：{exc}"
             return {}
+        try:
+            income = _eastmoney_income_reports(self._stock_code)
+        except Exception:
+            income = {}
 
         output: dict[str, Any] = {}
         fields = (
@@ -1713,9 +1998,14 @@ class CloudStockAdapter:
             ("归母净利润同比增长率", "PARENTNETPROFITTZ"),
         )
         for year in years:
-            report = annual.get(year)
+            report = dict(annual.get(year) or {})
             if not report:
                 continue
+            income_report = income.get(year) or {}
+            if income_report.get("OPERATE_INCOME") is not None:
+                report["TOTALOPERATEREVE"] = income_report["OPERATE_INCOME"]
+            if income_report.get("OPERATE_INCOME_YOY") is not None:
+                report["TOTALOPERATEREVETZ"] = income_report["OPERATE_INCOME_YOY"]
             for label, field in fields:
                 value = _number(report.get(field))
                 if value is not None:
@@ -2061,35 +2351,114 @@ class CloudStockAdapter:
         if not result.df.empty:
             self.peers_source = "wencai"
             self.peers_error = ""
+            self.peers_expected_count = 0
+            self.peers_scope = ""
             return result
 
         self.peers_error = result.error or "问财未返回同业数据"
         fallback = self._eastmoney_peers_frame()
+        if (
+            fallback.df.empty
+            or str(getattr(fallback, "scope", "")) == "eastmoney_f10_sample"
+        ):
+            fuyao_fallback = self._fuyao_peers_frame(query)
+            if not fuyao_fallback.df.empty:
+                fallback = fuyao_fallback
         if not fallback.df.empty:
-            self.peers_source = "eastmoney"
+            self.peers_source = str(
+                getattr(fallback, "source", "") or "eastmoney"
+            )
             self.peers_error = ""
+            self.peers_expected_count = int(
+                getattr(fallback, "expected_count", 0) or 0
+            )
+            self.peers_scope = str(getattr(fallback, "scope", "") or "")
             return fallback
 
         self.peers_source = ""
+        self.peers_expected_count = 0
+        self.peers_scope = ""
         self.peers_error = "; ".join(
             item for item in (self.peers_error, fallback.error) if item
         )
         return _empty(self.peers_error)
+
+    def _fuyao_peers_frame(self, query: str) -> SimpleNamespace:
+        """Build a full board from Fuyao membership when Eastmoney push2 is down."""
+
+        match = re.match(r"\s*([^，,]+?)(?:行业)?[，,]", query)
+        industry_name = match.group(1).strip() if match else ""
+        industry_name = re.sub(r"(?:行业|概念)$", "", industry_name).strip()
+        if not industry_name or self.market is None:
+            return _empty("无法从同业查询中确定扶摇板块名称")
+        try:
+            payload = self.market.sector(industry_name)
+        except Exception as exc:
+            return _empty(f"扶摇板块成员请求失败：{exc}")
+        members: list[dict[str, Any]] = []
+        for item in payload.get("members") or []:
+            if not isinstance(item, dict):
+                continue
+            code = _text(item.get("ticker"))
+            if not re.fullmatch(r"\d{6}", code):
+                code = re.search(
+                    r"(\d{6})",
+                    _text(item.get("thscode")),
+                ).group(1) if re.search(r"(\d{6})", _text(item.get("thscode"))) else ""
+            if not re.fullmatch(r"\d{6}", code):
+                continue
+            name = re.sub(r"\s+", "", _text(item.get("name")))
+            if not name:
+                continue
+            members.append({"f12": code, "f14": name})
+        if not members:
+            return _empty(f"扶摇板块 {industry_name} 未返回成分股")
+        frame = self._eastmoney_peers_frame_from_board(members, industry_name)
+        if not frame.df.empty:
+            frame.source = "fuyao"
+            frame.scope = industry_name
+            frame.expected_count = len(members)
+        return frame
 
     def _eastmoney_peers_frame(self) -> SimpleNamespace:
         """Build the peer table from public F10 discovery and quote snapshots."""
 
         if not self._stock_code:
             return _empty("东方财富同业兜底缺少股票代码")
+        board_error = ""
+        try:
+            industry_name = _eastmoney_industry_name(self._stock_code)
+            board_members = (
+                _eastmoney_industry_members(industry_name)
+                if industry_name
+                else []
+            )
+        except Exception as exc:
+            industry_name = ""
+            board_members = []
+            board_error = f"东方财富行业板块请求失败：{exc}"
+        if board_members:
+            board_frame = self._eastmoney_peers_frame_from_board(
+                board_members,
+                industry_name,
+            )
+            if not board_frame.df.empty:
+                return board_frame
         prefix = _eastmoney_market_prefix(self._stock_code)
         try:
             payload = _fetch_eastmoney_json(
                 f"{EASTMONEY_INDUSTRY_URL}?code={prefix}{self._stock_code}"
             )
         except Exception as exc:
-            return _empty(f"东方财富同业名单请求失败：{exc}")
+            detail = f"东方财富同业名单请求失败：{exc}"
+            if board_error:
+                detail = f"{board_error}；{detail}"
+            return _empty(detail)
         if not isinstance(payload, dict):
-            return _empty("东方财富同业名单返回结构无效")
+            detail = "东方财富同业名单返回结构无效"
+            if board_error:
+                detail = f"{board_error}；{detail}"
+            return _empty(detail)
 
         def index_rows(key: str) -> dict[str, dict[str, Any]]:
             indexed: dict[str, dict[str, Any]] = {}
@@ -2275,7 +2644,141 @@ class CloudStockAdapter:
             ),
             reverse=True,
         )
-        return SimpleNamespace(df=pd.DataFrame(rows), error="", source="eastmoney")
+        return SimpleNamespace(
+            df=pd.DataFrame(rows),
+            error="",
+            source="eastmoney",
+            expected_count=0,
+            scope="eastmoney_f10_sample",
+        )
+
+    def _eastmoney_peers_frame_from_board(
+        self,
+        members: list[dict[str, Any]],
+        industry_name: str,
+    ) -> SimpleNamespace:
+        """Build a full-industry peer table from board membership and F10."""
+
+        codes: list[str] = []
+        names: dict[str, str] = {}
+        for item in members:
+            code = _text(item.get("f12"))
+            if not re.fullmatch(r"\d{6}", code):
+                continue
+            if code not in codes:
+                codes.append(code)
+            name = re.sub(r"\s+", "", _text(item.get("f14")))
+            if name:
+                names[code] = name
+        if self._stock_code and self._stock_code not in codes:
+            codes.insert(0, self._stock_code)
+        if not codes:
+            return _empty("东方财富行业板块未返回同业股票代码")
+        try:
+            quotes = _eastmoney_quote_snapshot(codes)
+        except Exception as exc:
+            quotes = {}
+            quote_error = str(exc)
+        else:
+            quote_error = ""
+        try:
+            tencent_quotes = _tencent_quote_snapshot(codes)
+        except Exception:
+            tencent_quotes = {}
+
+        target_year = max(1, datetime.now(CN_TZ).year - 1)
+        rows: list[dict[str, Any]] = []
+        errors: list[str] = []
+        for code in codes:
+            quote = quotes.get(code) or {}
+            tencent = tencent_quotes.get(code) or {}
+            name = re.sub(
+                r"\s+",
+                "",
+                _coalesce(
+                    _text(quote.get("f14")),
+                    names.get(code),
+                    "",
+                ),
+            )
+            if not name:
+                continue
+            try:
+                annual = _eastmoney_annual_financials(code, target_year)
+            except Exception as exc:
+                annual = {}
+                errors.append(f"{code} 年度财务请求失败：{exc}")
+            price = _coalesce(
+                _number(quote.get("f2")),
+                _number(tencent.get("price")),
+            )
+            revenue = _number(annual.get("TOTALOPERATEREVE"))
+            profit = _number(annual.get("PARENTNETPROFIT"))
+            net_margin = _number(annual.get("XSJLL"))
+            if net_margin is None and profit is not None and revenue not in (None, 0):
+                net_margin = profit / revenue * 100
+            row = {
+                "股票代码": f"{code}.{_eastmoney_market_prefix(code)}",
+                "股票简称": name,
+                "市盈率(pe)": _coalesce(
+                    _number(quote.get("f9")),
+                    _number(tencent.get("pe")),
+                ),
+                "市净率(pb)": _coalesce(
+                    _number(quote.get("f23")),
+                    _number(tencent.get("pb")),
+                ),
+                "总市值": _coalesce(
+                    _number(quote.get("f20")),
+                    _number(tencent.get("market_cap")),
+                ),
+                "流通市值": _coalesce(
+                    _number(quote.get("f21")),
+                    _number(tencent.get("circulating_cap")),
+                ),
+                "净资产收益率": _number(annual.get("ROEJQ")),
+                "营业收入": revenue,
+                "净利润": profit,
+                "销售毛利率": _number(annual.get("XSMLL")),
+                "销售净利率": net_margin,
+                "营业收入同比": _number(annual.get("TOTALOPERATEREVETZ")),
+                "净利润同比": _number(annual.get("PARENTNETPROFITTZ")),
+                "股息率": _eastmoney_dividend_yield(code, price),
+                "最新价": price,
+                "最新涨跌幅": _coalesce(
+                    _number(quote.get("f3")),
+                    _number(tencent.get("change_pct")),
+                ),
+                "所属行业": industry_name,
+                "数据来源": "东方财富行业板块/行情/年报",
+            }
+            rows.append(
+                {
+                    key: value
+                    for key, value in row.items()
+                    if value not in (None, "")
+                }
+            )
+        if not rows:
+            detail = "；".join(errors[:2]) or quote_error
+            return _empty(
+                "东方财富行业板块未返回同业行情数据"
+                + (f"（{detail}）" if detail else "")
+            )
+        rows.sort(
+            key=lambda row: (
+                _number(row.get("总市值")) or 0,
+                _text(row.get("股票代码")),
+            ),
+            reverse=True,
+        )
+        return SimpleNamespace(
+            df=pd.DataFrame(rows),
+            error="",
+            source="eastmoney",
+            expected_count=len(rows),
+            scope=industry_name,
+        )
 
     def _concentration_frame(self) -> SimpleNamespace:
         query = (
@@ -3409,8 +3912,12 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 "净利润同比增长率",
             ),
             "ytd_change": pick_metric(row, "年初至今涨跌幅", "年涨跌幅"),
+            "dividend_yield": pick_metric(row, "年度股息率", "股息率"),
         }
-        return [name for name, value in values.items() if value is None]
+        missing = [name for name, value in values.items() if value is None]
+        if _is_missing(_join(_first(row, "主营产品", "主营业务"), "||")):
+            missing.append("main_business")
+        return missing
 
     fallback_codes: list[str] = []
     for member in members:
@@ -3440,8 +3947,10 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 annual = _eastmoney_annual_financials(code, year)
             except Exception as exc:
                 fallback_errors.append(f"{code} 年度财务请求失败：{exc}")
+            business = _eastmoney_main_business(code)
+            price = _number(quote.get("f2"))
             values = {
-                "price": _number(quote.get("f2")),
+                "price": price,
                 "change_pct": _number(quote.get("f3")),
                 "pe": _number(quote.get("f9")),
                 "pb": _number(quote.get("f23")),
@@ -3454,12 +3963,19 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 "roe": _number(annual.get("ROEJQ")),
                 "revenue_yoy": _number(annual.get("TOTALOPERATEREVETZ")),
                 "profit_yoy": _number(annual.get("PARENTNETPROFITTZ")),
+                "dividend_yield": _eastmoney_dividend_yield(code, price),
+                "main_business": business.get("main_business", ""),
             }
-            values = {key: value for key, value in values.items() if value is not None}
+            values = {
+                key: value
+                for key, value in values.items()
+                if value not in (None, "")
+            }
             if values:
                 values["raw"] = {
                     "annual": annual,
                     "quote": quote,
+                    "business": business,
                 }
                 fallback[code] = values
         if fallback:
@@ -3532,7 +4048,10 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 _number(_first(row, "最新市净率", "市净率")),
                 fallback_row.get("pb"),
             ),
-            "dividend_yield": _number(_first_priority(row, "年度股息率", "股息率")),
+            "dividend_yield": _coalesce(
+                _number(_first_priority(row, "年度股息率", "股息率")),
+                fallback_row.get("dividend_yield"),
+            ),
             "market_cap": market_cap,
             "revenue": revenue,
             "net_profit": profit,
@@ -3582,7 +4101,10 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 fallback_row.get("ytd_change"),
             ),
             "industry": _join(_first(row, "所属同花顺行业")) or sector_name,
-            "main_business": _join(_first(row, "主营产品", "主营业务"), "||"),
+            "main_business": (
+                _join(_first(row, "主营产品", "主营业务"), "||")
+                or fallback_row.get("main_business", "")
+            ),
             "raw": {key: _json_value(value) for key, value in row.items()},
         }
         if fallback_row:
@@ -3624,6 +4146,11 @@ def collect_industry_cloud(keyword: str, limit: int = 15) -> dict[str, Any]:
                 warnings.append(
                     "东方财富行情不完整，已使用腾讯行情补齐估值、总市值与年内涨幅"
                 )
+
+    # Dividend yield depends on price. Recalculate after quote fallbacks so a
+    # successful Tencent fill is not discarded merely because Eastmoney's
+    # batch quote was unavailable.
+    _fill_missing_dividend_yields(stocks)
 
     snapshot = {
         str(key): value

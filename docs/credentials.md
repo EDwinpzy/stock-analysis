@@ -82,6 +82,7 @@ Node 代理继承，Compose 镜像标签，以及 Linux 小写代理变量。完
 - 本机配置已经包含两组 Relay 变量；它们当前使用同一个 Key，避免只改一边造成不一致。
 - 淘股吧 Cookie 在 2026-11-13 13:27（北京时间）前后过期，属于近期必须替换项。
 - 抖音 Cookie 没有 `sessionid`，当前只能按公开页模式运行；文本 AI 与音频 ASR 必须分开配置。
+- 用户提供的百度 Cookie（`BDUSS`、`BAIDUID_BFESS`、`BAIDU_WISE_UID` 等）未被本项目任何采集链路读取，因此不纳入可执行清单；不要把它们混入淘股吧、抖音或雪球 Cookie 文件。
 - `DOUYIN_AI_BASE_URL`、`DOUYIN_AI_API_KEY`、`DOUYIN_AI_MODEL` 是代码未读取的旧变量，保留只会造成漂移。
 - 文本 AI Relay 不支持 `/audio/transcriptions`；`DOUYIN_ASR_*` 必须指向真正的音频接口。
 - 问财现在不是启动硬依赖；无 Key 或额度耗尽时，报告会使用东方财富、腾讯和同花顺补数并标明来源。

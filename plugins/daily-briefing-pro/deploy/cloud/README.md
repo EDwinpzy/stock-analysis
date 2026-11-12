@@ -192,7 +192,7 @@ endpoint. Because the container is limited to 1.5 CPU and 2GB memory,
 preflight warns when no audio service is configured. The warning does not
 bypass the real-transcription requirement or allow title-only substitutes.
 
-The image bakes the `small` Whisper checkpoint into `/opt/whisper-cache`; the
+The image bakes the `small` faster-whisper CTranslate2 checkpoint into `/opt/faster-whisper-cache`; the
 entrypoint copies it into the named runtime home on first start. This removes
 the build-time-only download gap that previously made the first cloud video
 transcription fail or take many minutes.
@@ -245,13 +245,14 @@ sudo docker compose -f compose.yaml run --rm briefing python ../stock-emotion-pa
 `stock-report` and `industry-report` are the delivery entry points. They invoke the portable collector, build the HTML, and run the same section/table/source-fact gate used locally. A non-zero exit means the report must not be delivered. The collector JSON and report are written below the mounted `/runtime` directories; `work/` and local runtime snapshots are intentionally excluded from Git.
 
 The cloud report path is deliberately deterministic: `stock-report` and
-`industry-report` force `--source cloud`. Financial and valuation fields must
-come from the official iWencai response, while quotes, sector membership,
-news and holder snapshots come from Fuyao REST. The builder rejects missing
-sections and empty tables, and the verifier rejects `暂无`, `UNSOURCED` and
-`NaN` placeholders in required data. Use `doctor --probe` before the first
-live run to verify both channels. A guest `thsdk` probe is not sufficient for
-report delivery.
+`industry-report` force `--source cloud`. When the official iWencai channel is
+available it supplies financial and valuation fields; when its key or quota is
+unavailable, the collector falls back to Eastmoney/Tencent and labels the
+source instead of inventing a value. Quotes, sector membership, news and
+holder snapshots use Fuyao REST or the documented fallback. The builder rejects
+missing sections and empty tables, and the verifier rejects `暂无`,
+`UNSOURCED` and `NaN` placeholders in required data. Use `doctor --probe`
+before the first live run to verify the configured channels.
 
 ## Portable command boundary
 
@@ -369,4 +370,18 @@ sudo docker compose -f compose.yaml run --rm briefing \
 
 The Fuyao REST contract uses `600519.SH`; `thsdk` uses `USHA600519`. The CLI accepts either and keeps `vendor_thscode` in its output. Cloud K-lines are daily only; `trend` and `tick` are available through `thsdk` (`--mode ths` or `auto`) but the public Fuyao REST channel has no corresponding endpoint. `capital-flow` is `ths`-only because the public Fuyao endpoint is marked `client-only`; the CLI fails explicitly instead of substituting another metric. For stock/industry report schedulers, set `DAILY_BRIEFING_DATA_DIR`, `BRIEFING_OUTPUT_DIR`, `FUYAO_API_KEY` and `IWENCAI_API_KEY`; THS account variables are only needed for the `thsdk` compatibility channel.
 
-The installed skill documents remain in `/opt/daily-briefing-pro/skills/`. Workflows that require an LLM to interpret fetched data continue to be orchestrated by the cloud agent; this container supplies their Python, Node, browser, and data-source runtime.
+The installed skill documents remain in `/opt/daily-briefing-pro/skills/`.
+`briefing --scheduled` runs the complete daily pipeline in the container. The
+OpenAI-compatible Relay is used only for textual semantic summaries; it is not
+an audio transcription endpoint. Audio must come from one of these real
+paths:
+
+- a native Douyin subtitle, when the video actually exposes one;
+- `faster-whisper` / CTranslate2 CPU `int8` in the image, or the compatible
+  `openai-whisper` fallback;
+- an explicitly configured OpenAI-compatible audio ASR, Groq, OpenAI, or
+  SiliconFlow endpoint.
+
+The pipeline never treats a title, hashtags, or a replay fixture as a
+transcript. If no real audio transcript is available, the run is reported as
+incomplete or fails its gate rather than producing a substitute briefing.

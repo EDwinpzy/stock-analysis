@@ -230,6 +230,20 @@ def test_secret_is_masked_in_audit_output_and_alias_is_supported():
     assert cm.fingerprint("super-secret-value") in result["detail"]
 
 
+def test_optional_missing_github_secret_is_not_a_failure():
+    result = {
+        "state": "ok",
+        "detail": "云端 ASR 已配置",
+        "github_secret": "DOUYIN_ASR_API_KEY",
+        "required": False,
+    }
+
+    cm.apply_github_state(result, set())
+
+    assert result["state"] == "warn"
+    assert "缺失（可选）" in result["detail"]
+
+
 def test_cookie_github_payload_round_trips(tmp_path):
     path = tmp_path / "cookie.json"
     _write_cookies(path, "2026-11-13T05:27:54.588Z")

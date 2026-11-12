@@ -90,16 +90,19 @@ class CloudDeployContractTests(unittest.TestCase):
                 self.assertIn("amd64", source)
                 self.assertIn("MiniRacer", source)
 
-    def test_cloud_runtime_pins_available_cpu_torch_build(self):
+    def test_cloud_runtime_bakes_faster_whisper_without_torch(self):
         dockerfile = (DEPLOY_ROOT / "Dockerfile").read_text(encoding="utf-8")
         bootstrap = (DEPLOY_ROOT / "codex-cloud-bootstrap.sh").read_text(encoding="utf-8")
+        requirements = (DEPLOY_ROOT / "requirements-cloud.txt").read_text(encoding="utf-8")
 
         for source in (dockerfile, bootstrap):
             with self.subTest(source=source.splitlines()[0]):
-                self.assertIn('"torch==2.7.0+cpu"', source)
-                self.assertIn("https://download.pytorch.org/whl/cpu", source)
-                self.assertIn("https://pypi.org/simple", source)
-                self.assertNotIn("2.5.1", source)
+                self.assertIn("faster_whisper", source)
+                self.assertIn("small", source)
+                self.assertNotIn('"torch==2.7.0+cpu"', source)
+        self.assertIn("faster-whisper==1.2.1", requirements)
+        self.assertIn("ctranslate2==4.9.0", requirements)
+        self.assertNotIn("openai-whisper==", requirements)
 
     def test_fuyao_secret_is_created_and_loaded(self):
         init_secrets = (DEPLOY_ROOT / "init-secrets.sh").read_text(encoding="utf-8")

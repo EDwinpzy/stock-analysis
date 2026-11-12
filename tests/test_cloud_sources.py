@@ -108,6 +108,8 @@ def make_adapter(wencai, market=None, name="平安银行"):
     adapter.holders_error = ""
     adapter.peers_source = ""
     adapter.peers_error = ""
+    adapter.peers_expected_count = 0
+    adapter.peers_scope = ""
     adapter.finance_source = ""
     adapter.finance_error = ""
     adapter.quote_source = ""
@@ -700,7 +702,7 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
         assert "市盈率" in query and "市净率" in query
         return payload()
 
-    adapter = make_adapter(FakeWencai(responder), FakeMarket())
+    adapter = make_adapter(FakeWencai(responder), None)
     adapter._stock_code = "600519"
     monkeypatch.setattr(cloud_sources, "_tencent_quote_snapshot", lambda codes: {})
 
@@ -826,8 +828,308 @@ def test_peer_query_falls_back_to_eastmoney_f10_and_quotes(monkeypatch):
     assert adapter.peers_error == ""
 
 
+def test_peer_fallback_uses_full_eastmoney_industry_board(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        FakeMarket(),
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    members = [
+        {"f12": "600519", "f14": "贵州茅台", "f100": "白酒Ⅲ"},
+        {"f12": "000858", "f14": "五粮液", "f100": "白酒Ⅲ"},
+        {"f12": "000568", "f14": "泸州老窖", "f100": "白酒Ⅲ"},
+    ]
+    quotes = {
+        "600519": {
+            "f2": 1410.27,
+            "f3": 0.57,
+            "f9": 20.51,
+            "f20": 1762952579442,
+            "f21": 1762952579442,
+            "f23": 6.5,
+        },
+        "000858": {
+            "f2": 72.63,
+            "f3": 0.33,
+            "f9": 21.77,
+            "f20": 281921189403,
+            "f21": 281914317588,
+            "f23": 2.38,
+        },
+        "000568": {
+            "f2": 76.74,
+            "f3": -0.32,
+            "f9": 14.94,
+            "f20": 112953718271,
+            "f21": 112896897979,
+            "f23": 2.4,
+        },
+    }
+    annual = {
+        "600519": {
+            "TOTALOPERATEREVE": 168838102514.79,
+            "PARENTNETPROFIT": 82320067101.68,
+            "XSMLL": 91.18,
+            "XSJLL": 48.76,
+            "ROEJQ": 32.53,
+            "TOTALOPERATEREVETZ": -1.21,
+            "PARENTNETPROFITTZ": -4.53,
+        },
+        "000858": {
+            "TOTALOPERATEREVE": 40528509770.23,
+            "PARENTNETPROFIT": 8954257202.51,
+            "XSMLL": 77.54,
+            "XSJLL": 22.09,
+            "ROEJQ": 6.89,
+            "TOTALOPERATEREVETZ": -54.55,
+            "PARENTNETPROFITTZ": -71.89,
+        },
+        "000568": {
+            "TOTALOPERATEREVE": 16883810251.0,
+            "PARENTNETPROFIT": 4000000000.0,
+            "XSMLL": 86.62,
+            "XSJLL": 23.69,
+            "ROEJQ": 22.66,
+            "TOTALOPERATEREVETZ": -17.52,
+            "PARENTNETPROFITTZ": -19.61,
+        },
+    }
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_industry_name",
+        lambda code: "白酒",
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_industry_members",
+        lambda name: members,
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_quote_snapshot",
+        lambda codes: quotes,
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_annual_financials",
+        lambda code, year: annual[code],
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_dividend_yield",
+        lambda code, price: 2.5,
+    )
+    monkeypatch.setattr(cloud_sources, "_tencent_quote_snapshot", lambda codes: {})
+    monkeypatch.setattr(
+        cloud_sources,
+        "_fetch_eastmoney_json",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("IndustryAnalysis should not be needed")
+        ),
+    )
+
+    result = adapter._peers_frame("白酒行业 市盈率 市净率")
+    rows = result.df.to_dict("records")
+
+    assert len(rows) == 3
+    assert adapter.peers_source == "eastmoney"
+    assert adapter.peers_expected_count == 3
+    assert adapter.peers_scope == "白酒"
+    assert {row["股票简称"] for row in rows} == {"贵州茅台", "五粮液", "泸州老窖"}
+    assert rows[0]["所属行业"] == "白酒"
+    assert rows[0]["股息率"] == pytest.approx(2.5)
+    assert rows[0]["营业收入"] == pytest.approx(168838102514.79)
+    assert rows[0]["营业收入同比"] == pytest.approx(-1.21)
+
+
+def test_peer_fallback_uses_fuyao_board_when_eastmoney_push2_is_down(monkeypatch):
+    market = FakeMarket()
+
+    def sector(keyword):
+        assert keyword == "白酒"
+        return {
+            "sector": {"name": "白酒Ⅲ", "thscode": "881273.TI"},
+            "members": [
+                {"thscode": "SH600519", "ticker": "600519", "name": "贵州茅台"},
+                {"thscode": "SZ000858", "ticker": "000858", "name": "五粮液"},
+            ],
+        }
+
+    monkeypatch.setattr(market, "sector", sector)
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        market,
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    annual = {
+        "600519": {
+            "TOTALOPERATEREVE": 168838102514.79,
+            "PARENTNETPROFIT": 82320067101.68,
+            "XSMLL": 91.18,
+            "XSJLL": 48.76,
+            "ROEJQ": 32.53,
+            "TOTALOPERATEREVETZ": -1.21,
+            "PARENTNETPROFITTZ": -4.53,
+        },
+        "000858": {
+            "TOTALOPERATEREVE": 40528509770.23,
+            "PARENTNETPROFIT": 8954257202.51,
+            "XSMLL": 77.54,
+            "XSJLL": 22.09,
+            "ROEJQ": 6.89,
+            "TOTALOPERATEREVETZ": -54.55,
+            "PARENTNETPROFITTZ": -71.89,
+        },
+    }
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_industry_name",
+        lambda code: "白酒",
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_industry_members",
+        lambda name: [],
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_quote_snapshot",
+        lambda codes: (_ for _ in ()).throw(RuntimeError("push2 unavailable")),
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_tencent_quote_snapshot",
+        lambda codes: {
+            "600519": {
+                "price": 1410.27,
+                "pe": 20.51,
+                "pb": 6.5,
+                "market_cap": 1762952579442,
+                "circulating_cap": 1762952579442,
+                "change_pct": 0.57,
+            },
+            "000858": {
+                "price": 72.63,
+                "pe": 21.77,
+                "pb": 2.38,
+                "market_cap": 281921189403,
+                "circulating_cap": 281914317588,
+                "change_pct": 0.33,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_annual_financials",
+        lambda code, year: annual[code],
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_dividend_yield",
+        lambda code, price: 2.5,
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_fetch_eastmoney_json",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError("push2 unavailable")
+        ),
+    )
+
+    result = adapter._peers_frame(
+        "白酒行业，市盈率，总市值，市净率，净资产收益率ROE，股息率"
+    )
+    rows = result.df.to_dict("records")
+
+    assert len(rows) == 2
+    assert adapter.peers_source == "fuyao"
+    assert adapter.peers_error == ""
+    assert adapter.peers_expected_count == 2
+    assert adapter.peers_scope == "白酒"
+    assert {row["股票简称"] for row in rows} == {"贵州茅台", "五粮液"}
+    assert all(row["所属行业"] == "白酒" for row in rows)
+
+
+def test_annual_financials_prefers_operating_income_over_total_income(monkeypatch):
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_annual_reports",
+        lambda code: {
+            2025: {
+                "REPORT_DATE": "2025-12-31 00:00:00",
+                "TOTALOPERATEREVE": 172054171890.91,
+                "TOTALOPERATEREVETZ": -1.200097,
+                "PARENTNETPROFIT": 82320067101.68,
+                "PARENTNETPROFITTZ": -4.532255,
+                "ROEJQ": 32.53,
+            }
+        },
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_income_reports",
+        lambda code: {
+            2025: {
+                "OPERATE_INCOME": 168838102514.79,
+                "OPERATE_INCOME_YOY": -1.206004,
+                "PARENT_NETPROFIT": 82320067101.68,
+                "PARENT_NETPROFIT_YOY": -4.532255,
+            }
+        },
+    )
+
+    annual = cloud_sources._eastmoney_annual_financials("600519", 2025)
+
+    assert annual["TOTALOPERATEREVE"] == pytest.approx(168838102514.79)
+    assert annual["TOTALOPERATEREVETZ"] == pytest.approx(-1.206004)
+    assert annual["_SELECTED_REPORT_YEAR"] == 2025
+
+
+def test_eastmoney_finance_fallback_uses_operating_income(monkeypatch):
+    adapter = make_adapter(
+        FakeWencai(lambda skill, query, limit: payload()),
+        None,
+        name="贵州茅台",
+    )
+    adapter._stock_code = "600519"
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_annual_reports",
+        lambda code: {
+            2025: {
+                "REPORT_DATE": "2025-12-31 00:00:00",
+                "TOTALOPERATEREVE": 172054171890.91,
+                "TOTALOPERATEREVETZ": -1.200097,
+                "PARENTNETPROFIT": 82320067101.68,
+                "PARENTNETPROFITTZ": -4.532255,
+                "ROEJQ": 32.53,
+            }
+        },
+    )
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_income_reports",
+        lambda code: {
+            2025: {
+                "OPERATE_INCOME": 168838102514.79,
+                "OPERATE_INCOME_YOY": -1.206004,
+            }
+        },
+    )
+
+    fields = adapter._eastmoney_finance_fallback([2025])
+
+    assert fields["营业收入[20251231]"] == pytest.approx(168838102514.79)
+    assert fields["营业收入同比增长率[20251231]"] == pytest.approx(-1.206004)
+    assert fields["归属于母公司所有者的净利润[20251231]"] == pytest.approx(
+        82320067101.68
+    )
+
+
 def test_peer_query_fills_missing_valuation_from_tencent(monkeypatch):
-    adapter = make_adapter(FakeWencai(lambda skill, query, limit: payload()), FakeMarket())
+    adapter = make_adapter(FakeWencai(lambda skill, query, limit: payload()), None)
     adapter._stock_code = "600519"
 
     def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
@@ -1213,6 +1515,30 @@ def test_tencent_quote_fallback_only_fills_missing_fields():
     assert stocks[0]["data_sources"] == ["eastmoney", "tencent"]
 
 
+def test_dividend_yield_is_recomputed_after_tencent_price_fill(monkeypatch):
+    stocks = [
+        {"ticker": "000568", "price": 76.74, "dividend_yield": None},
+        {"ticker": "600519", "price": 1410.27, "dividend_yield": 2.5},
+    ]
+    calls = []
+
+    def dividend_yield(code, price):
+        calls.append((code, price))
+        return 4.2
+
+    monkeypatch.setattr(
+        cloud_sources,
+        "_eastmoney_dividend_yield",
+        dividend_yield,
+    )
+
+    cloud_sources._fill_missing_dividend_yields(stocks)
+
+    assert stocks[0]["dividend_yield"] == pytest.approx(4.2)
+    assert stocks[1]["dividend_yield"] == pytest.approx(2.5)
+    assert calls == [("000568", 76.74)]
+
+
 def test_industry_cloud_uses_weighted_roe_and_builds_all_domains(monkeypatch):
     market = FakeMarket()
 
@@ -1538,6 +1864,28 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
         raise AssertionError(query)
 
     def fake_json(url, *, referer="https://emweb.securities.eastmoney.com/"):
+        if "BusinessAnalysis" in url:
+            name = "茅台酒" if "600519" in url else "国窖1573"
+            return {
+                "zygcfx": [
+                    {
+                        "REPORT_DATE": "2025-12-31 00:00:00",
+                        "MAINOP_TYPE": "2",
+                        "ITEM_NAME": name,
+                        "MBI_RATIO": 0.9,
+                    }
+                ]
+            }
+        if "BonusFinancing" in url:
+            return {
+                "fhyx": [
+                    {
+                        "ASSIGN_PROGRESS": "实施方案",
+                        "EX_DIVIDEND_DATE": "2026-06-22 00:00:00",
+                        "IMPL_PLAN_PROFILE": "10派280.2423元",
+                    }
+                ]
+            }
         if "ZYZBAjaxNew" in url:
             if "600519" in url:
                 return {
@@ -1660,6 +2008,12 @@ def test_industry_cloud_falls_back_to_eastmoney_annual_financials(monkeypatch):
     assert by_code["000568"]["profit_yoy"] == pytest.approx(-20.1)
     assert by_code["000568"]["ytd_change"] == pytest.approx(-30.3)
     assert by_code["600519"]["industry"] == "白酒Ⅲ"
+    assert by_code["600519"]["dividend_yield"] == pytest.approx(
+        280.2423 / 10 / 1402.3 * 100,
+        abs=0.0001,
+    )
+    assert by_code["600519"]["main_business"] == "茅台酒"
+    assert by_code["000568"]["main_business"] == "国窖1573"
     assert result["sector_snapshot"]["5日涨幅"] == pytest.approx((129 / 124 - 1) * 100)
     assert result["sector_snapshot"]["10日涨幅"] == pytest.approx((129 / 119 - 1) * 100)
     assert result["sector_snapshot"]["20日涨幅"] == pytest.approx((129 / 109 - 1) * 100)

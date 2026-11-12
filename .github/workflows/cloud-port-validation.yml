@@ -59,6 +59,11 @@ jobs:
       DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
+      DOUYIN_TRANSCRIPT_PROVIDER: auto
+      DOUYIN_LOCAL_ASR_ENGINE: faster-whisper
+      DOUYIN_FASTER_WHISPER_COMPUTE_TYPE: int8
+      DOUYIN_WHISPER_THREADS: "2"
+      DOUYIN_WHISPER_MODEL: small
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -189,6 +194,42 @@ jobs:
             --output-dir /runtime/data/industry-analysis \
             | tee artifacts/industry-report-result.json
 
+      - name: Gate report fields and stable business parity
+        run: |
+          set -euo pipefail
+          stock_html="$(find artifacts/reports/stock -maxdepth 1 -type f -name '*.html' -print -quit)"
+          industry_html="$(find artifacts/reports/industry -maxdepth 1 -type f -name '*.html' -print -quit)"
+          test -n "$stock_html"
+          test -n "$industry_html"
+          docker run --rm \
+            --volume "$PWD/artifacts/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/data:/runtime/data:ro" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_skill_report.py \
+            "/runtime/reports/stock/$(basename "$stock_html")" \
+            --type stock \
+            --data-json /runtime/data/stock-analysis/_fetch_result_600519.json \
+            | tee artifacts/stock-field-gate.json
+          docker run --rm \
+            --volume "$PWD/artifacts/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts/data:/runtime/data:ro" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_skill_report.py \
+            "/runtime/reports/industry/$(basename "$industry_html")" \
+            --type industry \
+            --data-json /runtime/data/industry-analysis/_industry_白酒.json \
+            | tee artifacts/industry-field-gate.json
+          python plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/compare_business_parity.py \
+            --type stock \
+            --local tests/fixtures/business-baseline/stock-600519-2026-11-12.json \
+            --cloud artifacts/data/stock-analysis/_fetch_result_600519.json \
+            | tee artifacts/stock-business-parity.json
+          python plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/compare_business_parity.py \
+            --type industry \
+            --local tests/fixtures/business-baseline/industry-baijiu-2026-11-12.json \
+            --cloud artifacts/data/industry-analysis/_industry_白酒.json \
+            | tee artifacts/industry-business-parity.json
+
       - name: Generate complete reports without a Wencai key
         run: |
           set -euo pipefail
@@ -284,6 +325,85 @@ jobs:
             --shots /runtime/visuals \
             --json /runtime/visuals/industry-visual-result.json
 
+      - name: Generate the live scheduled briefing with real audio transcription
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/briefing/data artifacts/briefing/reports
+          chmod 777 artifacts/briefing/data artifacts/briefing/reports
+          set +e
+          docker run --rm \
+            --env-file "$RUNNER_TEMP/briefing.env" \
+            --volume "$RUNNER_TEMP/briefing-secrets:/run/secrets:ro" \
+            --env FUYAO_API_KEY \
+            --env DEEPSEEK_API_KEY \
+            --env DAILY_BRIEFING_AI_API_KEY \
+            --env DAILY_BRIEFING_AI_BASE_URL \
+            --env DAILY_BRIEFING_AI_MODEL \
+            --env DEEPSEEK_BASE_URL \
+            --env DEEPSEEK_MODEL \
+            --env DAILY_BRIEFING_DATA_DIR=/runtime/data \
+            --env BRIEFING_OUTPUT_DIR=/runtime/reports \
+            --env DAILY_BRIEFING_RUN_TIMEOUT=3600 \
+            --env DOUYIN_TRANSCRIPT_PROVIDER=auto \
+            --env DOUYIN_LOCAL_ASR_ENGINE=faster-whisper \
+            --env DOUYIN_FASTER_WHISPER_COMPUTE_TYPE=int8 \
+            --env DOUYIN_WHISPER_THREADS=2 \
+            --env DOUYIN_WHISPER_MODEL=small \
+            --env DOUYIN_MAX_CONCURRENT=1 \
+            --shm-size=1g \
+            --volume "$PWD/artifacts/briefing/data:/runtime/data" \
+            --volume "$PWD/artifacts/briefing/reports:/runtime/reports" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/cloud_cli.py briefing --scheduled \
+            > artifacts/briefing/run.log 2>&1
+          rc=$?
+          set -e
+          cat artifacts/briefing/run.log
+          if [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
+          if grep -q '"status": "skipped"' artifacts/briefing/run.log; then
+            echo "The scheduled run skipped; live report evidence is required" >&2
+            exit 1
+          fi
+          source_html="$(find artifacts/briefing/reports -maxdepth 1 -type f -name '*简报.html' ! -name '*报刊版*' -print -quit)"
+          broadsheet_html="$(find artifacts/briefing/reports -maxdepth 1 -type f -name '*报刊版.html' -print -quit)"
+          test -s "$source_html"
+          test -s "$broadsheet_html"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("artifacts/briefing/data")
+          douyin = json.loads((root / "douyin_today.json").read_text(encoding="utf-8"))
+          assert douyin.get("status") == "ok", douyin.get("note") or douyin
+          expected = int(douyin.get("expected_video_count") or 0)
+          transcript_count = int(douyin.get("transcript_count") or 0)
+          assert expected > 0, douyin
+          assert transcript_count == expected, (transcript_count, expected)
+          allowed_sources = {
+              "douyin_subtitle",
+              "faster-whisper",
+              "whisper",
+              "verified_video_cache",
+              "cloud-asr",
+              "groq-whisper",
+              "openai-whisper",
+              "siliconflow-sensevoice",
+          }
+          for blogger in douyin.get("bloggers", []):
+              for video in blogger.get("videos", []):
+                  assert str(video.get("transcript") or "").strip(), video.get("url")
+                  source = str(video.get("transcript_source") or "").strip()
+                  assert source in allowed_sources, (video.get("url"), source)
+          print(json.dumps({
+              "douyin_status": douyin.get("status"),
+              "expected_video_count": expected,
+              "transcript_count": transcript_count,
+              "source_briefing": str(Path("artifacts/briefing/reports")),
+          }, ensure_ascii=False, indent=2))
+          PY
+
       - name: Replay the fixed 2026-11-11 briefing
         run: |
           set -euo pipefail
@@ -331,6 +451,11 @@ jobs:
       DOUYIN_ASR_BASE_URL: ${{ secrets.DOUYIN_ASR_BASE_URL }}
       DOUYIN_ASR_API_KEY: ${{ secrets.DOUYIN_ASR_API_KEY }}
       DOUYIN_ASR_MODEL: ${{ secrets.DOUYIN_ASR_MODEL }}
+      DOUYIN_TRANSCRIPT_PROVIDER: auto
+      DOUYIN_LOCAL_ASR_ENGINE: faster-whisper
+      DOUYIN_FASTER_WHISPER_COMPUTE_TYPE: int8
+      DOUYIN_WHISPER_THREADS: "2"
+      DOUYIN_WHISPER_MODEL: small
       TGB_COOKIE_GZ_B64: ${{ secrets.TGB_COOKIE_GZ_B64 }}
       DOUYIN_COOKIE_GZ_B64: ${{ secrets.DOUYIN_COOKIE_GZ_B64 }}
       XUEQIU_COOKIE_GZ_B64: ${{ secrets.XUEQIU_COOKIE_GZ_B64 }}
@@ -460,6 +585,42 @@ jobs:
             python /opt/daily-briefing-pro/cloud_cli.py industry-report 白酒 \
             --output-dir /runtime/data/industry-analysis \
             | tee artifacts-arm64/industry-report-result.json
+
+      - name: Gate report fields and stable business parity (ARM64)
+        run: |
+          set -euo pipefail
+          stock_html="$(find artifacts-arm64/reports/stock -maxdepth 1 -type f -name '*.html' -print -quit)"
+          industry_html="$(find artifacts-arm64/reports/industry -maxdepth 1 -type f -name '*.html' -print -quit)"
+          test -n "$stock_html"
+          test -n "$industry_html"
+          docker run --rm \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts-arm64/data:/runtime/data:ro" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_skill_report.py \
+            "/runtime/reports/stock/$(basename "$stock_html")" \
+            --type stock \
+            --data-json /runtime/data/stock-analysis/_fetch_result_600519.json \
+            | tee artifacts-arm64/stock-field-gate.json
+          docker run --rm \
+            --volume "$PWD/artifacts-arm64/reports:/runtime/reports:ro" \
+            --volume "$PWD/artifacts-arm64/data:/runtime/data:ro" \
+            "$IMAGE" \
+            python /opt/daily-briefing-pro/skills/daily-briefing-pro/scripts/verify_skill_report.py \
+            "/runtime/reports/industry/$(basename "$industry_html")" \
+            --type industry \
+            --data-json /runtime/data/industry-analysis/_industry_白酒.json \
+            | tee artifacts-arm64/industry-field-gate.json
+          python plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/compare_business_parity.py \
+            --type stock \
+            --local tests/fixtures/business-baseline/stock-600519-2026-11-12.json \
+            --cloud artifacts-arm64/data/stock-analysis/_fetch_result_600519.json \
+            | tee artifacts-arm64/stock-business-parity.json
+          python plugins/daily-briefing-pro/skills/daily-briefing-pro/scripts/compare_business_parity.py \
+            --type industry \
+            --local tests/fixtures/business-baseline/industry-baijiu-2026-11-12.json \
+            --cloud artifacts-arm64/data/industry-analysis/_industry_白酒.json \
+            | tee artifacts-arm64/industry-business-parity.json
 
       - name: Render desktop and mobile report screenshots
         run: |

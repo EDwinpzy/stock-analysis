@@ -483,10 +483,49 @@ def _whisper_cache_path(model_name: str, env: Mapping[str, str]) -> Path:
     return base / "whisper" / f"{model_name}.pt"
 
 
+def _faster_whisper_cache_root(env: Mapping[str, str]) -> Path:
+    configured = str(env.get("DOUYIN_FASTER_WHISPER_ROOT") or "").strip()
+    if configured:
+        return Path(configured).expanduser()
+    cache_home = str(env.get("XDG_CACHE_HOME") or "").strip()
+    base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
+    return base / "faster-whisper"
+
+
+def _faster_whisper_ready(env: Mapping[str, str]) -> tuple[bool, str]:
+    """Verify the CTranslate2 runtime and the requested model artifact."""
+    if not (_module_available("faster_whisper") and _module_available("ctranslate2")):
+        return False, "faster-whisper/ctranslate2 未安装"
+    model_name = (
+        str(env.get("DOUYIN_FASTER_WHISPER_MODEL") or "").strip()
+        or str(env.get("DOUYIN_WHISPER_MODEL") or "small").strip()
+        or "small"
+    )
+    root = _faster_whisper_cache_root(env)
+    candidates = [
+        root / model_name / "model.bin",
+        root / f"models--Systran--faster-whisper-{model_name}" / "model.bin",
+    ]
+    artifact = next((path for path in candidates if path.is_file()), None)
+    if artifact is None:
+        artifact = next((
+            path for path in root.rglob("model.bin")
+            if model_name in path.as_posix()
+        ), None)
+    if artifact is None:
+        return False, f"faster-whisper 模型权重未下载: {root}"
+    if artifact.stat().st_size < WHISPER_MIN_BYTES:
+        return False, f"faster-whisper 模型权重不完整: {artifact} ({artifact.stat().st_size} bytes)"
+    return True, f"faster-whisper {model_name} 权重已就绪 ({artifact.stat().st_size / 1024 / 1024:.0f} MB)"
+
+
 def _whisper_ready(env: Mapping[str, str]) -> tuple[bool, str]:
     """Verify both the Python packages and the actual model weights."""
+    faster_ready, faster_detail = _faster_whisper_ready(env)
+    if faster_ready:
+        return True, faster_detail
     if not (_module_available("whisper") and _module_available("torch")):
-        return False, "whisper/torch 未安装"
+        return False, f"{faster_detail}；openai-whisper/torch 未安装"
     try:
         import torch  # noqa: F401
     except Exception as exc:  # noqa: BLE001
@@ -549,7 +588,8 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "transcription",
             "抖音转录",
             f"DOUYIN_TRANSCRIPT_PROVIDER=local，但{whisper_detail}",
-            "安装 openai-whisper 与 CPU torch 并预下载模型权重，或配置 DOUYIN_ASR_* / 专用音频转录 Key",
+            "安装 faster-whisper 并预下载模型权重，或安装 openai-whisper 与 CPU torch，"
+            "或配置 DOUYIN_ASR_* / 专用音频转录 Key",
         )
     if provider == "auto":
         if configured:
@@ -567,7 +607,8 @@ def _check_transcription(env: Mapping[str, str]) -> Check:
             "transcription",
             "抖音转录",
             f"未配置通用 ASR 或 Groq/OpenAI/SiliconFlow Key，且{whisper_detail}",
-            "安装 openai-whisper 与 CPU torch 并预下载模型，或配置 DOUYIN_ASR_* / 专用音频转录 Key",
+            "安装 faster-whisper 并预下载模型，或安装 openai-whisper 与 CPU torch，"
+            "或配置 DOUYIN_ASR_* / 专用音频转录 Key",
         )
 
     key_name = TRANSCRIPTION_KEY_BY_PROVIDER[provider]
