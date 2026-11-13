@@ -85,6 +85,22 @@ def date_labels(date_str: str) -> dict:
         "weekday_short": "周" + "一二三四五六日"[d.weekday()],
     }
 
+
+def source_data_date(soup: BeautifulSoup, fallback: str) -> str:
+    """Read the completed trading date from the source briefing, not the edition date."""
+    mast = soup.select_one(".np-mast-sub")
+    if mast:
+        match = re.search(r"行情数据日\s*(\d{4}-\d{2}-\d{2})", mast.get_text(" ", strip=True))
+        if match:
+            return match.group(1)
+    sent_date = soup.select_one(".sent-date")
+    if sent_date:
+        match = re.search(r"(\d{4}-\d{2}-\d{2})", sent_date.get_text(" ", strip=True))
+        if match:
+            return match.group(1)
+    return fallback
+
+
 PHASE_COLORS = {
     "冰点": "#f0d0c2",
     "退潮": "#e3a68f",
@@ -257,6 +273,7 @@ def render(src: Path, out: Path, date_str: str, remote_fonts: bool = False) -> P
     SRC, OUT = src, out
     labels_cn = date_labels(date_str)
     soup = BeautifulSoup(SRC.read_text(encoding="utf-8"), "html.parser")
+    data_date = source_data_date(soup, date_str)
 
     scripts = "\n".join(s.get_text() for s in soup.find_all("script"))
     series = [float(x) for x in re.search(r"const data=\[([^\]]+)\]", scripts).group(1).split(",")]
@@ -372,6 +389,7 @@ def render(src: Path, out: Path, date_str: str, remote_fonts: bool = False) -> P
         "sprite": SPRITE,
         "headline": headline,
         "date_dash": labels_cn["date"],
+        "data_date": data_date,
         "date_dot": labels_cn["dot"],
         "date_cn": labels_cn["cn"],
         "weekday": labels_cn["weekday"],
@@ -440,7 +458,7 @@ DOC_TEMPLATE = """<!doctype html>
   <div class="kicker">A-Share Daily Briefing · Broadsheet Edition</div>
   <h1>每 日 简 报</h1>
   <div class="subtitle">盘面温度 / 资金流向 / 观点汇编 / 风险提示</div>
-  <div class="dateline"><span>{date_dot} {weekday_short}</span><span class="sep">·</span><span>行情数据日 <b>{date_dash}</b></span><span class="sep">·</span><span>共 <b>{board_count}</b> 个板块</span><span class="sep">·</span><span>情绪模型 3.2</span></div>
+  <div class="dateline"><span>{date_dot} {weekday_short}</span><span class="sep">·</span><span>行情数据日 <b>{data_date}</b></span><span class="sep">·</span><span>共 <b>{board_count}</b> 个板块</span><span class="sep">·</span><span>情绪模型 3.2</span></div>
   <div class="double-rule"></div>
 </header>
 
@@ -472,7 +490,7 @@ DOC_TEMPLATE = """<!doctype html>
     <div class="lead-chart">
       <div class="chart-head"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg>
         <h3>情绪阶段柱状图</h3><span class="en">Market Temperature</span>
-        <span class="meta">近 {series_len} 个交易日 · 数据日 {date_dash}</span></div>
+        <span class="meta">近 {series_len} 个交易日 · 数据日 {data_date}</span></div>
       <div class="chart-wrap">{chart}</div>
       <div class="legend">{legend}</div>
     </div>

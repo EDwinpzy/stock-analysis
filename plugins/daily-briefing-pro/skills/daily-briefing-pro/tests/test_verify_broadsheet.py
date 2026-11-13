@@ -10,6 +10,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import verify_broadsheet
 import build_broadsheet
+from bs4 import BeautifulSoup
 
 
 class BroadsheetScreenshotTests(unittest.TestCase):
@@ -19,6 +20,22 @@ class BroadsheetScreenshotTests(unittest.TestCase):
     def test_baseline_mode_restores_remote_font_links(self):
         self.assertIn("fonts.googleapis.com", build_broadsheet.REMOTE_FONT_LINKS)
         self.assertIn("Playfair+Display", build_broadsheet.REMOTE_FONT_LINKS)
+
+    def test_broadsheet_uses_the_source_market_data_date(self):
+        soup = BeautifulSoup(
+            """
+            <div class="np-mast-sub">
+              <span>2026.11.13 周五</span>
+              <span>行情数据日 <b>2026-11-12</b></span>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        self.assertEqual(
+            build_broadsheet.source_data_date(soup, "2026-11-13"),
+            "2026-11-12",
+        )
 
     def test_blank_tail_is_detected(self):
         with tempfile.TemporaryDirectory(prefix="broadsheet-blank-") as temp:
